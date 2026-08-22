@@ -21,6 +21,7 @@ pub struct TNTEntity {
 impl TNTEntity {
     /// Launch velocity for a freshly primed TNT, honoring the carpet rules
     /// `hardcodeTNTangle` and `tntPrimerMomentumRemoved`.
+    #[must_use]
     pub fn primer_velocity() -> Vector3<f64> {
         let rules = crate::carpet::values();
         let angle = if rules.hardcode_tnt_angle >= 0.0 {
@@ -90,7 +91,7 @@ impl EntityBase for TNTEntity {
             // carpet rule mergeTNT: fold stationary primed TNT into one entity.
             if crate::carpet::values().merge_tnt
                 && entity.on_ground.load(Ordering::Relaxed)
-                && fuse % 20 == 0
+                && fuse.is_multiple_of(20)
             {
                 let world = entity.world.load();
                 let entities = world.entities.load();

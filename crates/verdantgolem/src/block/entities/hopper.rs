@@ -294,7 +294,7 @@ impl HopperBlockEntity {
         let target_pos = self.position.offset(to_offset(&self.facing));
         if crate::carpet::values().hopper_counters {
             let (target_block, _) = world.get_block_and_state(&target_pos);
-            if let Some(channel) = crate::carpet::counters::wool_channel(&target_block) {
+            if let Some(channel) = crate::carpet::counters::wool_channel(target_block) {
                 let mut items = self.items.write().await;
                 for index in 0..items.len() {
                     let item = &items[index];

@@ -14,7 +14,6 @@ use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::sound::SoundCategory;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
-use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
 
 use super::redstone::block_receives_redstone_power;

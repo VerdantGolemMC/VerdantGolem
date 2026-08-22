@@ -13,6 +13,7 @@ pub mod piston_head;
 
 const MAX_MOVABLE_BLOCKS: usize = 12;
 
+/// Carpet rule `pushLimit` overrides the piston push limit (default 12).
 #[must_use]
 pub fn push_limit() -> usize {
     let limit = crate::carpet::values().push_limit;
@@ -22,8 +23,6 @@ pub fn push_limit() -> usize {
         MAX_MOVABLE_BLOCKS
     }
 }
-
-/// Carpet rule `pushLimit` overrides the piston push limit (default 12).
 
 pub struct PistonHandler<'a> {
     world: &'a World,

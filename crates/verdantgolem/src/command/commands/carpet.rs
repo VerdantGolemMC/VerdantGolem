@@ -56,10 +56,10 @@ fn list_rules(rules: &CarpetRules, category: Option<RuleCategory>) -> String {
         .filter(|rule| category.is_none_or(|wanted| rule.def().category == wanted))
         .map(|rule| {
             let value = rules.get(rule);
-            if value != rule.def().default {
-                format!("{} ({})", rule.def().name, value)
-            } else {
+            if value == rule.def().default {
                 rule.def().name.to_string()
+            } else {
+                format!("{} ({})", rule.def().name, value)
             }
         })
         .collect::<Vec<_>>()
@@ -78,7 +78,7 @@ impl CommandExecutor for ListExecutor {
         Box::pin(async move {
             let category = SimpleArgConsumer::find_arg(args, ARG_CATEGORY)
                 .ok()
-                .and_then(|name| RuleCategory::from_name(name));
+                .and_then(RuleCategory::from_name);
             let heading = category.map_or_else(
                 || "All carpet rules".to_string(),
                 |category| format!("Carpet rules in category {category}"),

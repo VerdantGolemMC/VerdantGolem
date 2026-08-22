@@ -1,6 +1,6 @@
 //! Carpet-style rule catalog: static metadata, runtime values and persistence.
 //!
-//! 语义与 fabric-carpet 的 CarpetSettings 对齐：规则在运行时通过 `/carpet` 修改、
+//! 语义与 fabric-carpet 的 `CarpetSettings` 对齐：规则在运行时通过 `/carpet` 修改、
 //! 按名称持久化到服务器根目录的 `carpet_rules.json`，未知或缺失的条目回落到默认值。
 //! 每条规则都必须在真实游戏逻辑中接线；没有接线的规则不允许出现在目录里。
 
@@ -23,28 +23,30 @@ pub enum RuleCategory {
 }
 
 impl RuleCategory {
-    pub const ALL: [RuleCategory; 5] = [
-        RuleCategory::Tnt,
-        RuleCategory::Creative,
-        RuleCategory::Survival,
-        RuleCategory::Optimization,
-        RuleCategory::Feature,
+    pub const ALL: [Self; 5] = [
+        Self::Tnt,
+        Self::Creative,
+        Self::Survival,
+        Self::Optimization,
+        Self::Feature,
     ];
 
-    pub fn from_name(name: &str) -> Option<RuleCategory> {
-        RuleCategory::ALL
+    #[must_use]
+    pub fn from_name(name: &str) -> Option<Self> {
+        Self::ALL
             .iter()
             .copied()
             .find(|category| category.name() == name)
     }
 
+    #[must_use]
     pub const fn name(self) -> &'static str {
         match self {
-            RuleCategory::Tnt => "tnt",
-            RuleCategory::Creative => "creative",
-            RuleCategory::Survival => "survival",
-            RuleCategory::Optimization => "optimization",
-            RuleCategory::Feature => "feature",
+            Self::Tnt => "tnt",
+            Self::Creative => "creative",
+            Self::Survival => "survival",
+            Self::Optimization => "optimization",
+            Self::Feature => "feature",
         }
     }
 }
@@ -64,11 +66,12 @@ pub enum ValueKind {
 }
 
 impl ValueKind {
+    #[must_use]
     pub const fn name(self) -> &'static str {
         match self {
-            ValueKind::Bool => "boolean",
-            ValueKind::Int => "integer",
-            ValueKind::Float => "float",
+            Self::Bool => "boolean",
+            Self::Int => "integer",
+            Self::Float => "float",
         }
     }
 }
@@ -83,43 +86,48 @@ pub enum RuleValue {
 }
 
 impl RuleValue {
+    #[must_use]
     pub const fn kind(self) -> ValueKind {
         match self {
-            RuleValue::Bool(_) => ValueKind::Bool,
-            RuleValue::Int(_) => ValueKind::Int,
-            RuleValue::Float(_) => ValueKind::Float,
+            Self::Bool(_) => ValueKind::Bool,
+            Self::Int(_) => ValueKind::Int,
+            Self::Float(_) => ValueKind::Float,
         }
     }
 
+    #[must_use]
     pub const fn as_bool(self) -> bool {
-        if let RuleValue::Bool(value) = self {
+        if let Self::Bool(value) = self {
             value
         } else {
             false
         }
     }
 
+    #[must_use]
     pub const fn as_int(self) -> i64 {
-        if let RuleValue::Int(value) = self {
+        if let Self::Int(value) = self {
             value
         } else {
             0
         }
     }
 
+    #[must_use]
     pub const fn as_float(self) -> f64 {
-        if let RuleValue::Float(value) = self {
+        if let Self::Float(value) = self {
             value
         } else {
             0.0
         }
     }
 
+    #[must_use]
     pub fn as_f64(self) -> f64 {
         match self {
-            RuleValue::Bool(value) => i64::from(value) as f64,
-            RuleValue::Int(value) => value as f64,
-            RuleValue::Float(value) => value,
+            Self::Bool(value) => i64::from(value) as f64,
+            Self::Int(value) => value as f64,
+            Self::Float(value) => value,
         }
     }
 }
@@ -127,9 +135,9 @@ impl RuleValue {
 impl fmt::Display for RuleValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RuleValue::Bool(value) => write!(f, "{value}"),
-            RuleValue::Int(value) => write!(f, "{value}"),
-            RuleValue::Float(value) => write!(f, "{value}"),
+            Self::Bool(value) => write!(f, "{value}"),
+            Self::Int(value) => write!(f, "{value}"),
+            Self::Float(value) => write!(f, "{value}"),
         }
     }
 }
@@ -251,17 +259,18 @@ macro_rules! carpet_rules {
         }
 
         impl RuleValues {
-            fn write(&mut self, rule: Rule, value: RuleValue) {
+            const fn write(&mut self, rule: Rule, value: RuleValue) {
                 match rule {
-                    $(Rule::$variant => {
-                        if let RuleValue::$kind(v) = value {
+                    $(Rule::$variant => match value {
+                        RuleValue::$kind(v) => {
                             self.$field = v;
                         }
-                    })*
+                        _ => {}
+                    },)*
                 }
             }
 
-            fn read(&self, rule: Rule) -> RuleValue {
+            const fn read(&self, rule: Rule) -> RuleValue {
                 match rule {
                     $(Rule::$variant => RuleValue::$kind(self.$field),)*
                 }
@@ -334,7 +343,7 @@ carpet_rules! {
         kind: Float,
         default: RuleValue::Float(-1.0),
         min: -1.0,
-        max: 6.283_185_307_179_586,
+        max: std::f64::consts::TAU,
         field: hardcode_tnt_angle,
         desc: "Fixed horizontal launch angle for primed TNT (-1 keeps vanilla randomness).",
     };
@@ -473,6 +482,7 @@ pub struct CarpetRules {
 
 impl CarpetRules {
     /// The process-wide rule store. Starts with defaults until [`CarpetRules::init`] loads a file.
+    #[must_use]
     pub fn global() -> &'static Self {
         static GLOBAL: LazyLock<CarpetRules> = LazyLock::new(|| CarpetRules {
             values: RwLock::new(RuleValues::default()),
@@ -521,13 +531,12 @@ impl CarpetRules {
     /// Validates `value` against the rule metadata, applies it and persists the store.
     pub fn set(&self, rule: Rule, value: RuleValue) -> Result<(), String> {
         rule.def().validate(value)?;
-        {
-            let mut values = self
-                .values
-                .write()
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
-            values.write(rule, value);
-        }
+        let mut values = self
+            .values
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        values.write(rule, value);
+        drop(values);
         self.persist();
         Ok(())
     }

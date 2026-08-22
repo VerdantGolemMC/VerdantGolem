@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use crate::TextComponent;
 use crate::carpet::counters;
 
@@ -27,7 +29,7 @@ impl CommandExecutor for AllChannelsExecutor {
             for (index, name) in counters::CHANNEL_NAMES.iter().enumerate() {
                 let total = counters::total(index);
                 if total > 0 {
-                    summary.push_str(&format!("\n{name}: {total} items"));
+                    let _ = writeln!(summary, "{name}: {total} items");
                 }
             }
             sender.send_message(TextComponent::text(summary)).await;
@@ -53,13 +55,14 @@ impl CommandExecutor for ChannelExecutor {
 
             let mut message = format!("{name}: {total} items total");
             for (item, count) in items.iter().take(MAX_ITEMS_SHOWN) {
-                message.push_str(&format!("\n{item}: {count}"));
+                let _ = writeln!(message, "{item}: {count}");
             }
             if items.len() > MAX_ITEMS_SHOWN {
-                message.push_str(&format!(
-                    "\n... and {} more item types",
+                let _ = writeln!(
+                    message,
+                    "... and {} more item types",
                     items.len() - MAX_ITEMS_SHOWN
-                ));
+                );
             }
 
             sender.send_message(TextComponent::text(message)).await;

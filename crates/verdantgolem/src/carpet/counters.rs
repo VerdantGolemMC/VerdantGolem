@@ -43,10 +43,10 @@ pub fn wool_channel(block: &Block) -> Option<usize> {
 
 /// Records `count` items of `item_key` on `channel`.
 pub fn add(channel: usize, item_key: &str, count: u64) {
-    if let Some(counters) = COUNTERS.lock().as_mut().ok() {
-        if let Some(channel) = counters.get_mut(channel) {
-            *channel.entry(item_key.to_string()).or_insert(0) += count;
-        }
+    if let Ok(mut counters) = COUNTERS.lock()
+        && let Some(items) = counters.get_mut(channel)
+    {
+        *items.entry(item_key.to_string()).or_insert(0) += count;
     }
 }
 
