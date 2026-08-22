@@ -375,7 +375,7 @@ mod tests {
 
     /// Every production caller reaches these functions through the `Xoroshiro` variant
     /// (feature-stage worldgen RNG, fire spread, gourd stems), while the parity tests above use
-    /// `Legacy`. These sequences are pinned from pumpkin's Xoroshiro implementation (whose
+    /// `Legacy`. These sequences are pinned from VerdantGolem's Xoroshiro implementation (whose
     /// generator core is bit-verified against vanilla in `verdantgolem-util`) to guard the enum dispatch
     /// and the small-bound `next_bounded_i32` path against regressions.
     #[test]

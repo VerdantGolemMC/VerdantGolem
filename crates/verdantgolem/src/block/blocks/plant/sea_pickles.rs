@@ -40,7 +40,7 @@ impl BlockBehaviour for SeaPickleBlock {
             }
 
             //1:1 vanilla algorithm
-            //TODO use pumpkin random
+            //TODO use verdantgolem random
 
             //let mut j = 1;
             let mut count = 0;
