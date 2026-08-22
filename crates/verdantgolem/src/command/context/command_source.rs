@@ -6,13 +6,13 @@ use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::server::Server;
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::translation;
 use verdantgolem_util::math::vector2::Vector2;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::math::wrap_degrees;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::text::color::{Color, NamedColor};
-use std::sync::Arc;
 
 pub const REQUIRES_PLAYER: CommandErrorType<0> = CommandErrorType::new(
     translation::java::PERMISSIONS_REQUIRES_PLAYER,

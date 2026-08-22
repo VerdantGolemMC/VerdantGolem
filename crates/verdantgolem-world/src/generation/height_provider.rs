@@ -1,10 +1,10 @@
 use std::num::NonZero;
 
+use tracing::warn;
 use verdantgolem_util::{
     random::{RandomGenerator, RandomImpl},
     y_offset::YOffset,
 };
-use tracing::warn;
 
 pub enum HeightProvider {
     Uniform(UniformHeightProvider),

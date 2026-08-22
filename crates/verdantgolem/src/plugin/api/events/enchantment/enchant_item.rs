@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use verdantgolem_data::Enchantment;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_macros::{Event, cancellable};
-use std::sync::Arc;
 
 use crate::entity::player::Player;
 

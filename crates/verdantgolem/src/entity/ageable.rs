@@ -1,6 +1,6 @@
+use std::sync::atomic::{AtomicBool, AtomicI32, Ordering::Relaxed};
 use verdantgolem_data::tracked_data;
 use verdantgolem_protocol::java::client::play::Metadata;
-use std::sync::atomic::{AtomicBool, AtomicI32, Ordering::Relaxed};
 
 use crate::entity::mob::Mob;
 

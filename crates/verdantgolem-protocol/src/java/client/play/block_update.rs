@@ -3,8 +3,8 @@ use verdantgolem_data::packet::clientbound::play::BLOCK_UPDATE;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::version::JavaMinecraftVersion;
 
-use verdantgolem_macros::java_packet;
 use std::io::Write;
+use verdantgolem_macros::java_packet;
 
 use crate::{
     ClientPacket, VarInt,

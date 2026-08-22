@@ -3,9 +3,9 @@ use crate::{
     screen_handler::{InventoryPlayer, ScreenHandler, ScreenHandlerBehaviour},
     slot::NormalSlot,
 };
+use std::{any::Any, sync::Arc};
 use verdantgolem_data::{item_stack::ItemStack, screen::WindowType};
 use verdantgolem_world::inventory::Inventory;
-use std::{any::Any, sync::Arc};
 
 /// Builder for custom GUIs.
 pub struct GUIBuilder {

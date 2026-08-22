@@ -1,7 +1,7 @@
 use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 use verdantgolem_util::noise::perlin::{OctavePerlinNoiseSampler, PerlinNoiseSampler};
 use verdantgolem_util::random::{RandomImpl, xoroshiro128::Xoroshiro};
-use std::hint::black_box;
 
 fn make_coords(count: usize) -> Vec<(f64, f64, f64)> {
     let mut rand = Xoroshiro::from_seed(0x5EED_C0DE_1234_5678);

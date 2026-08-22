@@ -1,7 +1,7 @@
+use serde::Serialize;
 use verdantgolem_data::item::Item;
 pub use verdantgolem_data::villager::{VillagerProfession, VillagerType};
 use verdantgolem_protocol::codec::var_int::VarInt;
-use serde::Serialize;
 
 pub const BREEDING_FOOD_THRESHOLD: i32 = 12;
 

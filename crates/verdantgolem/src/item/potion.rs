@@ -152,7 +152,9 @@ impl PotionContents {
                 if effect_type.id == verdantgolem_data::effect::StatusEffect::INSTANT_HEALTH.id {
                     let amount = (4 * ((amplifier as i32) + 1)) as f32 * instant_scale;
                     target.heal(amount);
-                } else if effect_type.id == verdantgolem_data::effect::StatusEffect::INSTANT_DAMAGE.id {
+                } else if effect_type.id
+                    == verdantgolem_data::effect::StatusEffect::INSTANT_DAMAGE.id
+                {
                     let amount = (6 * ((amplifier as i32) + 1)) as f32 * instant_scale;
 
                     let _ = target.damage(

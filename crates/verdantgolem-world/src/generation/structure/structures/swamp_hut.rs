@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
+use serde::Deserialize;
 use verdantgolem_data::Block;
 use verdantgolem_util::{
     BlockDirection,
     math::{block_box::BlockBox, position::BlockPos},
     random::RandomGenerator,
 };
-use serde::Deserialize;
 
 use crate::{
     ProtoChunk,

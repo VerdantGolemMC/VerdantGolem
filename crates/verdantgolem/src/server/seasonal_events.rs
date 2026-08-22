@@ -1,6 +1,6 @@
-use verdantgolem_config::AdvancedConfiguration;
 use rand::{rng, seq::SliceRandom};
 use time::{Month, OffsetDateTime};
+use verdantgolem_config::AdvancedConfiguration;
 
 // In fact Mojang also has some Seasonal Events, so we can use that later to match Vanilla :D
 

@@ -7,12 +7,12 @@ use crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_pac
     ClientboundPacket, ServerboundPacket,
 };
 use bytes::Bytes;
+use std::any::Any;
+use std::io::Cursor;
 use verdantgolem_protocol::codec::var_int::VarInt;
 use verdantgolem_protocol::packet::MultiVersionJavaPacket;
 use verdantgolem_protocol::packet::Packet;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use std::any::Any;
-use std::io::Cursor;
 
 #[must_use]
 pub fn serialize_java_packet(
@@ -206,7 +206,8 @@ pub fn serialize_java_packet(
             Some(buf.into())
         }
         ClientboundPacket::CCombatDeath(data) => {
-            let component_message = verdantgolem_util::text::TextComponent::text(data.message.clone());
+            let component_message =
+                verdantgolem_util::text::TextComponent::text(data.message.clone());
             let p = verdantgolem_protocol::java::client::play::CCombatDeath {
                 player_id: VarInt(data.player_id),
                 message: &component_message,
@@ -284,7 +285,8 @@ pub fn serialize_java_packet(
             Some(buf.into())
         }
         ClientboundPacket::CPlayDisconnect(data) => {
-            let component_reason = verdantgolem_util::text::TextComponent::text(data.reason.clone());
+            let component_reason =
+                verdantgolem_util::text::TextComponent::text(data.reason.clone());
             let p = verdantgolem_protocol::java::client::play::CPlayDisconnect {
                 reason: &component_reason,
             };
@@ -390,7 +392,9 @@ pub fn serialize_java_packet(
                 z: data.z.try_into().unwrap(),
                 old_diameter: data.old_diameter.try_into().unwrap(),
                 new_diameter: data.new_diameter.try_into().unwrap(),
-                speed: verdantgolem_protocol::codec::var_long::VarLong(data.speed.try_into().unwrap()),
+                speed: verdantgolem_protocol::codec::var_long::VarLong(
+                    data.speed.try_into().unwrap(),
+                ),
                 portal_teleport_boundary: VarInt(data.portal_teleport_boundary),
                 warning_blocks: VarInt(data.warning_blocks),
                 warning_time: VarInt(data.warning_time),
@@ -656,7 +660,9 @@ pub fn serialize_java_packet(
             let p = verdantgolem_protocol::java::client::play::CSetBorderLerpSize {
                 old_diameter: data.old_diameter.try_into().unwrap(),
                 new_diameter: data.new_diameter.try_into().unwrap(),
-                speed: verdantgolem_protocol::codec::var_long::VarLong(data.speed.try_into().unwrap()),
+                speed: verdantgolem_protocol::codec::var_long::VarLong(
+                    data.speed.try_into().unwrap(),
+                ),
             };
             let mut buf = Vec::new();
             crate::net::java::JavaClient::write_packet_for_version(&p, version, &mut buf).unwrap();
@@ -827,7 +833,8 @@ pub fn serialize_java_packet(
             Some(buf.into())
         }
         ClientboundPacket::CSubtitle(data) => {
-            let component_subtitle = verdantgolem_util::text::TextComponent::text(data.subtitle.clone());
+            let component_subtitle =
+                verdantgolem_util::text::TextComponent::text(data.subtitle.clone());
             let p = verdantgolem_protocol::java::client::play::CSubtitle {
                 subtitle: &component_subtitle,
             };
@@ -836,8 +843,10 @@ pub fn serialize_java_packet(
             Some(buf.into())
         }
         ClientboundPacket::CTabList(data) => {
-            let component_header = verdantgolem_util::text::TextComponent::text(data.header.clone());
-            let component_footer = verdantgolem_util::text::TextComponent::text(data.footer.clone());
+            let component_header =
+                verdantgolem_util::text::TextComponent::text(data.header.clone());
+            let component_footer =
+                verdantgolem_util::text::TextComponent::text(data.footer.clone());
             let p = verdantgolem_protocol::java::client::play::CTabList {
                 header: &component_header,
                 footer: &component_footer,
@@ -1017,7 +1026,9 @@ pub fn deserialize_java_serverbound_packet(
 ) -> Option<ServerboundPacket> {
     match id {
         id if id
-            == verdantgolem_protocol::java::server::config::SClientInformationConfig::to_id(version) =>
+            == verdantgolem_protocol::java::server::config::SClientInformationConfig::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::config::SClientInformationConfig as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1054,7 +1065,9 @@ pub fn deserialize_java_serverbound_packet(
                 id: p.id.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::config::SConfigResourcePack::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::config::SConfigResourcePack::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::config::SConfigResourcePack as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::ConfigSConfigResourcePack(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::ConfigSConfigResourcePack {
@@ -1069,7 +1082,9 @@ pub fn deserialize_java_serverbound_packet(
                 entity_id: p.entity_id.0.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SBlockEntityTagQuery::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SBlockEntityTagQuery::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SBlockEntityTagQuery as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SBlockEntityTagQuery(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SBlockEntityTagQuery {
@@ -1077,7 +1092,9 @@ pub fn deserialize_java_serverbound_packet(
                 location: (p.location.0.x, p.location.0.y, p.location.0.z),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SBundleItemSelected::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SBundleItemSelected::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SBundleItemSelected as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SBundleItemSelected(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SBundleItemSelected {
@@ -1114,7 +1131,9 @@ pub fn deserialize_java_serverbound_packet(
             }))
         }
         id if id
-            == verdantgolem_protocol::java::server::play::SClientInformationPlay::to_id(version) =>
+            == verdantgolem_protocol::java::server::play::SClientInformationPlay::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SClientInformationPlay as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1136,7 +1155,9 @@ pub fn deserialize_java_serverbound_packet(
                 window_id: p.window_id.0.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SCommandSuggestion::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SCommandSuggestion::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SCommandSuggestion as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SCommandSuggestion(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SCommandSuggestion {
@@ -1144,7 +1165,9 @@ pub fn deserialize_java_serverbound_packet(
                 command: p.command.into(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SContainerButtonClick::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SContainerButtonClick::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SContainerButtonClick as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SContainerButtonClick(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SContainerButtonClick {
@@ -1153,7 +1176,9 @@ pub fn deserialize_java_serverbound_packet(
             }))
         }
         id if id
-            == verdantgolem_protocol::java::server::play::SContainerSlotStateChanged::to_id(version) =>
+            == verdantgolem_protocol::java::server::play::SContainerSlotStateChanged::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SContainerSlotStateChanged as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1172,7 +1197,9 @@ pub fn deserialize_java_serverbound_packet(
             }))
         }
         id if id
-            == verdantgolem_protocol::java::server::play::SDebugSampleSubscription::to_id(version) =>
+            == verdantgolem_protocol::java::server::play::SDebugSampleSubscription::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SDebugSampleSubscription as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1181,7 +1208,9 @@ pub fn deserialize_java_serverbound_packet(
             }))
         }
         id if id
-            == verdantgolem_protocol::java::server::play::SDebugSubscriptionRequest::to_id(version) =>
+            == verdantgolem_protocol::java::server::play::SDebugSubscriptionRequest::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SDebugSubscriptionRequest as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1240,7 +1269,9 @@ pub fn deserialize_java_serverbound_packet(
                 right_paddle: p.right_paddle.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SPickItemFromBlock::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SPickItemFromBlock::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SPickItemFromBlock as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SPickItemFromBlock(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SPickItemFromBlock {
@@ -1248,7 +1279,9 @@ pub fn deserialize_java_serverbound_packet(
                 include_data: p.include_data.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SPickItemFromEntity::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SPickItemFromEntity::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SPickItemFromEntity as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SPickItemFromEntity(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SPickItemFromEntity {
@@ -1305,7 +1338,9 @@ pub fn deserialize_java_serverbound_packet(
             }))
         }
         id if id
-            == verdantgolem_protocol::java::server::play::SPlayerPositionRotation::to_id(version) =>
+            == verdantgolem_protocol::java::server::play::SPlayerPositionRotation::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SPlayerPositionRotation as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1343,7 +1378,9 @@ pub fn deserialize_java_serverbound_packet(
             }))
         }
         id if id
-            == verdantgolem_protocol::java::server::play::SRecipeBookChangeSettings::to_id(version) =>
+            == verdantgolem_protocol::java::server::play::SRecipeBookChangeSettings::to_id(
+                version,
+            ) =>
         {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SRecipeBookChangeSettings as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
@@ -1353,7 +1390,9 @@ pub fn deserialize_java_serverbound_packet(
                 is_filtering: p.is_filtering.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SRecipeBookSeenRecipe::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SRecipeBookSeenRecipe::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SRecipeBookSeenRecipe as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SRecipeBookSeenRecipe(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SRecipeBookSeenRecipe {
@@ -1367,7 +1406,9 @@ pub fn deserialize_java_serverbound_packet(
                 item_name: p.item_name.into(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SPlayResourcePack::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SPlayResourcePack::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SPlayResourcePack as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SPlayResourcePack(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SPlayResourcePack {
@@ -1400,7 +1441,9 @@ pub fn deserialize_java_serverbound_packet(
                 flags: p.flags.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SSetCommandMinecart::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SSetCommandMinecart::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SSetCommandMinecart as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SSetCommandMinecart(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SSetCommandMinecart {
@@ -1430,7 +1473,9 @@ pub fn deserialize_java_serverbound_packet(
                 placement_priority: p.placement_priority.0.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::SSetStructureBlock::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::SSetStructureBlock::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::SSetStructureBlock as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::SSetStructureBlock(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::SSetStructureBlock {
@@ -1466,7 +1511,9 @@ pub fn deserialize_java_serverbound_packet(
                 hand: p.hand.0.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::play::STeleportToEntity::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::play::STeleportToEntity::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::play::STeleportToEntity as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::STeleportToEntity(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::STeleportToEntity {
@@ -1508,7 +1555,9 @@ pub fn deserialize_java_serverbound_packet(
                 sequence: p.sequence.0.try_into().unwrap(),
             }))
         }
-        id if id == verdantgolem_protocol::java::server::status::SStatusPingRequest::to_id(version) => {
+        id if id
+            == verdantgolem_protocol::java::server::status::SStatusPingRequest::to_id(version) =>
+        {
             use verdantgolem_protocol::ServerPacket;
             let p = <verdantgolem_protocol::java::server::status::SStatusPingRequest as verdantgolem_protocol::ServerPacket>::read(&mut payload, &version).ok()?;
             Some(ServerboundPacket::StatusSStatusPingRequest(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::StatusSStatusPingRequest {
@@ -1706,7 +1755,9 @@ impl ToWitClientboundJava for verdantgolem_protocol::java::client::play::CCombat
     }
 }
 
-impl ToWitClientboundJava for verdantgolem_protocol::java::client::play::CCustomChatCompletions<'_> {
+impl ToWitClientboundJava
+    for verdantgolem_protocol::java::client::play::CCustomChatCompletions<'_>
+{
     fn to_wit(&self) -> ClientboundPacket {
         ClientboundPacket::CCustomChatCompletions(crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::java_packets::CCustomChatCompletions {
                 action: self.action.0.try_into().unwrap(),
@@ -2399,23 +2450,31 @@ impl ToWitClientboundJava for verdantgolem_protocol::java::client::status::CStat
 
 #[must_use]
 pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::config::CCodeOfConduct>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::config::CConfigDisconnect>()
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::config::CCodeOfConduct>()
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::config::CConfigPing>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::config::CConfigDisconnect>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::config::CPluginMessage>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::config::CConfigPing>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::config::CPluginMessage>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::config::CTransfer>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::login::CLoginDisconnect>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::login::CLoginDisconnect>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) =
@@ -2423,7 +2482,9 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::login::CSetCompression>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::login::CSetCompression>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) =
@@ -2439,7 +2500,9 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CBlockEntityData>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CBlockEntityData>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CBlockEvent>() {
@@ -2451,16 +2514,21 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CCenterChunk>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CChangeDifficulty>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CChangeDifficulty>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CChunkBatchEnd>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CChunkBatchEnd>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CClearTitle>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CCloseContainer>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CCloseContainer>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CCombatDeath>() {
@@ -2474,13 +2542,18 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CCustomPayload>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CCustomPayload>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CDebugBlockValue>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CDebugBlockValue>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CDebugEntityValue>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CDebugEntityValue>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CDebugEvent>() {
@@ -2489,23 +2562,33 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CDebugSample>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayDisconnect>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CDisplayObjective>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CEntityAnimation>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetEntityMetadata>()
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayDisconnect>()
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CEntityStatus>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CDisplayObjective>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CEntityVelocity>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CEntityAnimation>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetEntityMetadata>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CEntityStatus>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CEntityVelocity>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CGameEvent>() {
@@ -2519,7 +2602,8 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CHeadRot>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CHurtAnimation>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CHurtAnimation>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) =
@@ -2527,7 +2611,8 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CItemCooldown>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CItemCooldown>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CKeepAlive>() {
@@ -2542,13 +2627,17 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::COpenBook>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::COpenMountScreen>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::COpenMountScreen>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::COpenScreen>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::COpenSignEditor>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::COpenSignEditor>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CParticle>() {
@@ -2557,19 +2646,28 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayPing>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPingResponse>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPingResponse>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlaceGhostRecipe>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlaceGhostRecipe>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayerAbilities>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayerAbilities>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CRemovePlayerInfo>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CRemovePlayerInfo>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayerRotation>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CPlayerRotation>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) =
@@ -2577,30 +2675,43 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CProjectilePower>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CRecipeBookRemove>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CRecipeBookSettings>()
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CProjectilePower>()
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CRemoveEntities>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CRemoveMobEffect>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetBorderCenter>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetBorderLerpSize>()
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CRecipeBookRemove>()
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetBorderSize>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CRecipeBookSettings>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CRemoveEntities>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CRemoveMobEffect>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetBorderCenter>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetBorderLerpSize>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetBorderSize>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) =
@@ -2626,16 +2737,19 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetEntityLink>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetEntityLink>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetExperience>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetExperience>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetHealth>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetPassengers>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSetPassengers>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) =
@@ -2646,13 +2760,16 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTitleText>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTitleAnimation>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CTitleAnimation>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSpawnEntity>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSpawnPainting>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSpawnPainting>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CSubtitle>() {
@@ -2661,13 +2778,18 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTabList>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTagQueryResponse>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CTagQueryResponse>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTakeItemEntity>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CTakeItemEntity>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTickingState>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTickingState>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CTickingStep>() {
@@ -2679,20 +2801,28 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUnloadChunk>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateEntityPos>() {
-        return Some(p.to_wit());
-    }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateEntityPosRot>()
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateEntityPos>()
     {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateEntityRot>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateEntityPosRot>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateMobEffect>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateEntityRot>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateRecipes>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateMobEffect>()
+    {
+        return Some(p.to_wit());
+    }
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUpdateRecipes>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CUseBed>() {
@@ -2701,10 +2831,14 @@ pub fn clientbound_java_any_to_wit(any: &dyn Any) -> Option<ClientboundPacket> {
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::play::CWorldEvent>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::status::CPingResponse>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::status::CPingResponse>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::java::client::status::CStatusResponse>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::java::client::status::CStatusResponse>()
+    {
         return Some(p.to_wit());
     }
     None
@@ -2810,7 +2944,9 @@ pub fn serialize_bedrock_packet(packet: &BClientboundPacket) -> Option<Bytes> {
                 effect_amplifier: VarInt(data.effect_amplifier),
                 show_particles: data.show_particles.try_into().unwrap(),
                 effect_duration_ticks: VarInt(data.effect_duration_ticks),
-                tick: verdantgolem_protocol::codec::var_ulong::VarULong(data.tick.try_into().unwrap()),
+                tick: verdantgolem_protocol::codec::var_ulong::VarULong(
+                    data.tick.try_into().unwrap(),
+                ),
                 ambient: data.ambient.try_into().unwrap(),
             };
             let mut buf = Vec::new();
@@ -2884,7 +3020,9 @@ pub fn serialize_bedrock_packet(packet: &BClientboundPacket) -> Option<Bytes> {
                 ),
                 teleport_cause: data.teleport_cause.try_into().unwrap(),
                 teleport_source_entity_type: data.teleport_source_entity_type.try_into().unwrap(),
-                tick: verdantgolem_protocol::codec::var_ulong::VarULong(data.tick.try_into().unwrap()),
+                tick: verdantgolem_protocol::codec::var_ulong::VarULong(
+                    data.tick.try_into().unwrap(),
+                ),
             };
             let mut buf = Vec::new();
             crate::net::bedrock::BedrockClient::write_raw_packet(&p, &mut buf).unwrap();
@@ -2959,7 +3097,9 @@ pub fn serialize_bedrock_packet(packet: &BClientboundPacket) -> Option<Bytes> {
                     data.motion.1 as _,
                     data.motion.2 as _,
                 ),
-                tick: verdantgolem_protocol::codec::var_ulong::VarULong(data.tick.try_into().unwrap()),
+                tick: verdantgolem_protocol::codec::var_ulong::VarULong(
+                    data.tick.try_into().unwrap(),
+                ),
             };
             let mut buf = Vec::new();
             crate::net::bedrock::BedrockClient::write_raw_packet(&p, &mut buf).unwrap();
@@ -3047,8 +3187,12 @@ pub fn serialize_bedrock_packet(packet: &BClientboundPacket) -> Option<Bytes> {
                 block_runtime_id: verdantgolem_protocol::codec::var_uint::VarUInt(
                     data.block_runtime_id.try_into().unwrap(),
                 ),
-                flags: verdantgolem_protocol::codec::var_uint::VarUInt(data.flags.try_into().unwrap()),
-                layer: verdantgolem_protocol::codec::var_uint::VarUInt(data.layer.try_into().unwrap()),
+                flags: verdantgolem_protocol::codec::var_uint::VarUInt(
+                    data.flags.try_into().unwrap(),
+                ),
+                layer: verdantgolem_protocol::codec::var_uint::VarUInt(
+                    data.layer.try_into().unwrap(),
+                ),
             };
             let mut buf = Vec::new();
             crate::net::bedrock::BedrockClient::write_raw_packet(&p, &mut buf).unwrap();
@@ -3432,7 +3576,9 @@ pub fn clientbound_bedrock_any_to_wit(any: &dyn Any) -> Option<BClientboundPacke
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CBossEvent>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CChunkRadiusUpdated>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::bedrock::client::CChunkRadiusUpdated>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CContainerOpen>() {
@@ -3447,10 +3593,13 @@ pub fn clientbound_bedrock_any_to_wit(any: &dyn Any) -> Option<BClientboundPacke
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CMobEffect>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CModalFormRequest>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CModalFormRequest>()
+    {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CMoveActorAbsolute>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::bedrock::client::CMoveActorAbsolute>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CMoveActorDelta>() {
@@ -3459,7 +3608,8 @@ pub fn clientbound_bedrock_any_to_wit(any: &dyn Any) -> Option<BClientboundPacke
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CMovePlayer>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CNetworkSettings>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CNetworkSettings>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CPlayStatus>() {
@@ -3471,7 +3621,8 @@ pub fn clientbound_bedrock_any_to_wit(any: &dyn Any) -> Option<BClientboundPacke
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CRemoveActor>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CRemoveObjective>() {
+    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CRemoveObjective>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CSetActorMotion>() {
@@ -3480,7 +3631,9 @@ pub fn clientbound_bedrock_any_to_wit(any: &dyn Any) -> Option<BClientboundPacke
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CSetDifficulty>() {
         return Some(p.to_wit());
     }
-    if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CSetDisplayObjective>() {
+    if let Some(p) =
+        any.downcast_ref::<verdantgolem_protocol::bedrock::client::CSetDisplayObjective>()
+    {
         return Some(p.to_wit());
     }
     if let Some(p) = any.downcast_ref::<verdantgolem_protocol::bedrock::client::CSetHealth>() {

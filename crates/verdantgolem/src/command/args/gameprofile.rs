@@ -1,9 +1,11 @@
 use arc_swap::ArcSwap;
-use verdantgolem_data::translation;
-use verdantgolem_protocol::java::client::play::{ArgumentType, CommandSuggestion, SuggestionProviders};
-use verdantgolem_util::text::TextComponent;
 use std::sync::Arc;
 use uuid::Uuid;
+use verdantgolem_data::translation;
+use verdantgolem_protocol::java::client::play::{
+    ArgumentType, CommandSuggestion, SuggestionProviders,
+};
+use verdantgolem_util::text::TextComponent;
 
 use crate::command::errors::command_syntax_error::{CommandSyntaxError, CommandSyntaxErrorContext};
 use crate::command::errors::error_types;

@@ -5,9 +5,9 @@ use crate::entity::{
     area_effect_cloud::AreaEffectCloudEntity,
     boss::ender_dragon::{EnderDragonEntity, Vector3Ext, find_path},
 };
+use std::sync::atomic::Ordering;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::atomic::Ordering;
 
 pub struct StrafingPhase;
 

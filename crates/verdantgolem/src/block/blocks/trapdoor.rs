@@ -4,6 +4,7 @@ use crate::block::{BlockBehaviour, NormalUseArgs, OnNeighborUpdateArgs, OnPlaceA
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{BlockProperties, Half};
@@ -13,7 +14,6 @@ use verdantgolem_data::{Block, tag};
 use verdantgolem_macros::pumpkin_block_from_tag;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 type TrapDoorProperties = verdantgolem_data::block_properties::OakTrapdoorLikeProperties;
 

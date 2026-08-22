@@ -77,7 +77,8 @@ impl ClientPacket for CRespawn {
                     *version,
                     self.player_spawn_info.dimension.minecraft_name,
                 );
-                let dim_bytes = verdantgolem_nbt::Nbt::new(String::new(), dim_type_compound).write();
+                let dim_bytes =
+                    verdantgolem_nbt::Nbt::new(String::new(), dim_type_compound).write();
                 write.write_all(&dim_bytes)?;
             } else {
                 write.write_string(self.player_spawn_info.dimension.minecraft_name)?;
@@ -161,7 +162,8 @@ impl<'a> ServerPacket<'a> for CRespawn {
         if !v1_20_2 {
             let dimension = if v1_16_2 && *version < JavaMinecraftVersion::V_1_19 {
                 let mut cursor = std::io::Cursor::new(*read);
-                let mut reader = verdantgolem_nbt::deserializer::NbtReadHelperJava::new(&mut cursor);
+                let mut reader =
+                    verdantgolem_nbt::deserializer::NbtReadHelperJava::new(&mut cursor);
                 let _nbt = verdantgolem_nbt::Nbt::read(&mut reader).map_err(|e| {
                     ReadingError::Message(format!("Invalid dimension type NBT: {e}"))
                 })?;

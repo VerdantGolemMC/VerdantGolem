@@ -5,13 +5,17 @@ use crate::{
 };
 use arc_swap::ArcSwap;
 use bytes::Bytes;
-use verdantgolem_world::level::SyncChunk;
 use std::{
     net::SocketAddr,
     num::NonZero,
     sync::{Arc, atomic::Ordering},
 };
+use verdantgolem_world::level::SyncChunk;
 
+use serde::{Deserialize, Deserializer};
+use sha1::Digest;
+use sha2::Sha256;
+use tokio::task::JoinHandle;
 use verdantgolem_data::translation;
 use verdantgolem_protocol::{BClientPacket, ClientPacket, Property};
 use verdantgolem_util::{
@@ -19,10 +23,6 @@ use verdantgolem_util::{
     text::TextComponent,
     version::{BedrockMinecraftVersion, JavaMinecraftVersion},
 };
-use serde::{Deserialize, Deserializer};
-use sha1::Digest;
-use sha2::Sha256;
-use tokio::task::JoinHandle;
 
 use thiserror::Error;
 use uuid::Uuid;

@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use serde::Deserialize;
 use verdantgolem_data::{
     Block, BlockState,
     block_properties::{
@@ -12,7 +13,6 @@ use verdantgolem_util::{
     math::{block_box::BlockBox, position::BlockPos},
     random::{RandomGenerator, RandomImpl},
 };
-use serde::Deserialize;
 
 use crate::{
     ProtoChunk,

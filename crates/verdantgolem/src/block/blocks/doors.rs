@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::Axis;
@@ -13,7 +14,6 @@ use verdantgolem_macros::pumpkin_block_from_tag;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockAccessor;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 use crate::block::BlockBehaviour;
 use crate::block::BrokenArgs;

@@ -1,8 +1,3 @@
-use verdantgolem_data::Block;
-use verdantgolem_data::block_properties::{BlockProperties, ChiseledBookshelfLikeProperties};
-use verdantgolem_data::item_stack::ItemStack;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_util::math::position::BlockPos;
 use std::any::Any;
 use std::sync::RwLock;
 use std::{
@@ -13,6 +8,11 @@ use std::{
     },
 };
 use tracing::warn;
+use verdantgolem_data::Block;
+use verdantgolem_data::block_properties::{BlockProperties, ChiseledBookshelfLikeProperties};
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_util::math::position::BlockPos;
 
 use crate::{
     block::entities::BlockEntity,

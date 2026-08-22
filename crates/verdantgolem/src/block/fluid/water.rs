@@ -4,11 +4,11 @@ use crate::{
     entity::EntityBase,
     world::World,
 };
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::fluid::Fluid;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::tick::TickPriority;
-use std::sync::Arc;
 
 pub struct FlowingWater;
 

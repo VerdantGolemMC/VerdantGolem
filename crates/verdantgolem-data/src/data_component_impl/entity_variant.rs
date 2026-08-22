@@ -1,6 +1,6 @@
 use crate::data_component_impl::DataComponentImpl;
-use verdantgolem_nbt::tag::NbtTag;
 use std::borrow::Cow;
+use verdantgolem_nbt::tag::NbtTag;
 
 macro_rules! string_variant {
     ($name:ident, $struct_name:ident) => {

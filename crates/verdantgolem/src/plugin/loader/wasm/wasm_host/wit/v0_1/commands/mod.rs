@@ -158,15 +158,27 @@ impl pumpkin::plugin::command::HostConsumedArgs for PluginHostState {
             OwnedArg::Pos2D(v) => Arg::Pos2d((v.x, v.y)),
             OwnedArg::Rotation(a, b, c, d) => Arg::Rotation((a, b, c, d)),
             OwnedArg::GameMode(g) => Arg::Gamemode(match g {
-                verdantgolem_util::GameMode::Survival => pumpkin::plugin::common::GameMode::Survival,
-                verdantgolem_util::GameMode::Creative => pumpkin::plugin::common::GameMode::Creative,
-                verdantgolem_util::GameMode::Adventure => pumpkin::plugin::common::GameMode::Adventure,
-                verdantgolem_util::GameMode::Spectator => pumpkin::plugin::common::GameMode::Spectator,
+                verdantgolem_util::GameMode::Survival => {
+                    pumpkin::plugin::common::GameMode::Survival
+                }
+                verdantgolem_util::GameMode::Creative => {
+                    pumpkin::plugin::common::GameMode::Creative
+                }
+                verdantgolem_util::GameMode::Adventure => {
+                    pumpkin::plugin::common::GameMode::Adventure
+                }
+                verdantgolem_util::GameMode::Spectator => {
+                    pumpkin::plugin::common::GameMode::Spectator
+                }
             }),
             OwnedArg::Difficulty(d) => Arg::Difficulty(match d {
-                verdantgolem_util::Difficulty::Peaceful => pumpkin::plugin::server::Difficulty::Peaceful,
+                verdantgolem_util::Difficulty::Peaceful => {
+                    pumpkin::plugin::server::Difficulty::Peaceful
+                }
                 verdantgolem_util::Difficulty::Easy => pumpkin::plugin::server::Difficulty::Easy,
-                verdantgolem_util::Difficulty::Normal => pumpkin::plugin::server::Difficulty::Normal,
+                verdantgolem_util::Difficulty::Normal => {
+                    pumpkin::plugin::server::Difficulty::Normal
+                }
                 verdantgolem_util::Difficulty::Hard => pumpkin::plugin::server::Difficulty::Hard,
             }),
             OwnedArg::Players(players) => {
@@ -399,9 +411,11 @@ impl pumpkin::plugin::command::HostCommandSender for PluginHostState {
             .clone();
         self.get_sender_res(&sender)?
             .provider
-            .send_message(component.color(verdantgolem_util::text::color::Color::Named(
-                verdantgolem_util::text::color::NamedColor::Red,
-            )));
+            .send_message(
+                component.color(verdantgolem_util::text::color::Color::Named(
+                    verdantgolem_util::text::color::NamedColor::Red,
+                )),
+            );
         Ok(())
     }
 

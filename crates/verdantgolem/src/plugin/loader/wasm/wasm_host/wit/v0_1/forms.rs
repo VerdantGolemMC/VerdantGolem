@@ -3,8 +3,8 @@ use crate::plugin::loader::wasm::wasm_host::wit::v0_1::player::text_component_fr
 use crate::plugin::loader::wasm::wasm_host::wit::v0_1::pumpkin::plugin::forms::{
     CustomForm, CustomFormElement, Host, ImageType, ModalForm, SimpleForm,
 };
-use verdantgolem_util::translation::Locale;
 use serde_json::{Value, json};
+use verdantgolem_util::translation::Locale;
 use wasmtime::component::Resource;
 
 impl Host for PluginHostState {}

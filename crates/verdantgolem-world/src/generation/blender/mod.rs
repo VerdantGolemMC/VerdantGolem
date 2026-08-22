@@ -8,11 +8,11 @@ use crate::generation::noise::perlin::DoublePerlinNoiseSampler;
 use crate::generation::noise::router::multi_noise_sampler::MultiNoiseSampler;
 use crate::generation::proto_chunk::GenerationCache;
 use blending_data::BlendingData;
+use rustc_hash::FxHashMap;
 use verdantgolem_data::chunk::Biome;
 use verdantgolem_data::noise_parameter::DoublePerlinNoiseParameters;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::random::xoroshiro128::Xoroshiro;
-use rustc_hash::FxHashMap;
 
 pub struct BlendingOutput {
     pub alpha: f64,

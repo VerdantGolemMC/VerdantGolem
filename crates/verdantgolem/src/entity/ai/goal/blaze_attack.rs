@@ -1,7 +1,7 @@
-use verdantgolem_protocol::java::client::play::CWorldEvent;
-use verdantgolem_util::math::vector3::Vector3;
 use rand::RngExt;
 use std::sync::Arc;
+use verdantgolem_protocol::java::client::play::CWorldEvent;
+use verdantgolem_util::math::vector3::Vector3;
 
 use crate::entity::{
     Entity,

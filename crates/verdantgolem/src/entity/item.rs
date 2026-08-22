@@ -1,6 +1,7 @@
 use crate::entity::player::statistics::StatisticCategory;
 use crate::server::Server;
 use core::f32;
+use std::sync::atomic::Ordering::{AcqRel, Relaxed};
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::data_component_impl::DamageResistantImpl;
 use verdantgolem_data::data_component_impl::DamageResistantType;
@@ -15,7 +16,6 @@ use verdantgolem_protocol::java::client::play::{CSetEntityMetadata, Metadata};
 use verdantgolem_util::math::atomic_f32::AtomicF32;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use std::sync::atomic::Ordering::{AcqRel, Relaxed};
 
 use std::sync::{
     Arc, Mutex,

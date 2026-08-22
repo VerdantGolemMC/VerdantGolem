@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 use crate::block::BlockBehaviour;
 use crate::block::CanPlaceAtArgs;

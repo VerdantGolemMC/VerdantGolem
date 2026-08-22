@@ -1,11 +1,11 @@
 use crate::command::node::dispatcher::CommandDispatcher;
 use crate::command::tree::Command;
+use tracing::{info, warn};
 use verdantgolem_config::CommandsConfig;
 use verdantgolem_util::{
     PermissionLvl,
     permission::{Permission, PermissionDefault, PermissionManager, PermissionRegistry},
 };
-use tracing::{info, warn};
 
 mod advancement;
 mod attribute;
@@ -13,8 +13,10 @@ mod ban;
 mod banip;
 mod banlist;
 mod bossbar;
+mod carpet;
 mod clear;
 mod clone;
+mod counter;
 mod damage;
 mod data;
 mod datapack;
@@ -52,7 +54,6 @@ mod place;
 mod playsound;
 mod plugin;
 mod plugins;
-mod verdantgolem;
 mod raid;
 mod random;
 mod recipe;
@@ -85,6 +86,7 @@ mod title;
 mod tps;
 mod transfer;
 mod trigger;
+mod verdantgolem;
 mod waypoint;
 mod weather;
 mod whitelist;
@@ -102,7 +104,10 @@ pub fn default_dispatcher(
     register_permissions(registry);
 
     // Zero
-    dispatcher.register(verdantgolem::init_command_tree(), "pumpkin:command.verdantgolem");
+    dispatcher.register(
+        verdantgolem::init_command_tree(),
+        "pumpkin:command.verdantgolem",
+    );
     dispatcher.register(me::init_command_tree(), "minecraft:command.me");
     dispatcher.register(msg::init_command_tree(), "minecraft:command.msg");
     // Two
@@ -138,6 +143,8 @@ pub fn default_dispatcher(
     dispatcher.register(bossbar::init_command_tree(), "minecraft:command.bossbar");
     dispatcher.register(gamemode::init_command_tree(), "minecraft:command.gamemode");
     dispatcher.register(gamerule::init_command_tree(), "minecraft:command.gamerule");
+    dispatcher.register(carpet::init_command_tree(), "pumpkin:command.carpet");
+    dispatcher.register(counter::init_command_tree(), "pumpkin:command.counter");
     dispatcher.register(
         stopsound::init_command_tree(),
         "minecraft:command.stopsound",
@@ -377,6 +384,20 @@ fn register_level_0_permissions(registry: &PermissionRegistry) {
 #[expect(clippy::too_many_lines)]
 fn register_level_2_permissions(registry: &PermissionRegistry) {
     // Register permissions for commands with PermissionLvl::Two
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.carpet",
+            "Manages carpet rules",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.counter",
+            "Reads or resets hopper counters",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
     registry
         .register_permission(Permission::new(
             "minecraft:command.worldborder",

@@ -2,6 +2,8 @@ use std::sync::Arc;
 
 use crate::block::entities::{has_block_block_entity, piston::PistonBlockEntity};
 use crate::entity::EntityBase;
+use rand::RngExt;
+use rustc_hash::FxHashMap;
 use verdantgolem_data::BlockId;
 use verdantgolem_data::{
     Block, BlockDirection, BlockState, BlockStateId, FacingExt,
@@ -13,8 +15,6 @@ use verdantgolem_data::{
 };
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
-use rustc_hash::FxHashMap;
 
 use crate::{
     block::{

@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
-use verdantgolem_macros::Event;
 use std::sync::Arc;
+use verdantgolem_macros::Event;
 
 /// Generalized event that occurs when an inventory result slot item is prepared.
 #[derive(Event, Clone)]

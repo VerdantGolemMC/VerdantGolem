@@ -3,10 +3,10 @@ use crate::entity::ai::pathfinder::NavigatorGoal;
 use crate::entity::ai::pathfinder::node::PathType;
 use crate::entity::mob::Mob;
 use crate::entity::player::Player;
-use verdantgolem_util::math::position::BlockPos;
-use verdantgolem_util::math::vector3::Vector3;
 use rand::RngExt;
 use std::sync::Arc;
+use verdantgolem_util::math::position::BlockPos;
+use verdantgolem_util::math::vector3::Vector3;
 
 const TELEPORT_DISTANCE_SQ: f64 = 144.0;
 

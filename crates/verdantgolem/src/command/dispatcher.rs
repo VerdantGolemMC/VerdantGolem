@@ -1,9 +1,9 @@
+use rustc_hash::FxHashMap;
+use tracing::{debug, error, warn};
 use verdantgolem_data::translation;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::text::click::ClickEvent;
 use verdantgolem_util::text::color::NamedColor;
-use rustc_hash::FxHashMap;
-use tracing::{debug, error, warn};
 
 use super::args::ConsumedArgs;
 use super::errors::command_syntax_error::{CommandSyntaxError, CommandSyntaxErrorContext};
@@ -806,7 +806,9 @@ mod test {
     use crate::command::errors::error_types;
     use crate::command::{commands::default_dispatcher, tree::CommandTree};
 
-    fn component_plain_text(component: &verdantgolem_util::text::TextComponentBase) -> Option<&str> {
+    fn component_plain_text(
+        component: &verdantgolem_util::text::TextComponentBase,
+    ) -> Option<&str> {
         if let TextContent::Text { text } = component.content.as_ref() {
             Some(text.as_ref())
         } else {

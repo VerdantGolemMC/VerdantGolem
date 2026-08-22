@@ -1,14 +1,14 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use base64::{Engine, engine::general_purpose};
-use verdantgolem_config::{AuthenticationConfig, networking::auth::TextureConfig};
-use verdantgolem_protocol::Property;
 use rsa::RsaPublicKey;
 use rsa::pkcs8::DecodePublicKey;
 use serde::Deserialize;
 use thiserror::Error;
 use ureq::http::{StatusCode, Uri};
 use uuid::Uuid;
+use verdantgolem_config::{AuthenticationConfig, networking::auth::TextureConfig};
+use verdantgolem_protocol::Property;
 
 use super::GameProfile;
 

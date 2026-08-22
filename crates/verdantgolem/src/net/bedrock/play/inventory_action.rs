@@ -219,7 +219,8 @@ impl BedrockClient {
                         );
 
                         let item_id = stack.item.id;
-                        if let Some(placed_block) = verdantgolem_data::Block::from_item_id(item_id) {
+                        if let Some(placed_block) = verdantgolem_data::Block::from_item_id(item_id)
+                        {
                             let dummy_use_item_on =
                                 verdantgolem_protocol::java::server::play::SUseItemOn {
                                     hand: VarInt(0),

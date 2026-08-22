@@ -6,10 +6,10 @@
 use fun::FunConfig;
 
 use logging::LoggingConfig;
-use verdantgolem_util::world_seed::Seed;
-use verdantgolem_util::{Difficulty, GameMode, PermissionLvl, random};
 use recipe::RecipeConfig;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use verdantgolem_util::world_seed::Seed;
+use verdantgolem_util::{Difficulty, GameMode, PermissionLvl, random};
 
 use std::path::PathBuf;
 use std::{fs, num::NonZero, path::Path};

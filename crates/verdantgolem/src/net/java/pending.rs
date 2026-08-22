@@ -2,6 +2,15 @@ use std::{net::SocketAddr, num::NonZero, sync::Arc};
 
 use bytes::Bytes;
 use crossbeam::atomic::AtomicCell;
+use tokio::{
+    io::{BufReader, BufWriter},
+    net::{
+        TcpStream,
+        tcp::{OwnedReadHalf, OwnedWriteHalf},
+    },
+};
+use tokio_util::sync::CancellationToken;
+use tracing::{debug, error, warn};
 use verdantgolem_config::networking::compression::CompressionInfo;
 use verdantgolem_data::packet::CURRENT_MC_VERSION;
 use verdantgolem_protocol::{
@@ -21,15 +30,6 @@ use verdantgolem_protocol::{
     ser::ReadingError,
 };
 use verdantgolem_util::{Hand, text::TextComponent, version::JavaMinecraftVersion};
-use tokio::{
-    io::{BufReader, BufWriter},
-    net::{
-        TcpStream,
-        tcp::{OwnedReadHalf, OwnedWriteHalf},
-    },
-};
-use tokio_util::sync::CancellationToken;
-use tracing::{debug, error, warn};
 
 use crate::{
     entity::player::ChatMode,
@@ -264,10 +264,12 @@ impl PendingConnection {
         let mut payload = &packet.payload[..];
         match packet.id {
             0 => {
-                self.handle_handshake(verdantgolem_protocol::java::server::handshake::SHandShake::read(
-                    &mut payload,
-                    &self.version.load(),
-                )?)
+                self.handle_handshake(
+                    verdantgolem_protocol::java::server::handshake::SHandShake::read(
+                        &mut payload,
+                        &self.version.load(),
+                    )?,
+                )
                 .await;
                 Ok(None)
             }
@@ -288,12 +290,16 @@ impl PendingConnection {
         let version = self.version.load();
 
         match packet.id {
-            id if id == verdantgolem_protocol::java::server::status::SStatusRequest::to_id(version) => {
+            id if id
+                == verdantgolem_protocol::java::server::status::SStatusRequest::to_id(version) =>
+            {
                 self.handle_status_request(server).await;
                 Ok(None)
             }
             id if id
-                == verdantgolem_protocol::java::server::status::SStatusPingRequest::to_id(version) =>
+                == verdantgolem_protocol::java::server::status::SStatusPingRequest::to_id(
+                    version,
+                ) =>
             {
                 self.handle_ping_request(
                     verdantgolem_protocol::java::server::status::SStatusPingRequest::read(
@@ -333,7 +339,9 @@ impl PendingConnection {
                     .await)
             }
             id if id
-                == verdantgolem_protocol::java::server::login::SEncryptionResponse::to_id(version) =>
+                == verdantgolem_protocol::java::server::login::SEncryptionResponse::to_id(
+                    version,
+                ) =>
             {
                 Ok(self
                     .handle_encryption_response(
@@ -346,7 +354,9 @@ impl PendingConnection {
                     .await)
             }
             id if id
-                == verdantgolem_protocol::java::server::login::SLoginPluginResponse::to_id(version) =>
+                == verdantgolem_protocol::java::server::login::SLoginPluginResponse::to_id(
+                    version,
+                ) =>
             {
                 Ok(self
                     .handle_plugin_response(
@@ -359,7 +369,9 @@ impl PendingConnection {
                     .await)
             }
             id if id
-                == verdantgolem_protocol::java::server::login::SLoginCookieResponse::to_id(version) =>
+                == verdantgolem_protocol::java::server::login::SLoginCookieResponse::to_id(
+                    version,
+                ) =>
             {
                 self.handle_login_cookie_response(
                     &verdantgolem_protocol::java::server::login::SLoginCookieResponse::read(
@@ -370,7 +382,9 @@ impl PendingConnection {
                 Ok(None)
             }
             id if id
-                == verdantgolem_protocol::java::server::login::SLoginAcknowledged::to_id(version) =>
+                == verdantgolem_protocol::java::server::login::SLoginAcknowledged::to_id(
+                    version,
+                ) =>
             {
                 Ok(self.handle_login_acknowledged(server).await)
             }

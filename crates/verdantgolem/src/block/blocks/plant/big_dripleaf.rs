@@ -13,6 +13,7 @@ use crate::block::{
 use crate::entity::EntityBase;
 use crate::entity::ai::pathfinder::node::Coordinate;
 use crate::world::World;
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{
     BigDripleafLikeProperties, BlockProperties, HorizontalFacing, Tilt,
@@ -24,7 +25,6 @@ use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 #[pumpkin_block("minecraft:big_dripleaf")]
 pub struct BigDripleafBlock;

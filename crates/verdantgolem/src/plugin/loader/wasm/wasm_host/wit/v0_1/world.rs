@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use verdantgolem_data::block_properties::NoteblockInstrument as InternalNoteblockInstrument;
 use verdantgolem_data::block_state::PistonBehavior;
 use verdantgolem_data::{BlockDirection as InternalBlockDirection, BlockId, BlockStateId};
@@ -5,7 +6,6 @@ use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::chunk::ChunkHeightmapType;
 use verdantgolem_world::chunk::io::Dirtiable;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 use wasmtime::component::Resource;
 
 use crate::block::entities::banner::BannerBlockEntity as InternalBannerBlockEntity;
@@ -695,7 +695,10 @@ impl pumpkin::plugin::world::HostWorld for PluginHostState {
         let Some(id) = BlockId::new(block_id) else {
             return Err(wasmtime::Error::msg("Invalid BlockId"));
         };
-        let default_state_id = verdantgolem_data::Block::from_id(id).default_state.id.as_u16();
+        let default_state_id = verdantgolem_data::Block::from_id(id)
+            .default_state
+            .id
+            .as_u16();
         self.set_block_state(world, pos, default_state_id, update_flags)
             .await
     }
@@ -927,8 +930,8 @@ impl pumpkin::plugin::world::HostWorld for PluginHostState {
         count: i32,
     ) -> wasmtime::Result<()> {
         let world_ref = self.get_world_res(&world)?;
-        let particle_data =
-            verdantgolem_data::particle::Particle::from_id(particle as u16).ok_or_else(|| {
+        let particle_data = verdantgolem_data::particle::Particle::from_id(particle as u16)
+            .ok_or_else(|| {
                 wasmtime::Error::msg(format!("Unknown particle ID: {}", particle as u16))
             })?;
 
@@ -1244,9 +1247,10 @@ impl pumpkin::plugin::world::HostWorld for PluginHostState {
         let mut reader = verdantgolem_nbt::deserializer::NbtReadHelperJava::new(
             verdantgolem_nbt::deserializer::NbtStreamReader(&mut cursor),
         );
-        let mut nbt: verdantgolem_nbt::NbtCompound = verdantgolem_nbt::Nbt::read_unnamed(&mut reader)
-            .map_err(|e| wasmtime::Error::msg(format!("Invalid NBT: {e}")))?
-            .root_tag;
+        let mut nbt: verdantgolem_nbt::NbtCompound =
+            verdantgolem_nbt::Nbt::read_unnamed(&mut reader)
+                .map_err(|e| wasmtime::Error::msg(format!("Invalid NBT: {e}")))?
+                .root_tag;
 
         // Override NBT position with the caller-provided position so tile
         // entities land at the correct coordinates during schematic pastes.
@@ -1475,7 +1479,10 @@ impl pumpkin::plugin::world::HostChunk for PluginHostState {
         let Some(id) = BlockId::new(block_id) else {
             return Err(wasmtime::Error::msg("Invalid BlockId"));
         };
-        let default_state_id = verdantgolem_data::Block::from_id(id).default_state.id.as_u16();
+        let default_state_id = verdantgolem_data::Block::from_id(id)
+            .default_state
+            .id
+            .as_u16();
         self.set_block_state(chunk, pos, default_state_id).await
     }
 
@@ -2083,7 +2090,8 @@ impl pumpkin::plugin::world::HostChunkBuffer for PluginHostState {
         let start_z =
             verdantgolem_world::generation::positions::chunk_pos::start_block_z(res.provider.z);
         let block_state = verdantgolem_data::BlockState::from_id(
-            verdantgolem_data::BlockStateId::new(state_id).unwrap_or(verdantgolem_data::BlockStateId::AIR),
+            verdantgolem_data::BlockStateId::new(state_id)
+                .unwrap_or(verdantgolem_data::BlockStateId::AIR),
         );
         // SAFETY: `proto_chunk` points to a valid proto chunk allocated for world generation and is not aliased across threads.
         let proto = unsafe { &mut *res.provider.proto_chunk };
@@ -2142,7 +2150,8 @@ impl pumpkin::plugin::world::HostChunkBuffer for PluginHostState {
         let start_z =
             verdantgolem_world::generation::positions::chunk_pos::start_block_z(res.provider.z);
         let block_state = verdantgolem_data::BlockState::from_id(
-            verdantgolem_data::BlockStateId::new(state_id).unwrap_or(verdantgolem_data::BlockStateId::AIR),
+            verdantgolem_data::BlockStateId::new(state_id)
+                .unwrap_or(verdantgolem_data::BlockStateId::AIR),
         );
         // SAFETY: `proto_chunk` points to a valid proto chunk allocated for world generation and is not aliased across threads.
         let proto = unsafe { &mut *res.provider.proto_chunk };

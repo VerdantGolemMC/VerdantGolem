@@ -1,3 +1,4 @@
+use std::sync::{Arc, atomic::Ordering};
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::damage::DamageType;
@@ -5,7 +6,6 @@ use verdantgolem_data::entity::EntityType;
 use verdantgolem_protocol::java::client::play::Metadata;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::{Arc, atomic::Ordering};
 
 use crate::{
     entity::{Entity, EntityBase, living::LivingEntity},

@@ -428,11 +428,11 @@ pub fn create_block_entity(
 #[cfg(test)]
 mod test {
     use super::{BlockEntity, block_entity_from_nbt, furnace::FurnaceBlockEntity};
+    use std::sync::Arc;
     use verdantgolem_data::{item::Item, item_stack::ItemStack};
     use verdantgolem_nbt::compound::NbtCompound;
     use verdantgolem_util::math::position::BlockPos;
     use verdantgolem_world::inventory::Inventory;
-    use std::sync::Arc;
 
     /// A loaded block entity is serialized back into its chunk with
     /// `write_internal`, so whatever it holds has to survive that round trip or

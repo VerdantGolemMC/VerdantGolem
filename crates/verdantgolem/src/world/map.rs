@@ -1,8 +1,8 @@
 use crate::entity::player::Player;
 use dashmap::DashMap;
+use std::sync::{Arc, Mutex};
 use verdantgolem_data::dimension::Dimension;
 use verdantgolem_util::math::{position::BlockPos, vector2::Vector2};
-use std::sync::{Arc, Mutex};
 
 pub struct MapManager {
     pub maps: DashMap<i32, Arc<Mutex<MapData>>>,

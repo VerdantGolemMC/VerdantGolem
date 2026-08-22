@@ -9,11 +9,11 @@ pub mod weaving;
 pub mod wind_charged;
 pub mod wither;
 
+use tracing::warn;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_nbt::tag::NbtTag;
-use tracing::warn;
 
 use crate::entity::living::LivingEntity;
 use crate::entity::{NBTStorage, NBTStorageInit};

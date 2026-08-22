@@ -2,8 +2,8 @@ use crate::plugin::loader::wasm::wasm_host::{
     state::PluginHostState,
     wit::v0_1::pumpkin::plugin::{common::Locale as WitLocale, i18n::Host},
 };
-use verdantgolem_util::translation::{Locale as UtilLocale, add_translation_file, get_translation};
 use std::str::FromStr;
+use verdantgolem_util::translation::{Locale as UtilLocale, add_translation_file, get_translation};
 
 impl Host for PluginHostState {
     async fn translate(&mut self, key: String, locale: WitLocale) -> wasmtime::Result<String> {

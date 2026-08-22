@@ -9,14 +9,14 @@ use crate::item::Item;
 use crate::recipes::RecipeResultStruct;
 use crate::tag::Taggable;
 use crate::{Block, Enchantment};
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_nbt::tag::NbtTag;
-use verdantgolem_util::GameMode;
 use rand;
 use std::borrow::Cow;
 use std::cmp::{max, min};
 use std::num::NonZero;
 use std::sync::atomic::{AtomicU32, Ordering};
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_nbt::tag::NbtTag;
+use verdantgolem_util::GameMode;
 
 mod categories;
 
@@ -940,7 +940,9 @@ mod tests {
     #[test]
     fn lore_can_be_set_and_appended() {
         let mut stack = ItemStack::new(1, &Item::WOODEN_AXE);
-        stack.set_lore(vec![verdantgolem_util::text::TextComponent::text("First line")]);
+        stack.set_lore(vec![verdantgolem_util::text::TextComponent::text(
+            "First line",
+        )]);
         stack.add_lore(verdantgolem_util::text::TextComponent::text("Second line"));
 
         let lore = stack

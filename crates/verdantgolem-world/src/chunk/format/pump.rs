@@ -6,10 +6,10 @@ use crate::chunk::format::anvil::SingleChunkDataSerializer;
 use crate::chunk::io::{ChunkSerializer, LoadedData};
 use crate::chunk::{ChunkReadingError, ChunkWritingError};
 use bytes::Bytes;
-use verdantgolem_util::math::vector2::Vector2;
 use ruzstd::decoding::StreamingDecoder;
 use ruzstd::encoding::{CompressionLevel, compress_to_vec};
 use serde::{Deserialize, Serialize};
+use verdantgolem_util::math::vector2::Vector2;
 
 pub struct PumpFile<D> {
     pub data: PumpData,
@@ -179,8 +179,8 @@ mod tests {
     use crate::chunk::io::Dirtiable;
     use crate::chunk::io::{ChunkSerializer, LoadedData};
     use bytes::Bytes;
-    use verdantgolem_util::math::vector2::Vector2;
     use tempfile::TempDir;
+    use verdantgolem_util::math::vector2::Vector2;
 
     #[derive(Debug, Serialize, Deserialize, Clone)]
     struct MockChunk {
@@ -202,7 +202,10 @@ mod tests {
             root.put_int("x", self.x);
             root.put_int("z", self.z);
             let i8_vec: Vec<i8> = self.data.iter().map(|&b| b as i8).collect();
-            root.put("data", verdantgolem_nbt::tag::NbtTag::ByteArray(i8_vec.into()));
+            root.put(
+                "data",
+                verdantgolem_nbt::tag::NbtTag::ByteArray(i8_vec.into()),
+            );
             let bytes = verdantgolem_nbt::Nbt::from(root).write_unnamed();
             Ok(bytes)
         }

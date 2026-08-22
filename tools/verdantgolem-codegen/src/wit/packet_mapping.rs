@@ -27,7 +27,10 @@ pub fn build_java_mapping() -> String {
 
     for state in client_states {
         process_packets(
-            &format!("../../crates/verdantgolem-protocol/src/java/client/{}", state),
+            &format!(
+                "../../crates/verdantgolem-protocol/src/java/client/{}",
+                state
+            ),
             state,
             &mut output,
             "java_packet",
@@ -48,7 +51,10 @@ pub fn build_java_mapping() -> String {
 
     for state in server_states {
         process_packets(
-            &format!("../../crates/verdantgolem-protocol/src/java/server/{}", state),
+            &format!(
+                "../../crates/verdantgolem-protocol/src/java/server/{}",
+                state
+            ),
             state,
             &mut output,
             "java_packet",
@@ -69,7 +75,10 @@ pub fn build_java_mapping() -> String {
 
     for state in client_states {
         process_packets(
-            &format!("../../crates/verdantgolem-protocol/src/java/client/{}", state),
+            &format!(
+                "../../crates/verdantgolem-protocol/src/java/client/{}",
+                state
+            ),
             state,
             &mut output,
             "java_packet",
@@ -86,7 +95,10 @@ pub fn build_java_mapping() -> String {
     );
     for state in client_states {
         process_packets(
-            &format!("../../crates/verdantgolem-protocol/src/java/client/{}", state),
+            &format!(
+                "../../crates/verdantgolem-protocol/src/java/client/{}",
+                state
+            ),
             state,
             &mut output,
             "java_packet",

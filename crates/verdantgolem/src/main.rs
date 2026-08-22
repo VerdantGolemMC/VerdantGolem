@@ -6,8 +6,6 @@
 #[cfg(target_os = "wasi")]
 compile_error!("Compiling for WASI targets is not supported!");
 
-use verdantgolem_data::packet::CURRENT_MC_VERSION;
-use verdantgolem_world::{CURRENT_BEDROCK_MC_PROTOCOL, CURRENT_BEDROCK_MC_VERSION};
 use std::{
     backtrace::{Backtrace, BacktraceStatus},
     io::{self},
@@ -20,6 +18,8 @@ use std::{
 use tokio::signal::ctrl_c;
 #[cfg(unix)]
 use tokio::signal::unix::{SignalKind, signal};
+use verdantgolem_data::packet::CURRENT_MC_VERSION;
+use verdantgolem_world::{CURRENT_BEDROCK_MC_PROTOCOL, CURRENT_BEDROCK_MC_VERSION};
 
 use verdantgolem::{
     CRASH_REPORT, SERVER_EXIT_CODE, SERVER_IS_STOPPING,
@@ -29,13 +29,13 @@ use verdantgolem::{
 };
 use verdantgolem::{PumpkinServer, stop_server};
 
+use std::time::Instant;
+use tracing::{debug, info, warn};
 use verdantgolem_config::{LoadConfiguration, PumpkinConfig};
 use verdantgolem_util::text::{
     TextComponent,
     color::{Color, NamedColor},
 };
-use std::time::Instant;
-use tracing::{debug, info, warn};
 
 const CARGO_PKG_VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -64,6 +64,8 @@ async fn main() {
     let exec_dir = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
 
     let config = PumpkinConfig::load(&exec_dir);
+
+    verdantgolem::carpet::init(&exec_dir);
 
     let vanilla_data = VanillaData::load();
 

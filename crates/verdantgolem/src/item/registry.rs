@@ -1,14 +1,14 @@
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::server::Server;
+use rustc_hash::FxHashMap;
+use std::sync::Arc;
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use rustc_hash::FxHashMap;
-use std::sync::Arc;
 
 use super::{ItemBehaviour, ItemMetadata};
 

@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+use std::{collections::HashMap, io::Write};
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_id_remap::remap_item_id_for_version;
 use verdantgolem_data::item_stack::ItemStack;
@@ -8,8 +10,6 @@ use verdantgolem_data::recipes::{
 };
 use verdantgolem_macros::java_packet;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use std::borrow::Cow;
-use std::{collections::HashMap, io::Write};
 
 use crate::codec::item_stack_seralizer::ItemStackTemplateSerializer;
 use crate::{ClientPacket, VarInt, WritingError, ser::NetworkWriteExt};
@@ -131,16 +131,18 @@ fn resolve_item_tag(tag: &str, version: JavaMinecraftVersion) -> Option<Vec<&'st
         Cow::Owned(format!("minecraft:{tag}"))
     };
 
-    let item_names =
-        verdantgolem_data::tag::get_registry_key_tags(version, verdantgolem_data::tag::RegistryKey::Item)
-            .and_then(|map| map.get(full_tag.as_ref()))
-            .map(|t| t.0)
-            .or_else(|| {
-                verdantgolem_data::tag::get_tag_values(
-                    verdantgolem_data::tag::RegistryKey::Item,
-                    full_tag.as_ref(),
-                )
-            })?;
+    let item_names = verdantgolem_data::tag::get_registry_key_tags(
+        version,
+        verdantgolem_data::tag::RegistryKey::Item,
+    )
+    .and_then(|map| map.get(full_tag.as_ref()))
+    .map(|t| t.0)
+    .or_else(|| {
+        verdantgolem_data::tag::get_tag_values(
+            verdantgolem_data::tag::RegistryKey::Item,
+            full_tag.as_ref(),
+        )
+    })?;
 
     let mut items = Vec::new();
     for name in item_names {

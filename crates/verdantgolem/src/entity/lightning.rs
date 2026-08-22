@@ -4,6 +4,7 @@ use std::sync::{
     atomic::{AtomicBool, AtomicI32, AtomicI64, Ordering},
 };
 
+use rand::RngExt;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_data::world::WorldEvent;
 use verdantgolem_data::{Block, BlockId, BlockStateId};
@@ -12,7 +13,6 @@ use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 use crate::block::blocks::fire::FireBlockBase;
 use crate::entity::player::Player;

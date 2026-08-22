@@ -5,6 +5,12 @@ use crate::{
     server::Server,
 };
 use arc_swap::ArcSwap;
+use serde::{Deserialize, de::Error};
+use serde_repr::Deserialize_repr;
+use std::sync::Arc;
+use thiserror::Error;
+use tracing::debug;
+use uuid::Uuid;
 use verdantgolem_protocol::bedrock::{
     client::{
         network_settings::CNetworkSettings, play_status::CPlayStatus,
@@ -20,12 +26,6 @@ use verdantgolem_protocol::bedrock::{
 use verdantgolem_util::jwt::AuthError;
 use verdantgolem_util::version::BedrockMinecraftVersion;
 use verdantgolem_world::{CURRENT_BEDROCK_MC_PROTOCOL, CURRENT_BEDROCK_MC_VERSION};
-use serde::{Deserialize, de::Error};
-use serde_repr::Deserialize_repr;
-use std::sync::Arc;
-use thiserror::Error;
-use tracing::debug;
-use uuid::Uuid;
 
 #[derive(Debug, Error)]
 pub enum LoginError {

@@ -1,13 +1,5 @@
 use crate::block::entities::{BlockEntity, block_entity_from_nbt};
 use dashmap::DashMap;
-use verdantgolem_data::chunk::Biome;
-use verdantgolem_data::item::{BedrockItem, BedrockItemVersion};
-use verdantgolem_protocol::bedrock::client::item_registry::{CItemRegistry, ItemData};
-use verdantgolem_protocol::bedrock::client::level_event::{CLevelEvent, LevelEvent};
-use verdantgolem_protocol::bedrock::client::{CBiomeDefinitionList, block_actor_data::CBlockActorData};
-use verdantgolem_protocol::bedrock::network_item::{NetworkItemDescriptor, NetworkItemStackDescriptor};
-use verdantgolem_protocol::codec::data_component::data_to_proto_sound;
-use verdantgolem_world::generation::proto_chunk::GenerationCache;
 use rayon::prelude::*;
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::{Arc, Weak};
@@ -16,6 +8,18 @@ use std::{
     sync::atomic::Ordering,
 };
 use tracing::{debug, error, info, trace, warn};
+use verdantgolem_data::chunk::Biome;
+use verdantgolem_data::item::{BedrockItem, BedrockItemVersion};
+use verdantgolem_protocol::bedrock::client::item_registry::{CItemRegistry, ItemData};
+use verdantgolem_protocol::bedrock::client::level_event::{CLevelEvent, LevelEvent};
+use verdantgolem_protocol::bedrock::client::{
+    CBiomeDefinitionList, block_actor_data::CBlockActorData,
+};
+use verdantgolem_protocol::bedrock::network_item::{
+    NetworkItemDescriptor, NetworkItemStackDescriptor,
+};
+use verdantgolem_protocol::codec::data_component::data_to_proto_sound;
+use verdantgolem_world::generation::proto_chunk::GenerationCache;
 
 pub mod chunker;
 pub mod explosion;
@@ -52,6 +56,10 @@ pub use explosion::{
     BlockInteraction, DefaultExplosionDamageCalculator, Explosion, ExplosionDamageCalculator,
     ExplosionInteraction, SimpleExplosionDamageCalculator,
 };
+use rand::seq::SliceRandom;
+use rand::{RngExt, rng};
+use scoreboard::Scoreboard;
+use time::LevelTime;
 use verdantgolem_config::BasicConfiguration;
 use verdantgolem_data::block_properties::{blocks_movement, is_air};
 use verdantgolem_data::block_rotation::{Mirror, Rotation};
@@ -149,10 +157,6 @@ use verdantgolem_world::{
 use verdantgolem_world::{chunk::ChunkData, world::BlockAccessor};
 use verdantgolem_world::{level::Level, tick::TickPriority};
 pub use verdantgolem_world::{world::BlockFlags, world_info::LevelData};
-use rand::seq::SliceRandom;
-use rand::{RngExt, rng};
-use scoreboard::Scoreboard;
-use time::LevelTime;
 
 pub mod block_placer;
 pub mod border;
@@ -165,10 +169,10 @@ pub mod scoreboard;
 pub mod weather;
 
 use crate::world::natural_spawner::{SpawnState, spawn_for_chunk};
+use uuid::Uuid;
 use verdantgolem_config::lighting::LightingEngineConfig;
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_world::chunk::ChunkHeightmapType::{self, MotionBlocking};
-use uuid::Uuid;
 use weather::Weather;
 
 const MAX_LIGHT_LEVEL: u8 = 15;
@@ -360,9 +364,9 @@ impl World {
         let custom_data = if custom_data_path.exists()
             && let Ok(bytes) = std::fs::read(&custom_data_path)
             && let Ok(nbt) = verdantgolem_nbt::Nbt::read_unnamed(
-                &mut verdantgolem_nbt::deserializer::NbtReadHelperJava::new(&mut std::io::Cursor::new(
-                    bytes,
-                )),
+                &mut verdantgolem_nbt::deserializer::NbtReadHelperJava::new(
+                    &mut std::io::Cursor::new(bytes),
+                ),
             ) {
             nbt.root_tag
         } else {
@@ -412,6 +416,13 @@ impl World {
             s.advanced_config.networking.java.simulation_distance.get()
         }) as i32;
         for player in self.players.load().iter() {
+            // carpet rule creativePlayersLoadChunks: creative players can skip
+            // chunk loading and behave like spectators
+            if !crate::carpet::values().creative_players_load_chunks
+                && player.gamemode.load() == GameMode::Creative
+            {
+                continue;
+            }
             let center = player.get_entity().chunk_pos.load();
             for dx in -sim_dist..=sim_dist {
                 for dy in -sim_dist..=sim_dist {
@@ -421,6 +432,19 @@ impl World {
         }
         if let Ok(forced) = self.forced_chunks.lock() {
             active_chunks.extend(forced.iter().copied());
+        }
+
+        // carpet rule spawnChunkRadius keeps spawn chunks active without players
+        let spawn_radius = crate::carpet::values().spawn_chunk_radius;
+        if spawn_radius > 0 {
+            let level_info = self.level_info.load();
+            let spawn_chunk = Vector2::new(level_info.spawn_x >> 4, level_info.spawn_z >> 4);
+            let spawn_radius = (spawn_radius.min(32)) as i32;
+            for dx in -spawn_radius..=spawn_radius {
+                for dy in -spawn_radius..=spawn_radius {
+                    active_chunks.insert(spawn_chunk.add_raw(dx, dy));
+                }
+            }
         }
 
         let mut spawnable_chunks = 0;
@@ -2907,7 +2931,8 @@ impl World {
                 target_player_raw_id: runtime_id as i64,
                 player_permissions:
                     verdantgolem_protocol::bedrock::client::PlayerPermissionLevel::Visitor,
-                command_permissions: verdantgolem_protocol::bedrock::client::CommandPermissionLevel::Any,
+                command_permissions:
+                    verdantgolem_protocol::bedrock::client::CommandPermissionLevel::Any,
                 layers: vec![
                     verdantgolem_protocol::bedrock::client::SerializedAbilitiesDataSerializedLayer {
                         serialized_layer: 0,
@@ -3390,7 +3415,8 @@ impl World {
                 target_player_raw_id: entity_id as i64,
                 player_permissions:
                     verdantgolem_protocol::bedrock::client::PlayerPermissionLevel::Visitor,
-                command_permissions: verdantgolem_protocol::bedrock::client::CommandPermissionLevel::Any,
+                command_permissions:
+                    verdantgolem_protocol::bedrock::client::CommandPermissionLevel::Any,
                 layers: vec![
                     verdantgolem_protocol::bedrock::client::SerializedAbilitiesDataSerializedLayer {
                         serialized_layer: 0,
@@ -5237,8 +5263,8 @@ impl World {
     }
 
     pub fn strike_lightning(self: &Arc<Self>, pos: Vector3<f64>, effect_only: bool) {
-        use verdantgolem_data::entity::EntityType;
         use uuid::Uuid;
+        use verdantgolem_data::entity::EntityType;
         let server_ref = self.server.upgrade();
         if let Some(server_ref) = server_ref {
             let mut event =
@@ -6478,7 +6504,12 @@ impl World {
         }
     }
 
-    pub fn set_custom_data(&self, namespace: &str, key: &str, value: verdantgolem_nbt::tag::NbtTag) {
+    pub fn set_custom_data(
+        &self,
+        namespace: &str,
+        key: &str,
+        value: verdantgolem_nbt::tag::NbtTag,
+    ) {
         let mut custom_data = self
             .custom_data
             .lock()
@@ -6500,7 +6531,11 @@ impl World {
         );
     }
 
-    pub fn get_custom_data(&self, namespace: &str, key: &str) -> Option<verdantgolem_nbt::tag::NbtTag> {
+    pub fn get_custom_data(
+        &self,
+        namespace: &str,
+        key: &str,
+    ) -> Option<verdantgolem_nbt::tag::NbtTag> {
         let custom_data = self
             .custom_data
             .lock()

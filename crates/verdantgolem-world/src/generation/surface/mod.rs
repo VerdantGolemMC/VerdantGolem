@@ -381,7 +381,8 @@ pub fn test_vertical_gradient(
         .random_deriver
         .from_lo_and_hi(condition.random_lo, condition.random_hi)
         .next_splitter();
-    let mapped = verdantgolem_util::math::map(block_y as f32, true_at as f32, false_at as f32, 1.0, 0.0);
+    let mapped =
+        verdantgolem_util::math::map(block_y as f32, true_at as f32, false_at as f32, 1.0, 0.0);
     let mut random = splitter.split_pos(context.block_pos_x, block_y, context.block_pos_z);
     random.next_f32() < mapped
 }

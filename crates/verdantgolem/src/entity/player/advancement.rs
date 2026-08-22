@@ -5,16 +5,6 @@ use crate::data::advancement_data::AdvancementManager;
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use indexmap::IndexMap;
-use verdantgolem_data::advancement_data::{
-    AdvancementNode, AdvancementProgressData, AdvancementRequirement, AdvancementReward, Criteria,
-};
-use verdantgolem_data::{ADVANCEMENT_TREE, Advancement, translation};
-use verdantgolem_protocol::bedrock::server::text::SText;
-use verdantgolem_protocol::java::client::play::{
-    CSelectAdvancementsTab, CSystemChatMessage, CUpdateAdvancements,
-};
-use verdantgolem_util::identifier::Identifier;
-use verdantgolem_util::text::TextComponent;
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::to_string_pretty;
@@ -25,6 +15,16 @@ use std::sync::{Arc, Weak};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::{error, warn};
 use uuid::Uuid;
+use verdantgolem_data::advancement_data::{
+    AdvancementNode, AdvancementProgressData, AdvancementRequirement, AdvancementReward, Criteria,
+};
+use verdantgolem_data::{ADVANCEMENT_TREE, Advancement, translation};
+use verdantgolem_protocol::bedrock::server::text::SText;
+use verdantgolem_protocol::java::client::play::{
+    CSelectAdvancementsTab, CSystemChatMessage, CUpdateAdvancements,
+};
+use verdantgolem_util::identifier::Identifier;
+use verdantgolem_util::text::TextComponent;
 
 #[derive(Clone, Serialize, Deserialize, Debug, Default)]
 pub struct CriterionProgress(pub Option<SystemTime>);
@@ -517,8 +517,8 @@ impl Serialize for PlayerAdvancement {
 mod tests {
     use super::*;
     use crate::data::advancement_data::AdvancementManager;
-    use verdantgolem_data::Advancement;
     use tempfile::tempdir;
+    use verdantgolem_data::Advancement;
 
     #[test]
     fn advancement_progress() {

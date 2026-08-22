@@ -1,6 +1,6 @@
+use std::sync::Arc;
 use verdantgolem_data::{Enchantment, translation};
 use verdantgolem_util::text::TextComponent;
-use std::sync::Arc;
 
 use crate::command::args::bounded_num::{BoundedNumArgumentConsumer, NotInBounds};
 use crate::command::args::entities::EntitiesArgumentConsumer;

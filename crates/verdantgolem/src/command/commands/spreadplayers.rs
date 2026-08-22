@@ -86,7 +86,8 @@ impl Pile {
         let block_z = self.z.floor() as i32;
         let top = world.get_heightmap_height(ChunkHeightmapType::WorldSurface, block_x, block_z);
 
-        let ground = verdantgolem_util::math::position::BlockPos(Vector3::new(block_x, top, block_z));
+        let ground =
+            verdantgolem_util::math::position::BlockPos(Vector3::new(block_x, top, block_z));
         let state = world.get_block_state(&ground);
         if state.is_liquid() {
             return None;

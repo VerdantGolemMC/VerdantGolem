@@ -93,9 +93,11 @@ impl ItemBehaviour for BrushItem {
             &player.position(),
         );
         let stack = player.inventory().held_item();
-        player
-            .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, Self::USE_DURATION);
+        player.living_entity.set_active_hand(
+            verdantgolem_util::Hand::Right,
+            stack,
+            Self::USE_DURATION,
+        );
     }
 
     fn use_on_block(
@@ -176,9 +178,11 @@ impl ItemBehaviour for BrushItem {
         }
 
         let stack = player.inventory().held_item();
-        player
-            .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, Self::USE_DURATION);
+        player.living_entity.set_active_hand(
+            verdantgolem_util::Hand::Right,
+            stack,
+            Self::USE_DURATION,
+        );
     }
 
     fn use_on_entity(&self, _item: &mut ItemStack, player: &Player, entity: Arc<dyn EntityBase>) {
@@ -208,9 +212,11 @@ impl ItemBehaviour for BrushItem {
         }
 
         let stack = player.inventory().held_item();
-        player
-            .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, Self::USE_DURATION);
+        player.living_entity.set_active_hand(
+            verdantgolem_util::Hand::Right,
+            stack,
+            Self::USE_DURATION,
+        );
     }
 
     fn get_use_duration(&self) -> i32 {

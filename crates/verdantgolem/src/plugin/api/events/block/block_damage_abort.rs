@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_macros::Event;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 use crate::{entity::player::Player, world::World};
 

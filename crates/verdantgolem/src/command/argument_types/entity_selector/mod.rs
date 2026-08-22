@@ -9,6 +9,11 @@ use crate::command::errors::command_syntax_error::CommandSyntaxError;
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::world::World;
+use rand::seq::SliceRandom;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
+use uuid::Uuid;
 use verdantgolem_data::Advancement;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_nbt::compound::NbtCompound;
@@ -18,11 +23,6 @@ use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::bounds::{DoubleBounds, FloatDegreeBounds, IntBounds};
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::math::wrap_degrees;
-use rand::seq::SliceRandom;
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::sync::atomic::Ordering;
-use uuid::Uuid;
 
 /// Represents a structure that can target entities.
 ///

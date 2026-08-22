@@ -1,10 +1,10 @@
 use std::collections::BTreeMap;
 
 use proc_macro2::{Span, TokenStream};
-use verdantgolem_util::loot_table::LootNumberProviderTypes;
 use quote::{ToTokens, quote};
 use serde::Deserialize;
 use syn::LitStr;
+use verdantgolem_util::loot_table::LootNumberProviderTypes;
 
 /// Deserialized loot table as stored in the asset files.
 ///

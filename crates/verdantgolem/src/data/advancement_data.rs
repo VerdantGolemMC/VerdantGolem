@@ -1,13 +1,13 @@
 use crate::entity::player::Player;
 use crate::entity::player::advancement::{AdvancementDataError, PlayerAdvancement};
-use verdantgolem_data::Advancement;
-use verdantgolem_util::identifier::Identifier;
 use std::fs::create_dir_all;
 use std::path::PathBuf;
 use std::slice;
 use std::sync::Arc;
 use tracing::error;
 use uuid::Uuid;
+use verdantgolem_data::Advancement;
+use verdantgolem_util::identifier::Identifier;
 
 /// Manages player advancements, including data creation and saving.
 pub struct AdvancementManager {

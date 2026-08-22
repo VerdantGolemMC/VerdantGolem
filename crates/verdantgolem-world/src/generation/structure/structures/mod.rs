@@ -1,5 +1,6 @@
 use std::sync::{Arc, Mutex};
 
+use tracing::trace;
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockState;
 use verdantgolem_data::{Mirror, Rotation};
@@ -9,7 +10,6 @@ use verdantgolem_util::{
     math::{block_box::BlockBox, position::BlockPos, vector3::Vector3},
     random::{RandomGenerator, RandomImpl, legacy_rand::LegacyRand},
 };
-use tracing::trace;
 
 use crate::generation::structure::structures::stronghold::StrongholdPieceType;
 pub use crate::world::WorldPortalExt;

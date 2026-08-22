@@ -3,15 +3,15 @@ use crate::{
     server::Server,
 };
 use crossbeam::atomic::AtomicCell;
-use verdantgolem_inventory::screen_handler::ScreenHandler;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_world::data::player_data::{PlayerDataError, PlayerDataStorage};
 use std::sync::Arc;
 use std::{
     path::PathBuf,
     time::{Duration, Instant},
 };
 use tracing::{debug, error};
+use verdantgolem_inventory::screen_handler::ScreenHandler;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_world::data::player_data::{PlayerDataError, PlayerDataStorage};
 
 /// Helper for managing player data in the server context.
 ///
@@ -182,12 +182,12 @@ impl ServerPlayerData {
 #[cfg(test)]
 mod test {
     use crate::data::player_server::ServerPlayerData;
-    use verdantgolem_nbt::compound::NbtCompound;
-    use verdantgolem_world::data::player_data::PlayerDataStorage;
     use std::time::Duration;
     use std::time::Instant;
     use tempfile::tempdir;
     use uuid::Uuid;
+    use verdantgolem_nbt::compound::NbtCompound;
+    use verdantgolem_world::data::player_data::PlayerDataStorage;
 
     #[tokio::test]
     async fn player_data_storage_new() {

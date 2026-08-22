@@ -1,3 +1,4 @@
+use rand::RngExt;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item_stack::ItemStack;
@@ -10,7 +11,6 @@ use verdantgolem_util::{
     },
     random::{RandomGenerator, RandomImpl, get_seed, xoroshiro128::Xoroshiro},
 };
-use rand::RngExt;
 
 #[derive(Default, Clone)]
 pub struct LootContextParameters {
@@ -377,12 +377,14 @@ impl LootPoolEntryTypesExt for LootPoolEntryTypes {
                     .strip_prefix("minecraft:")
                     .unwrap_or(entry.value);
                 // First try chest loot tables.
-                verdantgolem_data::chest_loot_table::get_chest_loot_table(&format!("minecraft:{key}"))
-                    .map_or_else(Vec::new, |chest_table| {
-                        // We don't have a seed here, but we can generate a random one.
-                        let seed: i64 = rand::random();
-                        generate_chest_loot(chest_table, seed)
-                    })
+                verdantgolem_data::chest_loot_table::get_chest_loot_table(&format!(
+                    "minecraft:{key}"
+                ))
+                .map_or_else(Vec::new, |chest_table| {
+                    // We don't have a seed here, but we can generate a random one.
+                    let seed: i64 = rand::random();
+                    generate_chest_loot(chest_table, seed)
+                })
             }
             Self::Item(item_entry) => {
                 let key = item_entry

@@ -1796,7 +1796,9 @@ impl pumpkin::plugin::context::HostContext for PluginHostState {
                         PermissionLevel::Zero => verdantgolem_util::permission::PermissionLvl::Zero,
                         PermissionLevel::One => verdantgolem_util::permission::PermissionLvl::One,
                         PermissionLevel::Two => verdantgolem_util::permission::PermissionLvl::Two,
-                        PermissionLevel::Three => verdantgolem_util::permission::PermissionLvl::Three,
+                        PermissionLevel::Three => {
+                            verdantgolem_util::permission::PermissionLvl::Three
+                        }
                         PermissionLevel::Four => verdantgolem_util::permission::PermissionLvl::Four,
                     })
                 }

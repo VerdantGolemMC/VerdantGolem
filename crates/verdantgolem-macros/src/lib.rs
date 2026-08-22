@@ -3,12 +3,12 @@
 use heck::ToShoutySnakeCase;
 use proc_macro::TokenStream;
 use proc_macro_error2::{abort, abort_call_site};
-use verdantgolem_data::tag::{RegistryKey, get_tag_ids};
-use verdantgolem_data::{Block, BlockId};
 use quote::{format_ident, quote};
 use syn::spanned::Spanned;
 use syn::{self, Attribute, DeriveInput, LitStr, Type, parse_quote};
 use syn::{Block as SynBlock, Expr, Field, Fields, ItemStruct, Stmt, parse_macro_input};
+use verdantgolem_data::tag::{RegistryKey, get_tag_ids};
+use verdantgolem_data::{Block, BlockId};
 
 /// Derives the `Payload` trait for an event struct, enabling it to be used in the plugin system.
 ///
@@ -817,7 +817,12 @@ fn eval_translation_key_expr(expr: &syn::Expr) -> Option<(&'static str, proc_mac
                 ["translation", "java", ident]
                 | ["verdantgolem_data" | "crate", "translation", "java", ident] => (true, *ident),
                 ["translation", "bedrock", ident]
-                | ["verdantgolem_data" | "crate", "translation", "bedrock", ident] => (false, *ident),
+                | [
+                    "verdantgolem_data" | "crate",
+                    "translation",
+                    "bedrock",
+                    ident,
+                ] => (false, *ident),
                 _ => return None,
             };
 

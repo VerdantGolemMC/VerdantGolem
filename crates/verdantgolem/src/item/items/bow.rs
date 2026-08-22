@@ -36,9 +36,11 @@ impl ItemBehaviour for BowItem {
         let stack = inventory.held_item();
 
         // Start the bow drawing animation
-        player
-            .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, Self::USE_DURATION);
+        player.living_entity.set_active_hand(
+            verdantgolem_util::Hand::Right,
+            stack,
+            Self::USE_DURATION,
+        );
     }
 
     fn on_stopped_using(&self, _stack: &ItemStack, player: &Player) {

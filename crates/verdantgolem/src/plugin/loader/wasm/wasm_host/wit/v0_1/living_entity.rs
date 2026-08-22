@@ -30,7 +30,9 @@ pub fn living_entity_from_resource(
 }
 
 #[must_use]
-pub const fn from_wit_attribute(attr: Attribute) -> &'static verdantgolem_data::attributes::Attributes {
+pub const fn from_wit_attribute(
+    attr: Attribute,
+) -> &'static verdantgolem_data::attributes::Attributes {
     use verdantgolem_data::attributes::Attributes;
     match attr {
         Attribute::AirDragModifier => &Attributes::AIR_DRAG_MODIFIER,
@@ -124,7 +126,9 @@ pub const fn from_wit_equipment_slot(
 }
 
 #[must_use]
-pub const fn to_wit_damage_type(damage_type: &verdantgolem_data::damage::DamageType) -> WitDamageType {
+pub const fn to_wit_damage_type(
+    damage_type: &verdantgolem_data::damage::DamageType,
+) -> WitDamageType {
     // SAFETY: WIT enum is generated in the same order as the internal enum / id
     unsafe { std::mem::transmute(damage_type.id) }
 }
@@ -448,7 +452,12 @@ impl HostLivingEntity for PluginHostState {
             )> = equipment
                 .equipment
                 .drain()
-                .map(|(slot, _)| (slot, verdantgolem_data::item_stack::ItemStack::EMPTY.clone()))
+                .map(|(slot, _)| {
+                    (
+                        slot,
+                        verdantgolem_data::item_stack::ItemStack::EMPTY.clone(),
+                    )
+                })
                 .collect();
             drop(equipment);
 

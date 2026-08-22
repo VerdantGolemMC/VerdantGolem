@@ -1,7 +1,7 @@
+use serde::{Deserialize, Serialize};
 use verdantgolem_codecs::codec::list::validate_fixed_size;
 use verdantgolem_codecs::{DataResult, FlatTryFrom, comap_flat_map_codec_impl};
 use verdantgolem_nbt::tag::NbtTag;
-use serde::{Deserialize, Serialize};
 
 /// Represents a 3D rotation using Euler angles in degrees.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]

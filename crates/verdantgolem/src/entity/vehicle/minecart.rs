@@ -8,8 +8,8 @@ mod tnt;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
 
-use verdantgolem_protocol::java::server::play::SPlayerInput;
 use rand::RngExt;
+use verdantgolem_protocol::java::server::play::SPlayerInput;
 
 use crate::{
     entity::{Entity, EntityBase, living::LivingEntity, player::Player},

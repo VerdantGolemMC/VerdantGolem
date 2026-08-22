@@ -1,6 +1,7 @@
 use crate::chunk::format::LightContainer;
 use crate::tick::scheduler::ChunkTickScheduler;
 use palette::{BiomePalette, BlockPalette, has_random_ticking_fluid};
+use rustc_hash::FxHashMap;
 use verdantgolem_data::block_properties::{blocks_movement, has_random_ticks, is_air};
 use verdantgolem_data::chunk::ChunkStatus;
 use verdantgolem_data::fluid::Fluid;
@@ -8,7 +9,6 @@ use verdantgolem_data::tag::Block::MINECRAFT_LEAVES;
 use verdantgolem_data::{Block, BlockState, BlockStateId};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::math::position::BlockPos;
-use rustc_hash::FxHashMap;
 
 use std::sync::RwLock;
 use std::sync::atomic::AtomicBool;

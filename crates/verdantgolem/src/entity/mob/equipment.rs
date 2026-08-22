@@ -19,13 +19,13 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::LazyLock;
 
+use rand::RngExt;
 use verdantgolem_data::Enchantment;
 use verdantgolem_data::data_component_impl::EquipmentSlot;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_util::difficulty::Difficulty;
 use verdantgolem_util::math::vector3::Vector3;
-use rand::RngExt;
 
 use crate::entity::EntityBase;
 
@@ -580,7 +580,9 @@ impl RegionalDifficulty {
             world
                 .level
                 .loaded_chunks
-                .get(&verdantgolem_util::math::vector2::Vector2::new(chunk_x, chunk_z))
+                .get(&verdantgolem_util::math::vector2::Vector2::new(
+                    chunk_x, chunk_z,
+                ))
                 .map_or(0, |c| {
                     c.inhabited_time.load(std::sync::atomic::Ordering::Relaxed)
                 })

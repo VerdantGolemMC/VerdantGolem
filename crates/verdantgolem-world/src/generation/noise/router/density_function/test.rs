@@ -1,6 +1,6 @@
+use std::sync::LazyLock;
 use verdantgolem_data::noise_router::OVERWORLD_BASE_NOISE_ROUTER;
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::LazyLock;
 
 use crate::generation::GlobalRandomConfig;
 use crate::generation::noise::router::chunk_density_function::ChunkNoiseFunctionBuilderOptions;

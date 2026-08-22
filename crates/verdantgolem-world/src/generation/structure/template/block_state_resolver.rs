@@ -4,8 +4,8 @@
 //! to the runtime block state IDs used by the world, with support for rotation
 //! and mirroring transformations.
 
-use verdantgolem_data::{Block, BlockState, Mirror, Rotation};
 use tracing::warn;
+use verdantgolem_data::{Block, BlockState, Mirror, Rotation};
 
 use super::PaletteEntry;
 

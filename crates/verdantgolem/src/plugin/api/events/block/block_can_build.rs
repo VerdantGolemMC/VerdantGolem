@@ -1,6 +1,6 @@
+use std::sync::Arc;
 use verdantgolem_data::Block;
 use verdantgolem_macros::{Event, cancellable};
-use std::sync::Arc;
 
 use crate::entity::player::Player;
 

@@ -1,6 +1,7 @@
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 use std::sync::{Arc, Mutex, Weak};
 
+use rand::RngExt;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::sound::{Sound, SoundCategory};
@@ -9,7 +10,6 @@ use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_protocol::java::client::play::Metadata;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use rand::RngExt;
 
 use crate::entity::ai::goal::active_target::ActiveTargetGoal;
 use crate::entity::living::LivingEntity;

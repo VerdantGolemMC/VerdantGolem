@@ -10,11 +10,11 @@ use crate::command::node::attached::{
 };
 use crate::command::node::detached::{CommandDetachedNode, DetachedNode, GlobalNodeId};
 use crate::command::string_reader::StringReader;
-use verdantgolem_util::text::TextComponent;
 use rustc_hash::{FxBuildHasher, FxHashMap, FxHashSet};
 use std::num::NonZero;
 use std::ops::{Index, IndexMut};
 use std::sync::Arc;
+use verdantgolem_util::text::TextComponent;
 
 /// The constant local ID occupied by the root node.
 pub const ROOT_NODE_ID: NodeId = NodeId(NonZero::new(1).expect("1 is non-zero"));

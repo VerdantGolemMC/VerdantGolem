@@ -1,11 +1,11 @@
-use verdantgolem_data::item::Item;
-use verdantgolem_data::item_stack::ItemStack;
-use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
 use std::any::Any;
 use std::{
     hash::{Hash, Hasher},
     sync::Arc,
 };
+use verdantgolem_data::item::Item;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
 
 pub trait Inventory: Send + Sync + Clearable {
     fn size(&self) -> usize;

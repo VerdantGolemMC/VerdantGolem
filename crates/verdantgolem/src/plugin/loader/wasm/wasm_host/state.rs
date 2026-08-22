@@ -3,8 +3,8 @@ use std::{
     sync::{Arc, Weak},
 };
 
-use verdantgolem_util::text::TextComponent;
 use tokio::sync::Mutex;
+use verdantgolem_util::text::TextComponent;
 use wasmtime::component::ResourceTable;
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 use wasmtime_wasi_http::{

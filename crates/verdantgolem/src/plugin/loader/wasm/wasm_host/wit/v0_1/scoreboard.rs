@@ -693,12 +693,16 @@ impl scoreboard::HostScoreboard for PluginHostState {
     }
 }
 
-const fn map_display_slot(slot: DisplaySlot) -> verdantgolem_data::scoreboard::ScoreboardDisplaySlot {
+const fn map_display_slot(
+    slot: DisplaySlot,
+) -> verdantgolem_data::scoreboard::ScoreboardDisplaySlot {
     match slot {
         DisplaySlot::PlayerList => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::List,
         DisplaySlot::Sidebar => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::Sidebar,
         DisplaySlot::BelowName => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::BelowName,
-        DisplaySlot::SidebarTeamBlack => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamBlack,
+        DisplaySlot::SidebarTeamBlack => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamBlack
+        }
         DisplaySlot::SidebarTeamDarkBlue => {
             verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamDarkBlue
         }
@@ -714,22 +718,36 @@ const fn map_display_slot(slot: DisplaySlot) -> verdantgolem_data::scoreboard::S
         DisplaySlot::SidebarTeamDarkPurple => {
             verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamDarkPurple
         }
-        DisplaySlot::SidebarTeamGold => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamGold,
-        DisplaySlot::SidebarTeamGray => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamGray,
+        DisplaySlot::SidebarTeamGold => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamGold
+        }
+        DisplaySlot::SidebarTeamGray => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamGray
+        }
         DisplaySlot::SidebarTeamDarkGray => {
             verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamDarkGray
         }
-        DisplaySlot::SidebarTeamBlue => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamBlue,
-        DisplaySlot::SidebarTeamGreen => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamGreen,
-        DisplaySlot::SidebarTeamAqua => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamAqua,
-        DisplaySlot::SidebarTeamRed => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamRed,
+        DisplaySlot::SidebarTeamBlue => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamBlue
+        }
+        DisplaySlot::SidebarTeamGreen => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamGreen
+        }
+        DisplaySlot::SidebarTeamAqua => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamAqua
+        }
+        DisplaySlot::SidebarTeamRed => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamRed
+        }
         DisplaySlot::SidebarTeamLightPurple => {
             verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamLightPurple
         }
         DisplaySlot::SidebarTeamYellow => {
             verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamYellow
         }
-        DisplaySlot::SidebarTeamWhite => verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamWhite,
+        DisplaySlot::SidebarTeamWhite => {
+            verdantgolem_data::scoreboard::ScoreboardDisplaySlot::TeamWhite
+        }
     }
 }
 
@@ -783,7 +801,9 @@ const fn map_named_color(
     color: pumpkin::plugin::common::NamedColor,
 ) -> verdantgolem_util::text::color::NamedColor {
     match color {
-        pumpkin::plugin::common::NamedColor::Black => verdantgolem_util::text::color::NamedColor::Black,
+        pumpkin::plugin::common::NamedColor::Black => {
+            verdantgolem_util::text::color::NamedColor::Black
+        }
         pumpkin::plugin::common::NamedColor::DarkBlue => {
             verdantgolem_util::text::color::NamedColor::DarkBlue
         }
@@ -799,14 +819,24 @@ const fn map_named_color(
         pumpkin::plugin::common::NamedColor::DarkPurple => {
             verdantgolem_util::text::color::NamedColor::DarkPurple
         }
-        pumpkin::plugin::common::NamedColor::Gold => verdantgolem_util::text::color::NamedColor::Gold,
-        pumpkin::plugin::common::NamedColor::Gray => verdantgolem_util::text::color::NamedColor::Gray,
+        pumpkin::plugin::common::NamedColor::Gold => {
+            verdantgolem_util::text::color::NamedColor::Gold
+        }
+        pumpkin::plugin::common::NamedColor::Gray => {
+            verdantgolem_util::text::color::NamedColor::Gray
+        }
         pumpkin::plugin::common::NamedColor::DarkGray => {
             verdantgolem_util::text::color::NamedColor::DarkGray
         }
-        pumpkin::plugin::common::NamedColor::Blue => verdantgolem_util::text::color::NamedColor::Blue,
-        pumpkin::plugin::common::NamedColor::Green => verdantgolem_util::text::color::NamedColor::Green,
-        pumpkin::plugin::common::NamedColor::Aqua => verdantgolem_util::text::color::NamedColor::Aqua,
+        pumpkin::plugin::common::NamedColor::Blue => {
+            verdantgolem_util::text::color::NamedColor::Blue
+        }
+        pumpkin::plugin::common::NamedColor::Green => {
+            verdantgolem_util::text::color::NamedColor::Green
+        }
+        pumpkin::plugin::common::NamedColor::Aqua => {
+            verdantgolem_util::text::color::NamedColor::Aqua
+        }
         pumpkin::plugin::common::NamedColor::Red => verdantgolem_util::text::color::NamedColor::Red,
         pumpkin::plugin::common::NamedColor::LightPurple => {
             verdantgolem_util::text::color::NamedColor::LightPurple
@@ -814,7 +844,9 @@ const fn map_named_color(
         pumpkin::plugin::common::NamedColor::Yellow => {
             verdantgolem_util::text::color::NamedColor::Yellow
         }
-        pumpkin::plugin::common::NamedColor::White => verdantgolem_util::text::color::NamedColor::White,
+        pumpkin::plugin::common::NamedColor::White => {
+            verdantgolem_util::text::color::NamedColor::White
+        }
     }
 }
 
@@ -865,7 +897,9 @@ const fn map_named_color_rev(
     color: verdantgolem_util::text::color::NamedColor,
 ) -> pumpkin::plugin::common::NamedColor {
     match color {
-        verdantgolem_util::text::color::NamedColor::Black => pumpkin::plugin::common::NamedColor::Black,
+        verdantgolem_util::text::color::NamedColor::Black => {
+            pumpkin::plugin::common::NamedColor::Black
+        }
         verdantgolem_util::text::color::NamedColor::DarkBlue => {
             pumpkin::plugin::common::NamedColor::DarkBlue
         }
@@ -881,14 +915,24 @@ const fn map_named_color_rev(
         verdantgolem_util::text::color::NamedColor::DarkPurple => {
             pumpkin::plugin::common::NamedColor::DarkPurple
         }
-        verdantgolem_util::text::color::NamedColor::Gold => pumpkin::plugin::common::NamedColor::Gold,
-        verdantgolem_util::text::color::NamedColor::Gray => pumpkin::plugin::common::NamedColor::Gray,
+        verdantgolem_util::text::color::NamedColor::Gold => {
+            pumpkin::plugin::common::NamedColor::Gold
+        }
+        verdantgolem_util::text::color::NamedColor::Gray => {
+            pumpkin::plugin::common::NamedColor::Gray
+        }
         verdantgolem_util::text::color::NamedColor::DarkGray => {
             pumpkin::plugin::common::NamedColor::DarkGray
         }
-        verdantgolem_util::text::color::NamedColor::Blue => pumpkin::plugin::common::NamedColor::Blue,
-        verdantgolem_util::text::color::NamedColor::Green => pumpkin::plugin::common::NamedColor::Green,
-        verdantgolem_util::text::color::NamedColor::Aqua => pumpkin::plugin::common::NamedColor::Aqua,
+        verdantgolem_util::text::color::NamedColor::Blue => {
+            pumpkin::plugin::common::NamedColor::Blue
+        }
+        verdantgolem_util::text::color::NamedColor::Green => {
+            pumpkin::plugin::common::NamedColor::Green
+        }
+        verdantgolem_util::text::color::NamedColor::Aqua => {
+            pumpkin::plugin::common::NamedColor::Aqua
+        }
         verdantgolem_util::text::color::NamedColor::Red => pumpkin::plugin::common::NamedColor::Red,
         verdantgolem_util::text::color::NamedColor::LightPurple => {
             pumpkin::plugin::common::NamedColor::LightPurple
@@ -896,7 +940,9 @@ const fn map_named_color_rev(
         verdantgolem_util::text::color::NamedColor::Yellow => {
             pumpkin::plugin::common::NamedColor::Yellow
         }
-        verdantgolem_util::text::color::NamedColor::White => pumpkin::plugin::common::NamedColor::White,
+        verdantgolem_util::text::color::NamedColor::White => {
+            pumpkin::plugin::common::NamedColor::White
+        }
     }
 }
 

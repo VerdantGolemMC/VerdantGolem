@@ -12,13 +12,13 @@ use crate::{
     server::Server,
     world::World,
 };
+use tracing::warn;
 use verdantgolem_data::{
     Block, BlockId, BlockStateId, FacingExt,
     block_properties::{BlockProperties, CommandBlockLikeProperties, Facing},
 };
 use verdantgolem_util::{GameMode, PermissionLvl, math::position::BlockPos};
 use verdantgolem_world::tick::TickPriority;
-use tracing::warn;
 
 pub struct CommandBlock;
 

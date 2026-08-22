@@ -6,6 +6,7 @@ use crate::{
     entity::{EntityBase, player::Player},
     world::World,
 };
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockDirection, BlockState, BlockStateId, FacingExt,
     block_properties::{BlockProperties, VineLikeProperties},
@@ -17,7 +18,6 @@ use verdantgolem_data::{
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 #[pumpkin_block("minecraft:vine")]
 pub struct VineBlock;

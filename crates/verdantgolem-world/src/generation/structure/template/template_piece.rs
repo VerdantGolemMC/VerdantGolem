@@ -221,7 +221,8 @@ impl TemplatePiece {
 
             // Handle waterlogging if enabled
             if self.place_settings.should_apply_waterlogging()
-                && chunk.get_block_state(&world_pos).to_block_id() == verdantgolem_data::Block::WATER.id
+                && chunk.get_block_state(&world_pos).to_block_id()
+                    == verdantgolem_data::Block::WATER.id
                 && let Some((_, waterlogged)) = placed_entry
                     .properties
                     .iter_mut()

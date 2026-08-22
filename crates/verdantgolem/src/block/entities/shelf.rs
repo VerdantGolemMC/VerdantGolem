@@ -1,13 +1,13 @@
 use crate::block::entities::BlockEntity;
-use verdantgolem_data::item_stack::ItemStack;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_util::math::position::BlockPos;
-use verdantgolem_world::inventory::{Clearable, Inventory, sync_write_items_to_nbt};
 use std::any::Any;
 use std::array::from_fn;
 use std::sync::Arc;
 use std::sync::RwLock;
 use std::sync::atomic::{AtomicBool, Ordering};
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_util::math::position::BlockPos;
+use verdantgolem_world::inventory::{Clearable, Inventory, sync_write_items_to_nbt};
 
 pub struct ShelfBlockEntity {
     pub position: BlockPos,

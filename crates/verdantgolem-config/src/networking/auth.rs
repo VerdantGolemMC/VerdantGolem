@@ -1,5 +1,5 @@
-use verdantgolem_util::ProfileAction;
 use serde::{Deserialize, Serialize};
+use verdantgolem_util::ProfileAction;
 
 /// Configuration for server authentication.
 ///

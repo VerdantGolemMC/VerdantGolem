@@ -1,4 +1,6 @@
-use verdantgolem_data::{BlockDirection, BlockState, block_properties::HorizontalFacing, fluid::Fluid};
+use verdantgolem_data::{
+    BlockDirection, BlockState, block_properties::HorizontalFacing, fluid::Fluid,
+};
 use verdantgolem_util::{
     math::{int_provider::IntProvider, position::BlockPos},
     random::{RandomGenerator, RandomImpl},

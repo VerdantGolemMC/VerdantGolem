@@ -8,10 +8,10 @@ use crate::sound::Sound;
 use crate::tag::Taggable;
 use crc_fast::CrcAlgorithm::Crc32Iscsi;
 use crc_fast::Digest;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_nbt::tag::NbtTag;
 use std::any::Any;
 use std::borrow::Cow;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_nbt::tag::NbtTag;
 
 pub trait DataComponentImpl: Send + Sync {
     fn write_data(&self) -> NbtTag {

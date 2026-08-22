@@ -6,12 +6,12 @@ use crate::command::errors::error_types::{CommandErrorType, DISPATCHER_PARSE_EXC
 use crate::command::node::attached::AttachedNode;
 use crate::command::string_reader::StringReader;
 use crate::command::suggestion::suggestions::{Suggestions, SuggestionsBuilder};
+use std::any::Any;
+use std::iter::Iterator;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::translation;
 use verdantgolem_util::identifier::Identifier;
 use verdantgolem_util::text::TextComponent;
-use std::any::Any;
-use std::iter::Iterator;
 
 pub static ENTITY_TYPE_REGISTRY: &Identifier = &Identifier::vanilla_static("entity_type");
 static ERROR_UNKNOWN_RESOURCE: CommandErrorType<2> = CommandErrorType::new(

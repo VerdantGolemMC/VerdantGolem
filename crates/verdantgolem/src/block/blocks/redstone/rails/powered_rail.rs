@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 use crate::block::BlockBehaviour;
 use crate::block::CanPlaceAtArgs;
@@ -161,7 +161,10 @@ impl PoweredRailBlock {
         direction: bool,
         distance: u8,
     ) -> bool {
-        if distance >= 8 {
+        // carpet rule railPowerLimit (default 9 keeps vanilla propagation)
+        let limit =
+            (crate::carpet::values().rail_power_limit.saturating_sub(1)).clamp(0, 255) as u8;
+        if distance >= limit {
             return false;
         }
 

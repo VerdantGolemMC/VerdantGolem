@@ -30,8 +30,13 @@ impl ScreenHandlerFactory for BrewingScreenFactory {
         _player: &dyn InventoryPlayer,
     ) -> Option<SharedScreenHandler> {
         let inventory = self.0.clone();
-        verdantgolem_inventory::brewing::create_brewing(sync_id, player_inventory, inventory, &self.1)
-            .map(|handler| Arc::new(Mutex::new(handler)) as SharedScreenHandler)
+        verdantgolem_inventory::brewing::create_brewing(
+            sync_id,
+            player_inventory,
+            inventory,
+            &self.1,
+        )
+        .map(|handler| Arc::new(Mutex::new(handler)) as SharedScreenHandler)
     }
 
     fn get_display_name(&self) -> TextComponent {

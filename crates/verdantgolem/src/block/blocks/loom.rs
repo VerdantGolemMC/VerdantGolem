@@ -2,6 +2,8 @@ use crate::block::registry::BlockActionResult;
 use crate::block::{BlockBehaviour, NormalUseArgs, OnPlaceArgs};
 use crate::entity::EntityBase;
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use verdantgolem_data::block_properties::{BlockProperties, WallTorchLikeProperties};
 use verdantgolem_data::translation;
 use verdantgolem_data::{BlockStateId, FacingExt};
@@ -12,8 +14,6 @@ use verdantgolem_inventory::screen_handler::{
 };
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::text::TextComponent;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 #[pumpkin_block("minecraft:loom")]
 pub struct LoomBlock;

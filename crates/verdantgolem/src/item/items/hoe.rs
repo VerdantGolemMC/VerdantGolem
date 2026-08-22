@@ -3,6 +3,7 @@ use crate::entity::item::ItemEntity;
 use crate::entity::player::Player;
 use crate::item::{ItemBehaviour, ItemMetadata};
 use crate::server::Server;
+use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
@@ -12,7 +13,6 @@ use verdantgolem_util::GameMode;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 pub struct HoeItem;
 

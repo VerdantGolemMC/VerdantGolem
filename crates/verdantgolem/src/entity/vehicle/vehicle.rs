@@ -258,7 +258,10 @@ mod tests {
         let mut bytes = Vec::new();
         for metadata in [
             Metadata::new(verdantgolem_data::tracked_data::boat::ID_HURT, VarInt(10)),
-            Metadata::new(verdantgolem_data::tracked_data::boat::ID_HURTDIR, VarInt(-1)),
+            Metadata::new(
+                verdantgolem_data::tracked_data::boat::ID_HURTDIR,
+                VarInt(-1),
+            ),
         ] {
             metadata.write(&mut bytes, &version).unwrap();
         }

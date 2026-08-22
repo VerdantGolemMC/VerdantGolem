@@ -1,7 +1,7 @@
 use std::path::Path;
 
-use verdantgolem_config::whitelist::WhitelistEntry;
 use serde::{Deserialize, Serialize};
+use verdantgolem_config::whitelist::WhitelistEntry;
 
 use crate::net::GameProfile;
 

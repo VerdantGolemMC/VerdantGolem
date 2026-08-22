@@ -2,13 +2,13 @@ use crate::{
     BlockState, BlockStateId,
     tag::{RegistryKey, Tag, Taggable},
 };
+use std::hash::{Hash, Hasher};
 use verdantgolem_util::{
     loot_table::LootTable,
     math::{experience::Experience, position::BlockPos, vector3::Vector3},
     random::hash_block_pos,
     resource_location::{FromResourceLocation, ResourceLocation, ToResourceLocation},
 };
-use std::hash::{Hash, Hasher};
 
 /// Represents the static definition of a Minecraft block type.
 ///

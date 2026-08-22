@@ -1,6 +1,6 @@
 use crate::entity::boss::ender_dragon::EnderDragonEntity;
-use verdantgolem_util::math::vector3::Vector3;
 use std::sync::Arc;
+use verdantgolem_util::math::vector3::Vector3;
 
 mod charging;
 mod circling;

@@ -10,9 +10,9 @@ use crate::{
     },
     entity::r#type::from_type,
 };
+use uuid::Uuid;
 use verdantgolem_data::translation;
 use verdantgolem_util::{math::vector3::Vector3, text::TextComponent};
-use uuid::Uuid;
 
 use crate::block::entities::BlockEntity;
 

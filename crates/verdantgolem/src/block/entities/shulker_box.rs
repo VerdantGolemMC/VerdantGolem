@@ -1,11 +1,11 @@
-use verdantgolem_data::item_stack::ItemStack;
-use verdantgolem_data::sound::{Sound, SoundCategory};
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_util::math::position::BlockPos;
 use std::any::Any;
 use std::sync::RwLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{array::from_fn, sync::Arc};
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_data::sound::{Sound, SoundCategory};
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_util::math::position::BlockPos;
 
 use crate::block::entities::BlockEntity;
 use crate::block::viewer::{ViewerCountListener, ViewerCountTracker, ViewerCountTrackerExt};

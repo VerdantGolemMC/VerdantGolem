@@ -17,6 +17,9 @@ use arc_swap::ArcSwap;
 use crossbeam::atomic::AtomicCell;
 use crossbeam::channel::Receiver;
 use crossbeam::queue::SegQueue;
+use tokio::task::JoinHandle;
+use tracing::{debug, warn};
+use uuid::Uuid;
 use verdantgolem_data::dimension::Dimension;
 use verdantgolem_inventory::merchant::merchant_screen_handler::MerchantScreenHandler;
 use verdantgolem_inventory::player::ender_chest_inventory::EnderChestInventory;
@@ -43,9 +46,6 @@ use verdantgolem_util::translation::Locale;
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::{ChunkData, ChunkEntityData};
 use verdantgolem_world::inventory::Inventory;
-use tokio::task::JoinHandle;
-use tracing::{debug, warn};
-use uuid::Uuid;
 
 #[derive(Clone, Debug)]
 pub enum CustomScoreboard {
@@ -159,7 +159,9 @@ impl BedrockPlayer<'_> {
     }
 
     #[must_use]
-    pub fn client_data(&self) -> Option<Arc<verdantgolem_protocol::bedrock::server::login::ClientData>> {
+    pub fn client_data(
+        &self,
+    ) -> Option<Arc<verdantgolem_protocol::bedrock::server::login::ClientData>> {
         if let ClientPlatform::Bedrock(client) = self.0.client.as_ref() {
             let data = client.client_data.load();
             (**data).clone()
@@ -834,9 +836,9 @@ pub struct Player {
 }
 
 use base64::prelude::*;
-use verdantgolem_protocol::Property;
 use serde::Deserialize;
 use std::io::Read;
+use verdantgolem_protocol::Property;
 
 // Bit masks for the Java skin pixels that Bedrock requires to be opaque.
 // Adapted from Geyser's SkinProvider under the MIT License.
@@ -869,7 +871,9 @@ struct SkinMetadata {
 
 impl Player {
     #[must_use]
-    pub fn fetch_skin(properties: &[Property]) -> Option<verdantgolem_protocol::bedrock::client::Skin> {
+    pub fn fetch_skin(
+        properties: &[Property],
+    ) -> Option<verdantgolem_protocol::bedrock::client::Skin> {
         let textures_prop = properties.iter().find(|p| &*p.name == "textures")?;
         let decoded = BASE64_STANDARD
             .decode(textures_prop.value.as_bytes())
@@ -3331,7 +3335,10 @@ impl Player {
             .await;
     }
 
-    pub fn try_send_client_packet<C: verdantgolem_protocol::ClientPacket + Sync>(&self, packet: &C) {
+    pub fn try_send_client_packet<C: verdantgolem_protocol::ClientPacket + Sync>(
+        &self,
+        packet: &C,
+    ) {
         if let ClientPlatform::Java(client) = self.client.as_ref()
             && let Ok(data) = client.serialize_packet(packet)
         {
@@ -3339,7 +3346,10 @@ impl Player {
         }
     }
 
-    pub async fn send_client_packet<C: verdantgolem_protocol::ClientPacket + Sync>(&self, packet: &C) {
+    pub async fn send_client_packet<C: verdantgolem_protocol::ClientPacket + Sync>(
+        &self,
+        packet: &C,
+    ) {
         if let ClientPlatform::Java(client) = self.client.as_ref()
             && let Ok(data) = client.serialize_packet(packet)
         {
@@ -5190,8 +5200,8 @@ impl Player {
 
         if let Some(anvil_handler) = screen_handler
             .as_any_mut()
-            .downcast_mut::<verdantgolem_inventory::anvil::AnvilScreenHandler>()
-        {
+            .downcast_mut::<verdantgolem_inventory::anvil::AnvilScreenHandler>(
+        ) {
             anvil_handler.update_item_name(packet.item_name.to_string());
         }
     }
@@ -5810,7 +5820,9 @@ impl Player {
 
         let be_packet = verdantgolem_protocol::bedrock::server::animate::SAnimate {
             action: verdantgolem_protocol::bedrock::server::animate::AnimateAction::SwingArm,
-            target_actor_runtime_id: verdantgolem_protocol::codec::var_ulong::VarULong(entity_id as u64),
+            target_actor_runtime_id: verdantgolem_protocol::codec::var_ulong::VarULong(
+                entity_id as u64,
+            ),
             data: 0.0,
             swing_source: None,
         };
@@ -7392,8 +7404,8 @@ impl InventoryPlayer for Player {
 #[cfg(test)]
 mod tests {
     use super::{bedrock_inventory_slot, read_root_vehicle, write_root_vehicle};
-    use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
     use uuid::Uuid;
+    use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
 
     #[test]
     fn player_screen_slots_map_to_bedrock_inventory() {

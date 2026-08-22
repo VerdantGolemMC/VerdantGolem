@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
-use verdantgolem_macros::{Event, cancellable};
 use std::sync::Arc;
+use verdantgolem_macros::{Event, cancellable};
 
 /// The 16 colors available for dyeing entities.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

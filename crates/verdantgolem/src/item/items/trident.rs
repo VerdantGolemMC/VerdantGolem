@@ -47,9 +47,9 @@ impl ItemBehaviour for TridentItem {
 
         // Check Riptide level
         let mut riptide_level = 0u32;
-        if let Some(enchantments) =
-            stack_guard.get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
-        {
+        if let Some(enchantments) = stack_guard
+            .get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>(
+        ) {
             for (enchantment, level) in enchantments.enchantment.iter() {
                 if **enchantment == verdantgolem_data::Enchantment::RIPTIDE {
                     riptide_level = *level as u32;

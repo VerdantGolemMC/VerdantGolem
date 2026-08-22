@@ -1,6 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 use verdantgolem_data::noise_router::OVERWORLD_BASE_NOISE_ROUTER;
 use verdantgolem_world::generation::{
     GlobalRandomConfig,
@@ -9,7 +10,6 @@ use verdantgolem_world::generation::{
         chunk_noise_router::ChunkNoiseRouter, proto_noise_router::ProtoNoiseRouters,
     },
 };
-use std::hint::black_box;
 
 fn bench_noise_router_creation(c: &mut Criterion) {
     let base_routers = &OVERWORLD_BASE_NOISE_ROUTER;

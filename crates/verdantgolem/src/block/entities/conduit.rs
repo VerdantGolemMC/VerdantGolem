@@ -1,8 +1,8 @@
 use super::BlockEntity;
+use std::sync::Mutex;
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_nbt::tag::NbtTag;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Mutex;
 
 pub struct ConduitBlockEntity {
     pub position: BlockPos,

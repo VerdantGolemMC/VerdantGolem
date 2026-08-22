@@ -1,7 +1,7 @@
 use super::EnderDragonPhase;
 use crate::entity::boss::ender_dragon::{EnderDragonEntity, Vector3Ext, find_path};
-use verdantgolem_util::math::vector3::Vector3;
 use std::sync::atomic::Ordering;
+use verdantgolem_util::math::vector3::Vector3;
 
 pub struct CirclingPhase;
 

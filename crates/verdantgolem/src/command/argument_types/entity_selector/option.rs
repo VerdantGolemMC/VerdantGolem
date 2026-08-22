@@ -7,13 +7,13 @@ use crate::command::errors::command_syntax_error::CommandSyntaxError;
 use crate::command::errors::error_types::CommandErrorType;
 use crate::command::string_reader::StringReader;
 use crate::command::suggestion::suggestions::SuggestionsBuilder;
+use std::str::FromStr;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::translation;
 use verdantgolem_util::GameMode;
 use verdantgolem_util::identifier::{Identifier, VANILLA_NAMESPACE};
 use verdantgolem_util::math::bounds::{DoubleBounds, FloatDegreeBounds, IntBounds};
 use verdantgolem_util::text::TextComponent;
-use std::str::FromStr;
 
 pub const UNKNOWN_OPTION_ERROR_TYPE: CommandErrorType<1> = CommandErrorType::new(
     translation::java::ARGUMENT_ENTITY_OPTIONS_UNKNOWN,

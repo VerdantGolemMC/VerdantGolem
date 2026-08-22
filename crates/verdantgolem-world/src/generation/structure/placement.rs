@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+use std::sync::OnceLock;
 use verdantgolem_data::structures::{
     ConcentricRingsStructurePlacement, FrequencyReductionMethod, RandomSpreadStructurePlacement,
     SpreadType, StructurePlacement, StructurePlacementCalculator, StructurePlacementType,
@@ -10,8 +12,6 @@ use verdantgolem_util::{
         xoroshiro128::Xoroshiro,
     },
 };
-use std::f64::consts::PI;
-use std::sync::OnceLock;
 
 use crate::ProtoChunk;
 use dashmap::DashMap;

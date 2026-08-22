@@ -1007,11 +1007,14 @@ fn deserialize_item_stack_template(
         patch.push((id, None));
     }
 
-    Ok(verdantgolem_data::item_stack::ItemStack::new_with_component(
-        count,
-        verdantgolem_data::item::Item::from_id(item_id).unwrap_or(&verdantgolem_data::item::Item::AIR),
-        patch,
-    ))
+    Ok(
+        verdantgolem_data::item_stack::ItemStack::new_with_component(
+            count,
+            verdantgolem_data::item::Item::from_id(item_id)
+                .unwrap_or(&verdantgolem_data::item::Item::AIR),
+            patch,
+        ),
+    )
 }
 
 fn serialize_item_stack_template(

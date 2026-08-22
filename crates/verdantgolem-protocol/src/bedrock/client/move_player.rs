@@ -1,7 +1,7 @@
 use crate::{codec::var_ulong::VarULong, serial::PacketWrite};
+use std::io::{Error, Write};
 use verdantgolem_macros::packet;
 use verdantgolem_util::math::vector3::Vector3;
-use std::io::{Error, Write};
 
 #[derive(Debug)]
 #[packet(19)]

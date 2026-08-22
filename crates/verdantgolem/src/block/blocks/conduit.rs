@@ -1,9 +1,9 @@
 use crate::block::entities::conduit::ConduitBlockEntity;
 use crate::block::{BlockBehaviour, OnPlaceArgs, PlacedArgs};
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::BlockProperties;
 use verdantgolem_macros::pumpkin_block;
-use std::sync::Arc;
 
 #[pumpkin_block("minecraft:conduit")]
 pub struct ConduitBlock;

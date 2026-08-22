@@ -1,8 +1,8 @@
+use tracing::error;
 use verdantgolem_data::translation;
 use verdantgolem_util::PermissionLvl;
 use verdantgolem_util::permission::{Permission, PermissionDefault, PermissionRegistry};
 use verdantgolem_util::text::TextComponent;
-use tracing::error;
 
 use crate::command::argument_builder::{ArgumentBuilder, command};
 use crate::command::context::command_context::CommandContext;

@@ -128,7 +128,9 @@ impl BlockBehaviour for BedBlock {
             args.world.play_bedrock_level_sound(
                 "place",
                 &args.position.to_centered_f64(),
-                i32::from(verdantgolem_data::BlockState::to_be_network_id(args.state_id)),
+                i32::from(verdantgolem_data::BlockState::to_be_network_id(
+                    args.state_id,
+                )),
             );
         }
     }

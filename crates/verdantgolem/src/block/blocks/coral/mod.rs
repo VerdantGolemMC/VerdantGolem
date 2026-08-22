@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_util::math::position::BlockPos;
-use rand::RngExt;
 
 use crate::world::World;
 

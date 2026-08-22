@@ -4,10 +4,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use verdantgolem_data::game_rules::{GameRule, GameRuleRegistry, GameRuleValue};
-use verdantgolem_nbt::{compound::NbtCompound, nbt_compress::read_gzip_compound_tag, tag::NbtTag};
 use serde::{Deserialize, Serialize};
 use tracing::warn;
+use verdantgolem_data::game_rules::{GameRule, GameRuleRegistry, GameRuleValue};
+use verdantgolem_nbt::{compound::NbtCompound, nbt_compress::read_gzip_compound_tag, tag::NbtTag};
 
 use crate::world_info::{WorldGenSettings, WorldInfoError};
 

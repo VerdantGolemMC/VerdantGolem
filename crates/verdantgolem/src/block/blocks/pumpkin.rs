@@ -2,6 +2,7 @@ use crate::block::UseWithItemArgs;
 use crate::block::registry::BlockActionResult;
 use crate::entity::Entity;
 use crate::entity::item::ItemEntity;
+use std::sync::Arc;
 use verdantgolem_data::Block;
 use verdantgolem_data::block_properties::{BlockProperties, WallTorchLikeProperties};
 use verdantgolem_data::entity::EntityType;
@@ -9,7 +10,6 @@ use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 #[pumpkin_block("minecraft:pumpkin")]
 pub struct PumpkinBlock;

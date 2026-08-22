@@ -1,13 +1,13 @@
 use super::{Entity, EntityBase, living::LivingEntity};
+use std::{
+    sync::Arc,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_protocol::java::client::play::CEntityVelocity;
 use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
-use std::{
-    sync::Arc,
-    sync::atomic::{AtomicBool, Ordering},
-};
 pub mod arrow;
 pub mod egg;
 pub mod ender_pearl;

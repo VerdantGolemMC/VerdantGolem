@@ -1,6 +1,6 @@
 use crate::world::World;
-use verdantgolem_macros::{Event, cancellable};
 use std::sync::Arc;
+use verdantgolem_macros::{Event, cancellable};
 
 /// An event that occurs when weather (raining) changes in a world.
 #[cancellable]

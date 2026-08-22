@@ -1,4 +1,3 @@
-use verdantgolem_util::math::vector3::Vector3;
 use std::{
     f64,
     sync::{
@@ -6,6 +5,7 @@ use std::{
         atomic::{AtomicU8, Ordering},
     },
 };
+use verdantgolem_util::math::vector3::Vector3;
 
 use crate::{
     entity::{
@@ -34,8 +34,8 @@ pub struct WindChargeEntity {
 }
 
 use crate::world::SimpleExplosionDamageCalculator;
-use verdantgolem_data::tag;
 use std::sync::LazyLock;
+use verdantgolem_data::tag;
 
 pub static WIND_CHARGE_EXPLOSION_DAMAGE_CALCULATOR: LazyLock<Arc<SimpleExplosionDamageCalculator>> =
     LazyLock::new(|| {

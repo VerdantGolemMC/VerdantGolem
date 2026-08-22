@@ -9,10 +9,10 @@ use crate::{
     },
 };
 
+use thiserror::Error;
 use verdantgolem_nbt::{serializer::NbtWriteHelperJava, tag::NbtTag};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::{text::TextComponent, version::JavaMinecraftVersion};
-use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ReadingError {
@@ -273,7 +273,8 @@ impl<'a> NetworkReadSliceExt<'a> for &'a [u8] {
                 .map_err(|e| ReadingError::Message(format!("Invalid component JSON: {e}")))
         } else {
             let mut cursor = std::io::Cursor::new(*self);
-            let mut nbt_reader = verdantgolem_nbt::deserializer::NbtReadHelperJava::new(&mut cursor);
+            let mut nbt_reader =
+                verdantgolem_nbt::deserializer::NbtReadHelperJava::new(&mut cursor);
             let nbt = NbtTag::deserialize(&mut nbt_reader)
                 .map_err(|e| ReadingError::Message(format!("Invalid component NBT: {e}")))?;
             let bytes_read = cursor.position() as usize;

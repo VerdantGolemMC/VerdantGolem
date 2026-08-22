@@ -7,11 +7,11 @@ use crate::effect::StatusEffect;
 use crate::sound::Sound;
 use crc_fast::CrcAlgorithm::Crc32Iscsi;
 use crc_fast::Digest;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_nbt::tag::NbtTag;
 use std::borrow::Cow;
 use std::hash::{Hash, Hasher};
 use std::str::FromStr;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_nbt::tag::NbtTag;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FoodImpl {

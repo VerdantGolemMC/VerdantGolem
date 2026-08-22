@@ -9,7 +9,8 @@ use crate::block::{BrokenArgs, OnNeighborUpdateArgs};
 
 use super::piston::PistonProps;
 
-pub(crate) type PistonHeadProperties = verdantgolem_data::block_properties::PistonHeadLikeProperties;
+pub(crate) type PistonHeadProperties =
+    verdantgolem_data::block_properties::PistonHeadLikeProperties;
 
 #[pumpkin_block("minecraft:piston_head")]
 pub struct PistonHeadBlock;

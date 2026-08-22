@@ -3,8 +3,8 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
 };
 
-use verdantgolem_util::math::position::BlockPos;
 use rustc_hash::FxHashSet;
+use verdantgolem_util::math::position::BlockPos;
 
 use crate::tick::{MAX_TICK_DELAY, OrderedTick, ScheduledTick};
 

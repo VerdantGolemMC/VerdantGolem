@@ -239,7 +239,9 @@ impl BlockBehaviour for BubbleColumnBlock {
 #[cfg(test)]
 mod tests {
     use verdantgolem_data::BlockStateId;
-    use verdantgolem_data::fluid::{Falling, FlowingWaterLikeFluidProperties, FluidProperties, Level};
+    use verdantgolem_data::fluid::{
+        Falling, FlowingWaterLikeFluidProperties, FluidProperties, Level,
+    };
 
     use super::*;
 

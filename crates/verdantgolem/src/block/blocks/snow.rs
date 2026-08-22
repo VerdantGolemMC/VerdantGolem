@@ -1,6 +1,8 @@
 use verdantgolem_data::block_properties::BlockProperties;
 use verdantgolem_data::tag::Taggable;
-use verdantgolem_data::{Block, BlockStateId, block_properties::SnowLikeProperties, item::Item, tag};
+use verdantgolem_data::{
+    Block, BlockStateId, block_properties::SnowLikeProperties, item::Item, tag,
+};
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::{

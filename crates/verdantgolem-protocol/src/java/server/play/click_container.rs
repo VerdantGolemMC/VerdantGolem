@@ -4,10 +4,10 @@ use crate::{
     ServerPacket,
     ser::{NetworkReadExt, ReadingError},
 };
+use std::io::Read;
 use verdantgolem_data::packet::serverbound::play::CONTAINER_CLICK;
 use verdantgolem_macros::java_packet;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use std::io::Read;
 
 #[derive(Debug)]
 #[java_packet(CONTAINER_CLICK)]

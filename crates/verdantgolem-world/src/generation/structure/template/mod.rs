@@ -45,12 +45,12 @@ pub use cache::{
     get_processor_list_json, get_template, get_template_pool_json, global_cache,
 };
 pub use processor::StructureProcessor;
-pub use verdantgolem_data::{BlockState, Mirror as BlockMirror, Rotation as BlockRotation};
 pub use structure_template::{
     JigsawBlockInfo, Palette, PaletteEntry, SimplePalette, StructureBlockInfo, StructureEntityInfo,
     StructurePlaceSettings, StructureTemplate, TemplateBlock, TemplateEntity,
 };
 pub use template_piece::TemplatePiece;
+pub use verdantgolem_data::{BlockState, Mirror as BlockMirror, Rotation as BlockRotation};
 
 /// Abstraction over block placement, implemented by both [`ProtoChunk`] (worldgen) and
 /// [`WorldBlockPlacer`] (live `/place template` command).
@@ -172,7 +172,8 @@ pub fn place_template_with_options(
         let world_pos = Vector3::new(wx, wy, wz);
 
         if apply_waterlogging
-            && placer.get_block_state(&world_pos).to_block_id() == verdantgolem_data::Block::WATER.id
+            && placer.get_block_state(&world_pos).to_block_id()
+                == verdantgolem_data::Block::WATER.id
             && let Some((_, waterlogged)) = placed_entry
                 .properties
                 .iter_mut()

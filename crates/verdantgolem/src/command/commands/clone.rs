@@ -100,9 +100,11 @@ impl CommandExecutor for CloneExecutor {
 
         let volume = size_x * size_y * size_z;
 
-        if volume > 32768 {
+        // carpet rule fillLimit caps the clone volume
+        let fill_limit = crate::carpet::values().fill_limit.clamp(1, i32::MAX as i64) as i32;
+        if volume > fill_limit {
             return Err(TOOBIG_ERROR.create_without_context_args_slice(&[
-                TextComponent::text("32768"),
+                TextComponent::text(fill_limit.to_string()),
                 TextComponent::text(volume.to_string()),
             ]));
         }

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use verdantgolem_util::PermissionLvl;
 use serde::{Deserialize, Serialize};
+use verdantgolem_util::PermissionLvl;
 
 /// Configuration for command handling and execution.
 ///

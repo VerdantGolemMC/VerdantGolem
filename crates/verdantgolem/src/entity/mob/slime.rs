@@ -18,8 +18,8 @@ use crate::entity::{
     mob::{Mob, MobEntity},
 };
 use crate::world::World;
-use verdantgolem_util::random::RandomImpl;
 use rand::RngExt;
+use verdantgolem_util::random::RandomImpl;
 
 pub struct SlimeEntity {
     entity: Arc<MobEntity>,
@@ -194,7 +194,8 @@ impl SlimeEntity {
             world_seed,
             987_234_911,
         );
-        let mut slime_rand = verdantgolem_util::random::legacy_rand::LegacyRand::from_seed(slime_seed);
+        let mut slime_rand =
+            verdantgolem_util::random::legacy_rand::LegacyRand::from_seed(slime_seed);
 
         let mut rng = rand::rng();
         if rng.random_range(0..10) == 0 && slime_rand.next_bounded_i32(10) == 0 && pos.0.y < 40 {

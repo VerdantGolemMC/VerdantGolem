@@ -14,12 +14,12 @@ pub mod flowing {
 use super::{BlockIsReplacing, registry::BlockActionResult};
 use crate::entity::{EntityBase, player::Player};
 use crate::{server::Server, world::World};
+use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::{fluid::Fluid, item::Item};
 use verdantgolem_protocol::java::server::play::SUseItemOn;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 pub trait FluidBehaviour: Send + Sync {
     fn normal_use(

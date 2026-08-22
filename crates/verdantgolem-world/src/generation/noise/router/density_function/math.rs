@@ -1,6 +1,8 @@
 use std::cell::RefCell;
 
-use verdantgolem_data::noise_router::{BinaryData, BinaryOperation, ClampData, LinearData, UnaryData};
+use verdantgolem_data::noise_router::{
+    BinaryData, BinaryOperation, ClampData, LinearData, UnaryData,
+};
 use verdantgolem_util::math::vector3::Vector3;
 
 use crate::generation::noise::router::{

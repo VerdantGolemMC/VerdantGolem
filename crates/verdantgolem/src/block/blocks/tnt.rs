@@ -1,5 +1,5 @@
-use verdantgolem_data::item::Item;
 use std::sync::Arc;
+use verdantgolem_data::item::Item;
 
 use crate::block::registry::BlockActionResult;
 use crate::block::{
@@ -8,6 +8,7 @@ use crate::block::{
 use crate::entity::Entity;
 use crate::entity::tnt::TNTEntity;
 use crate::world::World;
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::sound::SoundCategory;
@@ -15,7 +16,6 @@ use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 use super::redstone::block_receives_redstone_power;
 
@@ -89,18 +89,18 @@ impl BlockBehaviour for TNTBlock {
     }
 
     fn on_neighbor_update(&self, args: OnNeighborUpdateArgs<'_>) {
+        // carpet rule tntDoNotUpdate: block updates never prime TNT
+        if !crate::carpet::values().tnt_do_not_update
+            && block_receives_redstone_power(args.world, args.position)
         {
-            if block_receives_redstone_power(args.world, args.position) {
-                Self::prime(args.world, args.position);
-            }
+            Self::prime(args.world, args.position);
         }
     }
 
     fn explode(&self, args: ExplodeArgs<'_>) {
         {
             let entity = Entity::new(args.world.clone(), args.position.to_f64(), &EntityType::TNT);
-            let angle = rand::random::<f64>() * std::f64::consts::TAU;
-            entity.set_velocity(Vector3::new(-angle.sin() * 0.02, 0.2, -angle.cos() * 0.02));
+            entity.set_velocity(TNTEntity::primer_velocity());
             let fuse = rand::rng().random_range(0..DEFAULT_FUSE / 4) + DEFAULT_FUSE / 8;
             let tnt = Arc::new(TNTEntity::new(entity, DEFAULT_POWER, fuse));
             args.world.spawn_entity(tnt);

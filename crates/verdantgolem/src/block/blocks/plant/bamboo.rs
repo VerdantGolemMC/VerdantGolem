@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{BambooLeaves, BambooLikeProperties, BlockProperties};
 use verdantgolem_data::tag::Block::MINECRAFT_SUPPORTS_BAMBOO;
@@ -10,7 +11,6 @@ use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::tick::TickPriority;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 use crate::block::{BlockBehaviour, CanPlaceAtArgs, blocks::plant::PlantBlockBase};
 use crate::block::{

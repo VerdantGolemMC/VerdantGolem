@@ -7,8 +7,8 @@ use crate::command::dispatcher::CommandError;
 use crate::command::tree::RawArgs;
 use crate::entity::EntityBase;
 use crate::server::Server;
-use verdantgolem_protocol::java::client::play::{ArgumentType, SuggestionProviders};
 use tracing::debug;
+use verdantgolem_protocol::java::client::play::{ArgumentType, SuggestionProviders};
 
 use super::super::args::ArgumentConsumer;
 use super::entities::parse_target_selector_with_context;

@@ -1,10 +1,10 @@
+use tracing::debug;
 use verdantgolem_data::{
     packet::{CURRENT_MC_VERSION, LOWEST_SUPPORTED_MC_VERSION},
     translation,
 };
 use verdantgolem_protocol::{ConnectionState, java::server::handshake::SHandShake};
 use verdantgolem_util::{text::TextComponent, version::JavaMinecraftVersion};
-use tracing::debug;
 
 use crate::net::java::pending::PendingConnection;
 

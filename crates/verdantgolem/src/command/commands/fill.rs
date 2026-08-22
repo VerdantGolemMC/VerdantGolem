@@ -294,6 +294,14 @@ impl CommandExecutor for Executor {
             )));
         }
 
+        // carpet rule fillLimit caps the fill volume in addition to the gamerule.
+        let fill_limit = crate::carpet::values().fill_limit;
+        if total_blocks > fill_limit {
+            return Err(CommandError::CommandFailed(TextComponent::text(format!(
+                "Too many blocks to fill: {total_blocks} is larger than fillLimit {fill_limit}"
+            ))));
+        }
+
         match mode {
             Mode::Destroy => DestroyFiller::execute_for_region(&mut context),
             Mode::Replace => ReplaceFiller::execute_for_region(&mut context),
@@ -303,8 +311,11 @@ impl CommandExecutor for Executor {
             Mode::Strict => StrictFiller::execute_for_region(&mut context),
         }
 
-        for i in context.to_update {
-            context.world.update_neighbors(&i, None);
+        // carpet rule fillUpdates: false suppresses neighbor updates from /fill.
+        if crate::carpet::values().fill_updates {
+            for i in context.to_update {
+                context.world.update_neighbors(&i, None);
+            }
         }
 
         if context.placed_blocks == 0 {

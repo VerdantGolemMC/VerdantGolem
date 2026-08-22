@@ -1,12 +1,12 @@
 use std::time::Instant;
 
 use num_bigint::BigInt;
-use verdantgolem_protocol::java::client::login::CEncryptionRequest;
 use rsa::pkcs8::EncodePublicKey;
 use rsa::{Pkcs1v15Encrypt, RsaPrivateKey};
 use sha1::Sha1;
 use sha2::Digest;
 use tracing::{debug, error};
+use verdantgolem_protocol::java::client::login::CEncryptionRequest;
 
 use crate::net::EncryptionError;
 

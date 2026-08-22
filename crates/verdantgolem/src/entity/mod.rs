@@ -13,6 +13,15 @@ use bytes::BufMut;
 use crossbeam::atomic::AtomicCell;
 use living::LivingEntity;
 use player::Player;
+use std::collections::{BTreeMap, HashSet};
+use std::sync::{
+    Arc,
+    atomic::{
+        AtomicBool, AtomicI32, AtomicU8, AtomicU32,
+        Ordering::{self, Relaxed},
+    },
+};
+use uuid::Uuid;
 use verdantgolem_data::BlockState;
 use verdantgolem_data::biome::Biome;
 use verdantgolem_data::block_properties::blocks_movement;
@@ -69,15 +78,6 @@ use verdantgolem_util::math::{
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::text::hover::HoverEvent;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use std::collections::{BTreeMap, HashSet};
-use std::sync::{
-    Arc,
-    atomic::{
-        AtomicBool, AtomicI32, AtomicU8, AtomicU32,
-        Ordering::{self, Relaxed},
-    },
-};
-use uuid::Uuid;
 
 pub mod ageable;
 pub mod ai;
@@ -629,6 +629,10 @@ pub trait EntityBase: Send + Sync + std::any::Any {
     fn get_living_entity(&self) -> Option<&LivingEntity>;
 
     fn cast_any(&self) -> &dyn std::any::Any;
+
+    fn get_tnt_entity(self: Arc<Self>) -> Option<Arc<crate::entity::tnt::TNTEntity>> {
+        None
+    }
 
     fn get_item_entity(&self) -> Option<&ItemEntity> {
         None
@@ -1485,16 +1489,18 @@ impl Entity {
                 motion.z = 0.0;
             }
         } else {
-            if motion.x.abs() < 0.003 {
+            // carpet rule momentumClampThreshold (0 disables the vanilla clamp)
+            let clamp = crate::carpet::values().momentum_clamp_threshold;
+            if motion.x.abs() < clamp {
                 motion.x = 0.0;
             }
 
-            if motion.z.abs() < 0.003 {
+            if motion.z.abs() < clamp {
                 motion.z = 0.0;
             }
         }
 
-        if motion.y.abs() < 0.003 {
+        if motion.y.abs() < crate::carpet::values().momentum_clamp_threshold {
             motion.y = 0.0;
         }
 
@@ -3220,7 +3226,9 @@ impl Entity {
         );
         let be_packet = verdantgolem_protocol::bedrock::client::CSetActorLink {
             link: verdantgolem_protocol::bedrock::client::common::ActorLink {
-                ridden_unique_id: verdantgolem_protocol::codec::var_long::VarLong(self.entity_id as i64),
+                ridden_unique_id: verdantgolem_protocol::codec::var_long::VarLong(
+                    self.entity_id as i64,
+                ),
                 rider_unique_id: verdantgolem_protocol::codec::var_long::VarLong(
                     holder_entity_id as i64,
                 ),
@@ -3248,11 +3256,16 @@ impl Entity {
             return;
         }
 
-        let je_packet =
-            verdantgolem_protocol::java::client::play::CSetEntityLink::new(self.entity_id, -1, true);
+        let je_packet = verdantgolem_protocol::java::client::play::CSetEntityLink::new(
+            self.entity_id,
+            -1,
+            true,
+        );
         let be_packet = verdantgolem_protocol::bedrock::client::CSetActorLink {
             link: verdantgolem_protocol::bedrock::client::common::ActorLink {
-                ridden_unique_id: verdantgolem_protocol::codec::var_long::VarLong(self.entity_id as i64),
+                ridden_unique_id: verdantgolem_protocol::codec::var_long::VarLong(
+                    self.entity_id as i64,
+                ),
                 rider_unique_id: verdantgolem_protocol::codec::var_long::VarLong(-1),
                 link_type: 0, // Unlink
                 immediate: true,
@@ -3293,8 +3306,10 @@ impl Entity {
             if distance > Self::LEASH_SNAP_DISTANCE {
                 // Too far: snap/break leash and drop lead item
                 self.unleash();
-                let lead_item =
-                    verdantgolem_data::item_stack::ItemStack::new(1, &verdantgolem_data::item::Item::LEAD);
+                let lead_item = verdantgolem_data::item_stack::ItemStack::new(
+                    1,
+                    &verdantgolem_data::item::Item::LEAD,
+                );
                 self.world
                     .load()
                     .drop_stack(&self.block_pos.load(), lead_item);

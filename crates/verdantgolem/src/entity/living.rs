@@ -1,3 +1,11 @@
+use std::sync::Arc;
+use std::sync::atomic::Ordering;
+use std::sync::atomic::{
+    AtomicBool, AtomicU8,
+    Ordering::{Relaxed, SeqCst},
+};
+use std::{collections::HashMap, sync::atomic::AtomicI32};
+use tracing::warn;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::particle::Particle;
 use verdantgolem_data::potion::Effect;
@@ -12,14 +20,6 @@ use verdantgolem_protocol::codec::var_ulong::VarULong;
 use verdantgolem_util::GameMode;
 use verdantgolem_util::Hand;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
-use std::sync::atomic::Ordering;
-use std::sync::atomic::{
-    AtomicBool, AtomicU8,
-    Ordering::{Relaxed, SeqCst},
-};
-use std::{collections::HashMap, sync::atomic::AtomicI32};
-use tracing::warn;
 
 use super::experience_orb::ExperienceOrbEntity;
 use super::{Entity, EntityBase, NBTStorageInit};
@@ -35,6 +35,8 @@ use crate::entity::player::statistics::{CustomStatistic, StatisticCategory};
 use crate::server::Server;
 use crate::world::loot::{LootContextParameters, LootTableExt};
 use crossbeam::atomic::AtomicCell;
+use rand::RngExt;
+use std::sync::RwLock;
 use verdantgolem_data::attributes::Attributes;
 use verdantgolem_data::damage::DeathMessageType;
 use verdantgolem_data::data_component_impl::Operation;
@@ -65,8 +67,6 @@ use verdantgolem_protocol::{
 use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::text::TextComponent;
-use rand::RngExt;
-use std::sync::RwLock;
 
 /// Represents a living entity within the game world.
 ///
@@ -978,7 +978,9 @@ impl LivingEntity {
         );
         let be_packet = verdantgolem_protocol::bedrock::server::animate::SAnimate {
             action: verdantgolem_protocol::bedrock::server::animate::AnimateAction::SwingArm,
-            target_actor_runtime_id: verdantgolem_protocol::codec::var_ulong::VarULong(entity_id as u64),
+            target_actor_runtime_id: verdantgolem_protocol::codec::var_ulong::VarULong(
+                entity_id as u64,
+            ),
             data: 0.0,
             swing_source: None,
         };

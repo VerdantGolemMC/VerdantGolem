@@ -1,8 +1,8 @@
+use rand::seq::SliceRandom;
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::{Block, BlockDirection, BlockId, BlockStateId, tag};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::seq::SliceRandom;
 
 use crate::block::{
     BlockBehaviour, BlockMetadata, CanPlaceAtArgs, GetStateForNeighborUpdateArgs,

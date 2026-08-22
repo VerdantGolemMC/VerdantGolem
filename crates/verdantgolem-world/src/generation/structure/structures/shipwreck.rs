@@ -336,7 +336,8 @@ impl StructurePieceBase for ShipwreckPiece {
                 continue;
             };
 
-            if chunk.get_block_state(&world_pos).to_block_id() == verdantgolem_data::Block::WATER.id {
+            if chunk.get_block_state(&world_pos).to_block_id() == verdantgolem_data::Block::WATER.id
+            {
                 let mut modified_entry = palette_entry.clone();
                 if let Some((_, waterlogged)) = modified_entry
                     .properties

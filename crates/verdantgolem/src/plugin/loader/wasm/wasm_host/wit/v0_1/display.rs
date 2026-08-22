@@ -621,7 +621,10 @@ impl HostItemDisplayEntity for PluginHostState {
             let stack = if let Some(item_res_val) = item {
                 self.get_item_stack(&item_res_val)?.lock().await.clone()
             } else {
-                verdantgolem_data::item_stack::ItemStack::new(0, &verdantgolem_data::item::Item::AIR)
+                verdantgolem_data::item_stack::ItemStack::new(
+                    0,
+                    &verdantgolem_data::item::Item::AIR,
+                )
             };
             i.set_item(stack);
         }

@@ -18,7 +18,8 @@ impl BedrockClient {
 
         let mut broadcast_packet = packet;
         broadcast_packet.actor_runtime_id = VarULong(entity.entity_id as u64);
-        broadcast_packet.flags |= verdantgolem_protocol::bedrock::server::emote::EMOTE_FLAG_SERVER_SIDE;
+        broadcast_packet.flags |=
+            verdantgolem_protocol::bedrock::server::emote::EMOTE_FLAG_SERVER_SIDE;
 
         world.broadcast_packet_except_editioned(
             &[player.gameprofile.id],

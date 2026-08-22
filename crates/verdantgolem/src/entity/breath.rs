@@ -1,5 +1,6 @@
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
+use std::sync::atomic::{AtomicI32, Ordering};
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_data::tag;
@@ -8,7 +9,6 @@ use verdantgolem_protocol::codec::var_int::VarInt;
 use verdantgolem_protocol::java::client::play::Metadata;
 use verdantgolem_util::GameMode;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::atomic::{AtomicI32, Ordering};
 
 pub const MAX_AIR: i32 = 300;
 pub const AIR_RECOVERY_RATE: i32 = 4;
@@ -159,7 +159,9 @@ impl BreathManager {
             verdantgolem_protocol::bedrock::client::set_actor_data::SyncedActorDataList::new();
         bedrock_meta.set(
             verdantgolem_protocol::bedrock::client::set_actor_data::entity_data_key::AIR_SUPPLY,
-            verdantgolem_protocol::bedrock::client::set_actor_data::MetadataValue::Short(air as i16),
+            verdantgolem_protocol::bedrock::client::set_actor_data::MetadataValue::Short(
+                air as i16,
+            ),
         );
 
         player.get_entity().send_meta_data(

@@ -1,8 +1,8 @@
+use rand::RngExt;
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{BlockProperties, NetherWartLikeProperties};
 use verdantgolem_macros::pumpkin_block;
-use rand::RngExt;
 
 use crate::block::blocks::plant::PlantBlockBase;
 use crate::block::blocks::plant::crop::CropBlockBase;

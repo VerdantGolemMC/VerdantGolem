@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rand::{RngExt, rng};
 use verdantgolem_data::{
     Block, BlockDirection, BlockStateId, HorizontalFacingExt,
     block_properties::BlockProperties,
@@ -11,7 +12,6 @@ use verdantgolem_world::{
     tick::TickPriority,
     world::{BlockAccessor, BlockFlags},
 };
-use rand::{RngExt, rng};
 
 use crate::{
     block::{

@@ -1,14 +1,26 @@
-use verdantgolem_protocol::java::client::play::{
-    CChunkBatchEnd, CChunkBatchStart, CChunkData, CLightUpdate, CPlayDisconnect,
-};
-use verdantgolem_world::level::SyncChunk;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use std::{io::Write, sync::Arc};
+use verdantgolem_protocol::java::client::play::{
+    CChunkBatchEnd, CChunkBatchStart, CChunkData, CLightUpdate, CPlayDisconnect,
+};
+use verdantgolem_world::level::SyncChunk;
 
 use bytes::Bytes;
 use crossbeam::atomic::AtomicCell;
+use tokio::{
+    io::{BufReader, BufWriter},
+    net::tcp::{OwnedReadHalf, OwnedWriteHalf},
+    sync::oneshot,
+};
+use tokio::{
+    sync::mpsc::{Receiver, Sender, error::TryRecvError},
+    task::JoinHandle,
+};
+use tokio_util::sync::CancellationToken;
+use tokio_util::task::TaskTracker;
+use tracing::{debug, error, warn};
 use verdantgolem_data::translation;
 use verdantgolem_protocol::java::server::play::{
     SAttack, SBlockEntityTagQuery, SBundleItemSelected, SChangeDifficulty, SChangeGameMode,
@@ -39,18 +51,6 @@ use verdantgolem_protocol::{
 };
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use tokio::{
-    io::{BufReader, BufWriter},
-    net::tcp::{OwnedReadHalf, OwnedWriteHalf},
-    sync::oneshot,
-};
-use tokio::{
-    sync::mpsc::{Receiver, Sender, error::TryRecvError},
-    task::JoinHandle,
-};
-use tokio_util::sync::CancellationToken;
-use tokio_util::task::TaskTracker;
-use tracing::{debug, error, warn};
 
 pub mod config;
 pub mod handshake;
@@ -925,7 +925,9 @@ impl JavaClient {
                 );
             }
             id if id
-                == verdantgolem_protocol::java::server::play::SPickItemFromEntity::to_id(version) =>
+                == verdantgolem_protocol::java::server::play::SPickItemFromEntity::to_id(
+                    version,
+                ) =>
             {
                 self.handle_pick_item_from_entity(
                     player,
@@ -1082,7 +1084,9 @@ impl JavaClient {
                 self.handle_place_recipe(server, player, &packet);
             }
             id if id
-                == verdantgolem_protocol::java::server::play::SCustomClickAction::to_id(version) =>
+                == verdantgolem_protocol::java::server::play::SCustomClickAction::to_id(
+                    version,
+                ) =>
             {
                 let packet = verdantgolem_protocol::java::server::play::SCustomClickAction::read(
                     &mut payload,

@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::world::WorldEvent;
 use verdantgolem_util::Difficulty;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 use super::door_interact::DoorInteractGoal;
 use super::{Controls, Goal};

@@ -1,7 +1,7 @@
 use crate::entity::player::advancement::PlayerAdvancement;
+use std::cmp::PartialEq;
 use verdantgolem_data::advancement_data::AdvancementNode;
 use verdantgolem_data::{ADVANCEMENT_TREE, Advancement};
-use std::cmp::PartialEq;
 
 static VISIBILITY_DEPTH: usize = 3;
 

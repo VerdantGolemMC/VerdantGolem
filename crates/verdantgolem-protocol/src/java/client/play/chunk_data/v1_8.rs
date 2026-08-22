@@ -2,10 +2,10 @@ use super::util::get_light_bytes;
 use crate::VarInt;
 use crate::WritingError;
 use crate::ser::NetworkWriteExt;
+use std::io::Write;
 use verdantgolem_data::block_state_remap::remap_block_state_for_version;
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::ChunkData;
-use std::io::Write;
 
 /// Serializes chunk data for Minecraft 1.8.x.
 pub fn write_chunk_data(

@@ -1,6 +1,12 @@
 use crate::block::entities::BlockEntity;
 use crate::entity::experience_orb::ExperienceOrbEntity;
 use crate::world::World;
+use std::any::Any;
+use std::array::from_fn;
+use std::sync::Arc;
+use std::sync::RwLock;
+use std::sync::atomic::Ordering;
+use std::sync::atomic::{AtomicBool, AtomicI32, AtomicI64};
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{BlockProperties, FacingHopper, HopperLikeProperties};
 use verdantgolem_data::item_stack::ItemStack;
@@ -11,12 +17,6 @@ use verdantgolem_nbt::tag::NbtTag;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::inventory::{Clearable, Inventory, sync_write_items_to_nbt};
-use std::any::Any;
-use std::array::from_fn;
-use std::sync::Arc;
-use std::sync::RwLock;
-use std::sync::atomic::Ordering;
-use std::sync::atomic::{AtomicBool, AtomicI32, AtomicI64};
 
 pub struct HopperBlockEntity {
     pub position: BlockPos,
@@ -289,6 +289,28 @@ impl HopperBlockEntity {
 
     fn eject_items(&self, world: &Arc<World>) -> bool {
         // TODO getEntityContainer
+
+        // carpet rule hopperCounters: transfers into wool count and void the items
+        let target_pos = self.position.offset(to_offset(&self.facing));
+        if crate::carpet::values().hopper_counters {
+            let (target_block, _) = world.get_block_and_state(&target_pos);
+            if let Some(channel) = crate::carpet::counters::wool_channel(&target_block) {
+                let mut items = self.items.write().await;
+                for index in 0..items.len() {
+                    let item = &items[index];
+                    if !item.is_empty() {
+                        let key = item.item.registry_key.to_string();
+                        let count = u64::from(item.item_count);
+                        items[index] = ItemStack::EMPTY.clone();
+                        drop(items);
+                        crate::carpet::counters::add(channel, &key, count);
+                        self.mark_dirty();
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
 
         if let Some(entity) = world.get_block_entity(&self.position.offset(to_offset(&self.facing)))
             && let Some(container) = entity.get_inventory()

@@ -1,8 +1,8 @@
 use std::ops::BitOr;
 
+use rand::RngExt;
 use verdantgolem_data::entity::EntityStatus;
 use verdantgolem_data::tag::{self, Taggable};
-use rand::RngExt;
 
 use super::{Controls, Goal};
 use crate::entity::mob::Mob;

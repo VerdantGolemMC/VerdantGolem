@@ -7,6 +7,12 @@ use crate::entity::player::Player;
 use crate::server::Server;
 use crate::world::World;
 use crossbeam::atomic::AtomicCell;
+use rand::RngExt;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::sync::atomic::Ordering::Relaxed;
+use std::sync::atomic::{AtomicI32, AtomicU8, Ordering};
+use uuid::Uuid;
 use verdantgolem_data::attributes::Attributes;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::data_component_impl::EquipmentSlot;
@@ -24,12 +30,6 @@ use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::random::xoroshiro128::Xoroshiro;
 use verdantgolem_util::random::{RandomGenerator, get_seed};
 use verdantgolem_util::version::JavaMinecraftVersion;
-use rand::RngExt;
-use std::pin::Pin;
-use std::sync::Arc;
-use std::sync::atomic::Ordering::Relaxed;
-use std::sync::atomic::{AtomicI32, AtomicU8, Ordering};
-use uuid::Uuid;
 
 pub mod bat;
 pub mod blaze;
@@ -534,8 +534,10 @@ impl MobEntity {
 
         if currently_leashed {
             entity.unleash();
-            let lead_item =
-                verdantgolem_data::item_stack::ItemStack::new(1, &verdantgolem_data::item::Item::LEAD);
+            let lead_item = verdantgolem_data::item_stack::ItemStack::new(
+                1,
+                &verdantgolem_data::item::Item::LEAD,
+            );
             entity
                 .world
                 .load()

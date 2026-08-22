@@ -44,7 +44,10 @@ impl NautilusEntity {
             is_dashing: AtomicBool::new(false),
             dash_cooldown: AtomicI32::new(0),
             is_saddled: AtomicBool::new(false),
-            inventory: Mutex::new(vec![ItemStack::new(0, &verdantgolem_data::item::Item::AIR); 9]),
+            inventory: Mutex::new(vec![
+                ItemStack::new(0, &verdantgolem_data::item::Item::AIR);
+                9
+            ]),
         };
 
         Arc::new(nautilus)

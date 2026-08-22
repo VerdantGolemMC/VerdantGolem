@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering::Relaxed};
 
+use rand::RngExt;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_data::tag::{self, Taggable};
@@ -11,7 +12,6 @@ use verdantgolem_protocol::java::client::play::Metadata;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::chunk::ChunkHeightmapType;
-use rand::RngExt;
 
 use crate::entity::mob::{Mob, MobEntity};
 use crate::entity::{Entity, EntityBase};

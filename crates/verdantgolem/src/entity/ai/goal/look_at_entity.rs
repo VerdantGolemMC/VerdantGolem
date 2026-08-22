@@ -4,9 +4,9 @@ use crate::entity::ai::target_predicate::TargetPredicate;
 use crate::entity::mob::Mob;
 use crate::entity::predicate::EntityPredicate;
 use crate::entity::{EntityBase, player::Player};
-use verdantgolem_data::entity::EntityType;
 use rand::RngExt;
 use std::sync::{Arc, Weak};
+use verdantgolem_data::entity::EntityType;
 
 #[expect(dead_code)]
 pub struct LookAtEntityGoal {

@@ -1,10 +1,10 @@
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockDirection, BlockId, BlockStateId, FacingExt,
     block_properties::{AmethystClusterLikeProperties, BlockProperties},
 };
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 use crate::block::{
     BlockBehaviour, BlockMetadata, CanPlaceAtArgs, GetStateForNeighborUpdateArgs, OnPlaceArgs,

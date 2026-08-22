@@ -16,8 +16,8 @@ pub trait GeneratorInit {
     fn new(seed: Seed, dimension: Dimension) -> Self;
 }
 
-use verdantgolem_data::structures::{StructurePlacementCalculator, StructureSet};
 use rustc_hash::FxHashMap;
+use verdantgolem_data::structures::{StructurePlacementCalculator, StructureSet};
 
 use std::sync::Arc;
 

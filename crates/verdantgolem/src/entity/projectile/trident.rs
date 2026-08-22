@@ -332,7 +332,8 @@ impl EntityBase for TridentEntity {
                     .item_stack
                     .lock()
                     .unwrap_or_else(std::sync::PoisonError::into_inner)
-                    .get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
+                    .get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>(
+                    )
                 {
                     for (enchantment, level) in enchantments.enchantment.iter() {
                         if **enchantment == verdantgolem_data::Enchantment::IMPALING {

@@ -1,6 +1,6 @@
+use rustc_hash::FxHashMap;
 use verdantgolem_data::noise_router::WrapperType;
 use verdantgolem_util::math::vector3::Vector3;
-use rustc_hash::FxHashMap;
 
 use crate::generation::{biome_coords, positions::chunk_pos};
 

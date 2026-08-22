@@ -1,8 +1,8 @@
 use crate::entity::Entity;
 use crate::entity::mob::zombie::ZombieEntityBase;
 use crate::entity::mob::{Mob, MobEntity};
-use verdantgolem_nbt::compound::NbtCompound;
 use std::sync::Arc;
+use verdantgolem_nbt::compound::NbtCompound;
 
 pub struct ZombieVillagerEntity {
     pub mob_entity: Arc<ZombieEntityBase>,

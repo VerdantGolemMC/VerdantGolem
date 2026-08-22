@@ -9,6 +9,7 @@ use crate::{
     server::Server,
 };
 use core::str;
+use tracing::{debug, trace, warn};
 use verdantgolem_data::registry::Registry;
 use verdantgolem_protocol::{
     ConnectionState, KnownPack,
@@ -21,7 +22,6 @@ use verdantgolem_protocol::{
     },
 };
 use verdantgolem_util::{Hand, text::TextComponent};
-use tracing::{debug, trace, warn};
 
 const BRAND_CHANNEL_PREFIX: &str = "minecraft:brand";
 

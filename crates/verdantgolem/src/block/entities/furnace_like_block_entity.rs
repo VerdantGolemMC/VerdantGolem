@@ -158,7 +158,10 @@ macro_rules! impl_cooking_block_entity_base {
                 }
                 false
             }
-            fn craft_recipe(&self, recipe: Option<&verdantgolem_data::recipes::CookingRecipe>) -> bool {
+            fn craft_recipe(
+                &self,
+                recipe: Option<&verdantgolem_data::recipes::CookingRecipe>,
+            ) -> bool {
                 let can_accept_output =
                     self.can_accept_recipe_output(recipe, self.get_max_count_per_stack());
                 if let Some(recipe) = recipe {
@@ -190,7 +193,8 @@ macro_rules! impl_cooking_block_entity_base {
                             && !items[1].is_empty()
                             && items[1].item.id == verdantgolem_data::item::Item::BUCKET.id
                         {
-                            items[1] = ItemStack::new(1, &verdantgolem_data::item::Item::WATER_BUCKET);
+                            items[1] =
+                                ItemStack::new(1, &verdantgolem_data::item::Item::WATER_BUCKET);
                         }
 
                         items[0].decrement(1);
@@ -325,10 +329,12 @@ macro_rules! impl_inventory_for_cooking {
                 items[slot] = stack.clone();
 
                 if slot == 0 && !is_same_item {
-                    if let Some(recipe) = verdantgolem_data::recipes::get_cooking_recipe_with_ingredient(
-                        stack.item,
-                        CookingRecipeKind::Smelting,
-                    ) {
+                    if let Some(recipe) =
+                        verdantgolem_data::recipes::get_cooking_recipe_with_ingredient(
+                            stack.item,
+                            CookingRecipeKind::Smelting,
+                        )
+                    {
                         self.set_cooking_total_time(recipe.cookingtime as u16);
                     } else {
                         self.set_cooking_total_time(0);

@@ -3,11 +3,11 @@ use crate::VarInt;
 use crate::WritingError;
 use crate::codec::bit_set::BitSet;
 use crate::ser::NetworkWriteExt;
+use std::io::Write;
 use verdantgolem_data::block_state_remap::remap_block_state_for_version;
 use verdantgolem_util::encompassing_bits;
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::ChunkData;
-use std::io::Write;
 
 /// Serializes chunk data for Minecraft 1.9 through 1.17.1 (including 1.12.2).
 #[expect(clippy::too_many_lines)]
@@ -99,7 +99,10 @@ pub fn write_chunk_data(
             )
         };
 
-        comp.put("WORLD_SURFACE", verdantgolem_nbt::tag::NbtTag::LongArray(ws_vec));
+        comp.put(
+            "WORLD_SURFACE",
+            verdantgolem_nbt::tag::NbtTag::LongArray(ws_vec),
+        );
         comp.put(
             "MOTION_BLOCKING",
             verdantgolem_nbt::tag::NbtTag::LongArray(mb_vec),

@@ -1,7 +1,7 @@
 use super::{Controls, Goal, to_goal_ticks};
 use crate::entity::{ai::pathfinder::NavigatorGoal, mob::Mob};
-use verdantgolem_util::math::vector3::Vector3;
 use rand::RngExt;
+use verdantgolem_util::math::vector3::Vector3;
 
 pub struct WanderAroundGoal {
     goal_control: Controls,

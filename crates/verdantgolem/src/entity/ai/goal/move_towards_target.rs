@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use super::{Controls, Goal};
 use crate::entity::{EntityBase, ai::pathfinder::NavigatorGoal, mob::Mob};
-use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
 use rand::RngExt;
+use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
 
 const HORIZONTAL_RANGE: f64 = 16.0;
 const VERTICAL_RANGE: i32 = 7;
@@ -186,7 +186,9 @@ mod tests {
         assert!(goal.target.is_none());
         assert!(goal.wanted_pos.is_none());
 
-        goal.wanted_pos = Some(verdantgolem_util::math::vector3::Vector3::new(1.0, 2.0, 3.0));
+        goal.wanted_pos = Some(verdantgolem_util::math::vector3::Vector3::new(
+            1.0, 2.0, 3.0,
+        ));
         assert!(goal.wanted_pos.is_some());
         goal.stop(&MockMob);
         assert!(goal.target.is_none());

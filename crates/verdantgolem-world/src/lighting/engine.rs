@@ -3,12 +3,12 @@ use crate::chunk_system::generation_cache::Cache;
 use crate::generation::height_limit::HeightLimitView;
 use crate::generation::proto_chunk::GenerationCache;
 use crate::lighting::storage::{get_block_light, get_sky_light, set_block_light, set_sky_light};
+use std::collections::VecDeque;
 use verdantgolem_config::lighting::LightingEngineConfig;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_util::HeightMap;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use std::collections::VecDeque;
 //use std::time::Instant;
 
 // These are hit on every neighbour of every propagated block, so the hash

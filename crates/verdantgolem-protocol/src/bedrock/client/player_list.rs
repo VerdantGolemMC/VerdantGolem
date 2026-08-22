@@ -2,9 +2,9 @@ use crate::{
     codec::{var_long::VarLong, var_uint::VarUInt},
     serial::PacketWrite,
 };
-use verdantgolem_macros::packet;
 use std::io::{Error, Write};
 use uuid::Uuid;
+use verdantgolem_macros::packet;
 
 use super::common::BuildPlatform;
 

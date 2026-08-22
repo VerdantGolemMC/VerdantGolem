@@ -2,16 +2,18 @@
 
 use crate::compound::NbtCompound;
 use crate::tag::NbtTag;
+use std::iter::Map;
+use std::vec::IntoIter;
+use tracing::warn;
 use verdantgolem_codecs::DataResult;
 use verdantgolem_codecs::DynamicOps;
 use verdantgolem_codecs::Lifecycle;
 use verdantgolem_codecs::MapLike;
 use verdantgolem_codecs::Number;
-use verdantgolem_codecs::struct_builder::{ResultStructBuilder, StringStructBuilder, StructBuilder};
+use verdantgolem_codecs::struct_builder::{
+    ResultStructBuilder, StringStructBuilder, StructBuilder,
+};
 use verdantgolem_codecs::{impl_get_list, impl_string_struct_builder, impl_struct_builder};
-use std::iter::Map;
-use std::vec::IntoIter;
-use tracing::warn;
 
 /// A [`DynamicOps`] implementation that represents values as [`NbtTag`]s.
 pub struct NbtOps;

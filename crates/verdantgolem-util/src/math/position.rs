@@ -7,9 +7,9 @@ use std::hash::Hash;
 
 use crate::math::vector2::Vector2;
 use num_traits::Euclid;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use verdantgolem_codecs::codec::list::validate_fixed_size;
 use verdantgolem_codecs::{DataResult, FlatTryFrom, IntStream, comap_flat_map_codec_impl};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// An iterator that yields all `BlockPos` positions within a cuboid region.
 pub struct BlockPosIterator {

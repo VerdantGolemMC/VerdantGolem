@@ -1,6 +1,6 @@
 use crate::{codec::var_int::VarInt, serial::PacketRead};
-use verdantgolem_macros::packet;
 use std::io::{Error, Read};
+use verdantgolem_macros::packet;
 
 #[derive(Clone, Debug)]
 pub enum AbilityValue {

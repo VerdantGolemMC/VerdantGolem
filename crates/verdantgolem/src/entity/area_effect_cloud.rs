@@ -61,7 +61,10 @@ impl AreaEffectCloudEntity {
             .store(true, std::sync::atomic::Ordering::Relaxed);
         let cloud = Self {
             entity,
-            item_stack: Mutex::new(ItemStack::new(0, &verdantgolem_data::item::Item::GLASS_BOTTLE)),
+            item_stack: Mutex::new(ItemStack::new(
+                0,
+                &verdantgolem_data::item::Item::GLASS_BOTTLE,
+            )),
             effects: Mutex::new(Vec::new()),
             radius: Mutex::new(3.0),
             duration: Mutex::new(600), // default for lingering potions

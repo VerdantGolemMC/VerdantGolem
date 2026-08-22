@@ -1,9 +1,9 @@
 use std::sync::atomic::{AtomicBool, Ordering::Relaxed};
 
 use crossbeam::atomic::AtomicCell;
+use uuid::Uuid;
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_protocol::java::client::play::Metadata;
-use uuid::Uuid;
 
 use crate::entity::passive::animal::Animal;
 

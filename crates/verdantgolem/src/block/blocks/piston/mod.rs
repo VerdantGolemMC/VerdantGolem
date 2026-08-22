@@ -13,6 +13,18 @@ pub mod piston_head;
 
 const MAX_MOVABLE_BLOCKS: usize = 12;
 
+#[must_use]
+pub fn push_limit() -> usize {
+    let limit = crate::carpet::values().push_limit;
+    if limit > 0 {
+        limit as usize
+    } else {
+        MAX_MOVABLE_BLOCKS
+    }
+}
+
+/// Carpet rule `pushLimit` overrides the piston push limit (default 12).
+
 pub struct PistonHandler<'a> {
     world: &'a World,
     pos_from: BlockPos,
@@ -111,7 +123,7 @@ impl<'a> PistonHandler<'a> {
             return true;
         }
         let mut i = 1;
-        if i + self.moved_blocks.len() > MAX_MOVABLE_BLOCKS {
+        if i + self.moved_blocks.len() > push_limit() {
             return false;
         }
         while Self::is_block_sticky(block) {
@@ -133,7 +145,7 @@ impl<'a> PistonHandler<'a> {
             }
             block = next_block;
             i += 1;
-            if i + self.moved_blocks.len() > MAX_MOVABLE_BLOCKS {
+            if i + self.moved_blocks.len() > push_limit() {
                 return false;
             }
         }

@@ -1,7 +1,7 @@
 use crate::entity::player::Player;
+use std::sync::Arc;
 use verdantgolem_macros::Event;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 /// An event that occurs when a player extracts items from a furnace output slot.
 #[derive(Event, Clone)]

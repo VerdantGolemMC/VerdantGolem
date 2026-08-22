@@ -1,7 +1,7 @@
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_macros::{Event, cancellable};
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::Arc;
 
 /// An event that occurs when a creature spawns.
 #[cancellable]

@@ -2,8 +2,6 @@ use bytes::{Buf, BufMut, Bytes};
 use flate2::read::{GzDecoder, GzEncoder, ZlibDecoder, ZlibEncoder};
 use itertools::Itertools;
 use lz4_java_wrc::Context;
-use verdantgolem_config::chunk::AnvilChunkConfig;
-use verdantgolem_util::math::vector2::Vector2;
 use std::{
     io::{Read, SeekFrom, Write},
     marker::PhantomData,
@@ -15,6 +13,8 @@ use tokio::{
     sync::Mutex,
 };
 use tracing::{debug, trace};
+use verdantgolem_config::chunk::AnvilChunkConfig;
+use verdantgolem_util::math::vector2::Vector2;
 
 use crate::chunk::{
     ChunkParsingError, ChunkReadingError, ChunkSerializingError, ChunkWritingError,

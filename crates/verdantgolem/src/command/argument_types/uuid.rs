@@ -1,6 +1,6 @@
+use uuid::Uuid;
 use verdantgolem_data::translation::java::ARGUMENT_UUID_INVALID;
 use verdantgolem_util::uuid::parse_uuid;
-use uuid::Uuid;
 
 use crate::command::{
     argument_types::argument_type::{ArgumentType, JavaClientArgumentType},

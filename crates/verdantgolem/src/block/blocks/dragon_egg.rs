@@ -2,11 +2,11 @@ use crate::block::blocks::falling::FallingBlock;
 use crate::block::registry::BlockActionResult;
 use crate::block::{BlockBehaviour, BrokenArgs, NormalUseArgs, PlacedArgs};
 use crate::world::World;
+use rand::{RngExt, rng};
+use std::sync::Arc;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::tick::TickPriority;
-use rand::{RngExt, rng};
-use std::sync::Arc;
 
 #[pumpkin_block("minecraft:dragon_egg")]
 pub struct DragonEggBlock;

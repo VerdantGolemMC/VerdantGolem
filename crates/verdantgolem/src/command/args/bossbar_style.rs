@@ -7,7 +7,9 @@ use crate::command::dispatcher::CommandError;
 use crate::command::tree::RawArgs;
 use crate::server::Server;
 use crate::world::bossbar::BossbarDivisions;
-use verdantgolem_protocol::java::client::play::{ArgumentType, CommandSuggestion, SuggestionProviders};
+use verdantgolem_protocol::java::client::play::{
+    ArgumentType, CommandSuggestion, SuggestionProviders,
+};
 
 pub struct BossbarStyleArgumentConsumer;
 

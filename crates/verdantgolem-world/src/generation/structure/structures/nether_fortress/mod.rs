@@ -1,11 +1,11 @@
 use std::sync::{Arc, Mutex};
 
+use serde::Deserialize;
 use verdantgolem_util::{
     BlockDirection,
     math::{block_box::BlockBox, position::BlockPos},
     random::RandomImpl,
 };
-use serde::Deserialize;
 
 use crate::generation::{
     section_coords,

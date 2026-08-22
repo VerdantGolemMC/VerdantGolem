@@ -108,7 +108,9 @@ impl MerchantScreenHandler {
         }
     }
 
-    fn adjusted_cost_a(offer: &verdantgolem_protocol::java::client::play::MerchantOffer) -> ItemStack {
+    fn adjusted_cost_a(
+        offer: &verdantgolem_protocol::java::client::play::MerchantOffer,
+    ) -> ItemStack {
         let mut cost = offer.base_cost_a.0.as_ref().clone();
         let demand = i32::from(cost.item_count).saturating_mul(offer.demand) as f32;
         let demand_bonus = (demand * offer.price_multiplier).floor().max(0.0) as i32;
@@ -496,6 +498,7 @@ mod tests {
         sync::atomic::{AtomicI32, AtomicUsize, Ordering},
     };
 
+    use std::sync::Mutex;
     use verdantgolem_data::{data_component_impl::EquipmentSlot, item::Item};
     use verdantgolem_protocol::{
         codec::item_stack_seralizer::ItemStackSerializer,
@@ -508,7 +511,6 @@ mod tests {
         },
     };
     use verdantgolem_world::inventory::SimpleInventory;
-    use std::sync::Mutex;
 
     use crate::{entity_equipment::EntityEquipment, screen_handler::InventoryPlayer};
 

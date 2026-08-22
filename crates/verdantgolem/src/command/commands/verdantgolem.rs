@@ -1,12 +1,12 @@
+use serde::Deserialize;
+use std::borrow::Cow;
+use std::sync::{LazyLock, Mutex};
+use std::time::{Duration, Instant};
 use verdantgolem_data::packet::CURRENT_MC_VERSION;
 use verdantgolem_util::text::click::ClickEvent;
 use verdantgolem_util::text::hover::HoverEvent;
 use verdantgolem_util::text::{TextComponent, color::NamedColor};
 use verdantgolem_util::translation::get_translation_text;
-use serde::Deserialize;
-use std::borrow::Cow;
-use std::sync::{LazyLock, Mutex};
-use std::time::{Duration, Instant};
 
 use crate::command::CommandResult;
 use crate::command::{CommandExecutor, CommandSender, args::ConsumedArgs, tree::CommandTree};
@@ -71,7 +71,8 @@ fn fetch_all_contributors_cached() -> Vec<Contributor> {
 fn fetch_all_contributors() -> Vec<Contributor> {
     let mut all_contributors = Vec::new();
     let mut next_url = Some(
-        "https://api.github.com/repos/VerdantGolemMC/VerdantGolem/contributors?per_page=100".to_string(),
+        "https://api.github.com/repos/VerdantGolemMC/VerdantGolem/contributors?per_page=100"
+            .to_string(),
     );
 
     while let Some(url) = next_url {

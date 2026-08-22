@@ -68,8 +68,8 @@ use crate::{
     server::{Server, seasonal_events},
     world::{BlockBreakingProgress, chunker},
 };
-use verdantgolem_data::BlockDirection;
 use tracing::{debug, info};
+use verdantgolem_data::BlockDirection;
 
 const MIN_PREDICTED_BREAK_PROGRESS: f32 = 0.65;
 

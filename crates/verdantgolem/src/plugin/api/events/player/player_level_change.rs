@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
-use verdantgolem_macros::Event;
 use std::sync::Arc;
+use verdantgolem_macros::Event;
 
 /// An event that occurs when a player's experience level changes.
 #[derive(Event, Clone)]

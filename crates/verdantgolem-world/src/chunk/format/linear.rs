@@ -8,11 +8,11 @@ use crate::chunk::format::anvil::{AnvilChunkFile, SingleChunkDataSerializer};
 use crate::chunk::io::{ChunkSerializer, LoadedData};
 use crate::chunk::{ChunkReadingError, ChunkWritingError};
 use bytes::{Buf, BufMut, Bytes};
-use verdantgolem_util::math::vector2::Vector2;
 use ruzstd::decoding::StreamingDecoder;
 use ruzstd::encoding::{CompressionLevel, compress_to_vec};
 use tokio::io::{AsyncWriteExt, BufWriter};
 use tracing::{error, warn};
+use verdantgolem_util::math::vector2::Vector2;
 use xxhash_rust::xxh64::xxh64;
 
 use super::anvil::CHUNK_COUNT;

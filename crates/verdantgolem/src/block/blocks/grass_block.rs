@@ -1,3 +1,4 @@
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::{
     Block, BlockState,
@@ -15,7 +16,6 @@ use verdantgolem_world::generation::feature::{
 };
 use verdantgolem_world::tick::TickPriority;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 use crate::block::{BlockBehaviour, GetStateForNeighborUpdateArgs};
 

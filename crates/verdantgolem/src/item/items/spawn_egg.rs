@@ -4,6 +4,7 @@ use crate::entity::player::Player;
 use crate::entity::r#type::from_type;
 use crate::item::{ItemBehaviour, ItemMetadata};
 use crate::server::Server;
+use uuid::Uuid;
 use verdantgolem_data::data_component_impl::{
     AxolotlVariantImpl, CatVariantImpl, ChickenVariantImpl, CowVariantImpl, FoxVariantImpl,
     FrogVariantImpl, HorseVariantImpl, LlamaVariantImpl, MooshroomVariantImpl, PigVariantImpl,
@@ -15,7 +16,6 @@ use verdantgolem_data::{Block, BlockDirection};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::math::wrap_degrees;
-use uuid::Uuid;
 
 pub struct SpawnEggItem;
 

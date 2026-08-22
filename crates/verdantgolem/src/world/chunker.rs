@@ -1,5 +1,5 @@
-use verdantgolem_util::math::vector2::Vector2;
 use std::{num::NonZero, sync::Arc};
+use verdantgolem_util::math::vector2::Vector2;
 
 use verdantgolem_protocol::{
     bedrock::client::network_chunk_publisher_update::CNetworkChunkPublisherUpdate,

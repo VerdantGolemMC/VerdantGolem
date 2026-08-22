@@ -191,7 +191,9 @@ impl ToTokens for JavaMinecraftVersion {
             Self::V_1_21_6 => quote! { verdantgolem_util::version::JavaMinecraftVersion::V_1_21_6 },
             Self::V_1_21_7 => quote! { verdantgolem_util::version::JavaMinecraftVersion::V_1_21_7 },
             Self::V_1_21_9 => quote! { verdantgolem_util::version::JavaMinecraftVersion::V_1_21_9 },
-            Self::V_1_21_11 => quote! { verdantgolem_util::version::JavaMinecraftVersion::V_1_21_11 },
+            Self::V_1_21_11 => {
+                quote! { verdantgolem_util::version::JavaMinecraftVersion::V_1_21_11 }
+            }
             Self::V_26_1 => quote! { verdantgolem_util::version::JavaMinecraftVersion::V_26_1 },
             Self::V_26_2 => quote! { verdantgolem_util::version::JavaMinecraftVersion::V_26_2 },
         });

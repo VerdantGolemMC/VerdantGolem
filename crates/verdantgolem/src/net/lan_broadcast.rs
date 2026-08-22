@@ -1,10 +1,10 @@
-use verdantgolem_config::LANBroadcastConfig;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::atomic::Ordering;
 use std::time::Duration;
 use tokio::net::UdpSocket;
 use tokio::{select, time};
 use tracing::{error, info, warn};
+use verdantgolem_config::LANBroadcastConfig;
 
 use crate::{SHOULD_STOP, STOP_INTERRUPT};
 

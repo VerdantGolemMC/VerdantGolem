@@ -10,16 +10,16 @@
 use crate::entity_equipment::EntityEquipment;
 use crate::screen_handler::InventoryPlayer;
 
+use std::any::Any;
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::{Arc, Mutex, RwLock};
 use verdantgolem_data::data_component_impl::EquipmentSlot;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_protocol::java::client::play::CSetPlayerInventory;
 use verdantgolem_util::Hand;
 use verdantgolem_world::inventory::{Clearable, Inventory};
-use std::any::Any;
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::{Arc, Mutex, RwLock};
 
 use tracing::warn;
 

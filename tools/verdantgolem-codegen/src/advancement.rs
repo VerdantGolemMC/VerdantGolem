@@ -1,15 +1,15 @@
 use heck::ToShoutySnakeCase;
 use proc_macro2::TokenStream;
-use verdantgolem_util::identifier::Identifier;
-use verdantgolem_util::resource_location::ResourceLocation;
-use verdantgolem_util::text::TextComponent;
-use verdantgolem_util::text::TextContent::Translate;
 use quote::{ToTokens, format_ident, quote};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::cmp::PartialEq;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use std::{collections::BTreeMap, fs};
+use verdantgolem_util::identifier::Identifier;
+use verdantgolem_util::resource_location::ResourceLocation;
+use verdantgolem_util::text::TextComponent;
+use verdantgolem_util::text::TextContent::Translate;
 
 /// helper default used by serde for fields that should be `true` when omitted.
 const fn default_true() -> bool {

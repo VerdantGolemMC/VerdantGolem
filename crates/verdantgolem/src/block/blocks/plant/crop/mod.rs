@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::{
     Block,
     BlockDirection::{East, North, South, West},
@@ -8,7 +9,6 @@ use verdantgolem_data::{
 };
 use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 use crate::{block::blocks::plant::PlantBlockBase, world::World};
 

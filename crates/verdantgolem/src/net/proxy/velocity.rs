@@ -1,11 +1,6 @@
 use arc_swap::ArcSwap;
 use bytes::{BufMut, BytesMut};
 use hmac::{Hmac, KeyInit, Mac};
-use verdantgolem_config::networking::proxy::VelocityConfig;
-use verdantgolem_protocol::{
-    Property, java::client::login::CLoginPluginRequest, java::server::login::SLoginPluginResponse,
-    ser::NetworkReadExt,
-};
 use rand::RngExt;
 use sha2::Sha256;
 use std::sync::Arc;
@@ -18,6 +13,11 @@ use std::{
 };
 use thiserror::Error;
 use tracing::debug;
+use verdantgolem_config::networking::proxy::VelocityConfig;
+use verdantgolem_protocol::{
+    Property, java::client::login::CLoginPluginRequest, java::server::login::SLoginPluginResponse,
+    ser::NetworkReadExt,
+};
 
 use crate::net::{GameProfile, java::pending::PendingConnection};
 

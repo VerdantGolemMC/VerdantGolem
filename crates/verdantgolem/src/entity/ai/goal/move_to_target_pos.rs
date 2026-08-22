@@ -3,10 +3,10 @@ use super::{Controls, Goal, to_goal_ticks};
 use crate::entity::ai::pathfinder::NavigatorGoal;
 use crate::entity::{ai::goal::ParentHandle, mob::Mob};
 use crate::world::World;
-use verdantgolem_util::math::position::BlockPos;
-use verdantgolem_util::math::vector3::Vector3;
 use rand::RngExt;
 use std::sync::Arc;
+use verdantgolem_util::math::position::BlockPos;
+use verdantgolem_util::math::vector3::Vector3;
 
 const GIVE_UP_TICKS: i32 = 1200;
 const STAY_TICKS: i32 = 1200;

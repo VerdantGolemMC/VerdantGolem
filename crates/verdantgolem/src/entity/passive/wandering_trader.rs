@@ -3,6 +3,8 @@ use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, Weak};
 use uuid::Uuid;
 
+use rand::RngExt;
+use rand::seq::IndexedRandom;
 use verdantgolem_data::data_component_impl::EquipmentSlot;
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_data::entity::EntityType;
@@ -27,8 +29,6 @@ use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::inventory::SimpleInventory;
-use rand::RngExt;
-use rand::seq::IndexedRandom;
 
 use super::villager::{
     apply_potion, apply_random_dye, apply_random_stew_effect, trigger_trade_advancement,
@@ -78,8 +78,9 @@ fn add_offers_from_trade_set(
         match trade.modifier {
             VillagerTradeModifier::RandomDyes => apply_random_dye(rng, &mut output),
             VillagerTradeModifier::RandomPotion => {
-                if let Some(potion_name) =
-                    verdantgolem_data::tag::Potion::MINECRAFT_TRADEABLE.0.choose(rng)
+                if let Some(potion_name) = verdantgolem_data::tag::Potion::MINECRAFT_TRADEABLE
+                    .0
+                    .choose(rng)
                 {
                     apply_potion(&mut output, potion_name);
                 }
@@ -436,10 +437,9 @@ impl WanderingTraderEntity {
             return false;
         };
         let entity = self.get_entity();
-        let range = player
-            .living_entity
-            .get_attribute_value(&verdantgolem_data::attributes::Attributes::ENTITY_INTERACTION_RANGE)
-            + 4.0;
+        let range = player.living_entity.get_attribute_value(
+            &verdantgolem_data::attributes::Attributes::ENTITY_INTERACTION_RANGE,
+        ) + 4.0;
         entity.is_alive()
             && self.mob_entity.living_entity.health.load() > 0.0
             && self

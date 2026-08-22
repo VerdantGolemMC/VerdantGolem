@@ -6,6 +6,7 @@ use crate::{
     entity::{Entity, EntityBase, projectile::ThrownItemEntity, r#type::from_type},
     server::Server,
 };
+use uuid::Uuid;
 use verdantgolem_data::entity::{EntityStatus, EntityType};
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
@@ -13,7 +14,6 @@ use verdantgolem_protocol::bedrock::server::actor_event::ActorEventID;
 use verdantgolem_protocol::codec::item_stack_seralizer::ItemStackSerializer;
 use verdantgolem_protocol::java::client::play::Metadata;
 use verdantgolem_util::math::vector3::Vector3;
-use uuid::Uuid;
 
 const MAX_EGG_HATCH_EVENT_SPAWNS: usize = 16;
 const GRAVITY: f64 = 0.03;

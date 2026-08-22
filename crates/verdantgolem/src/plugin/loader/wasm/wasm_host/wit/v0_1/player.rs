@@ -1,6 +1,6 @@
-use verdantgolem_protocol::bedrock::client::PackIdVersion;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use verdantgolem_protocol::bedrock::client::PackIdVersion;
 use wasmtime::component::Resource;
 
 use crate::plugin::api::gui::PluginScreenHandler;
@@ -34,13 +34,13 @@ use crate::{
         },
     },
 };
+use std::str::FromStr;
 use verdantgolem_inventory::player::player_inventory::PlayerInventory;
 use verdantgolem_protocol::Property;
 use verdantgolem_protocol::bedrock::client::modal_form_request::CModalFormRequest;
 use verdantgolem_protocol::java::client::dialog::DialogNBT;
 use verdantgolem_util::permission::PermissionLvl;
 use verdantgolem_util::translation::Locale;
-use std::str::FromStr;
 
 use verdantgolem_protocol::bedrock::client::set_actor_data::{
     CSetActorData, MetadataValue, PropertySyncData, SyncedActorDataList, entity_data_key,
@@ -3062,9 +3062,11 @@ impl pumpkin::plugin::player::HostJavaPlayer for PluginHostState {
 
         if let crate::net::ClientPlatform::Java(_) = player.client.as_ref() {
             player
-                .send_client_packet(&verdantgolem_protocol::java::client::play::CCustomPayload::new(
-                    &channel, &data,
-                ))
+                .send_client_packet(
+                    &verdantgolem_protocol::java::client::play::CCustomPayload::new(
+                        &channel, &data,
+                    ),
+                )
                 .await;
         }
         Ok(())
@@ -3113,9 +3115,13 @@ impl pumpkin::plugin::player::HostJavaPlayer for PluginHostState {
                 }
                 verdantgolem_protocol::ConnectionState::Play => {
                     client
-                        .send_packet(&verdantgolem_protocol::java::client::play::CPlayShowDialog::new(
-                            verdantgolem_protocol::IdOr::Value(DialogNBT::from_dialog(&protocol_dialog)),
-                        ))
+                        .send_packet(
+                            &verdantgolem_protocol::java::client::play::CPlayShowDialog::new(
+                                verdantgolem_protocol::IdOr::Value(DialogNBT::from_dialog(
+                                    &protocol_dialog,
+                                )),
+                            ),
+                        )
                         .await;
                 }
                 _ => {}
@@ -3159,7 +3165,9 @@ impl pumpkin::plugin::player::HostJavaPlayer for PluginHostState {
                 }
                 verdantgolem_protocol::ConnectionState::Play => {
                     client
-                        .send_packet(&verdantgolem_protocol::java::client::play::CPlayClearDialog::new())
+                        .send_packet(
+                            &verdantgolem_protocol::java::client::play::CPlayClearDialog::new(),
+                        )
                         .await;
                 }
                 _ => {}
@@ -3257,7 +3265,9 @@ impl pumpkin::plugin::player::HostJavaPlayer for PluginHostState {
         if let crate::net::ClientPlatform::Java(client) = player.client.as_ref() {
             client
                 .send_packet(
-                    &verdantgolem_protocol::java::client::play::CRemoveResourcePack::new(Some(&uuid)),
+                    &verdantgolem_protocol::java::client::play::CRemoveResourcePack::new(Some(
+                        &uuid,
+                    )),
                 )
                 .await;
         }
@@ -3279,7 +3289,9 @@ impl pumpkin::plugin::player::HostJavaPlayer for PluginHostState {
 
         if let crate::net::ClientPlatform::Java(client) = player.client.as_ref() {
             client
-                .send_packet(&verdantgolem_protocol::java::client::play::CRemoveResourcePack::new(None))
+                .send_packet(
+                    &verdantgolem_protocol::java::client::play::CRemoveResourcePack::new(None),
+                )
                 .await;
         }
         Ok(())
@@ -3731,8 +3743,8 @@ impl pumpkin::plugin::player::HostBedrockPlayer for PluginHostState {
             let entries = info
                 .packs
                 .into_iter()
-                .map(
-                    |p| verdantgolem_protocol::bedrock::client::resource_packs_info::PackInfoData {
+                .map(|p| {
+                    verdantgolem_protocol::bedrock::client::resource_packs_info::PackInfoData {
                         pack_id_version: PackIdVersion::new(Uuid::from_wit(&p.id), p.version),
                         pack_size: p.size,
                         cdn_url: p.download_url,
@@ -3742,8 +3754,8 @@ impl pumpkin::plugin::player::HostBedrockPlayer for PluginHostState {
                         has_scripts: p.has_scripts,
                         is_addon_pack: p.addon_pack,
                         is_ray_tracing_capable: p.rtx_enabled,
-                    },
-                )
+                    }
+                })
                 .collect();
 
             let world_template_id = info

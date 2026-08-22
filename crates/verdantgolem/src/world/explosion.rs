@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rustc_hash::FxHashMap;
 use verdantgolem_data::{
     Block, BlockState, BlockStateId,
     damage::DamageType,
@@ -9,7 +10,6 @@ use verdantgolem_data::{
 };
 use verdantgolem_util::math::{boundingbox::BoundingBox, position::BlockPos, vector3::Vector3};
 use verdantgolem_world::chunk::ChunkData;
-use rustc_hash::FxHashMap;
 
 use crate::{
     block::{ExplodeArgs, drop_loot},
@@ -500,7 +500,14 @@ impl Explosion {
 
     /// Returns the removed block count
     pub fn explode(&self, world: &Arc<World>) -> u32 {
-        self.damage_entities(world);
+        // carpet rules explosionNoEntityDamage / explosionNoBlockDamage
+        let rules = crate::carpet::values();
+        if !rules.explosion_no_entity_damage {
+            self.damage_entities(world);
+        }
+        if rules.explosion_no_block_damage {
+            return 0;
+        }
 
         match self.block_interaction {
             BlockInteraction::Keep => 0,

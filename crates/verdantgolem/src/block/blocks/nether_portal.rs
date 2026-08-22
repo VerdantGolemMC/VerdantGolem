@@ -1,5 +1,7 @@
 use std::sync::{Arc, atomic::Ordering};
 
+use rand::RngExt;
+use uuid::Uuid;
 use verdantgolem_data::{
     Block, BlockDirection, BlockState, BlockStateId, Rotation,
     block_properties::{Axis, BlockProperties, HorizontalAxis, NetherPortalLikeProperties},
@@ -8,8 +10,6 @@ use verdantgolem_data::{
 };
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::{Difficulty, GameMode, math::vector3::Vector3};
-use rand::RngExt;
-use uuid::Uuid;
 
 use crate::{
     block::{

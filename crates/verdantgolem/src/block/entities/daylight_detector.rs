@@ -8,7 +8,8 @@ use crate::world::{BlockFlags, World};
 
 use super::BlockEntity;
 
-type DaylightDetectorProperties = verdantgolem_data::block_properties::DaylightDetectorLikeProperties;
+type DaylightDetectorProperties =
+    verdantgolem_data::block_properties::DaylightDetectorLikeProperties;
 
 pub struct DaylightDetectorBlockEntity {
     pub position: BlockPos,

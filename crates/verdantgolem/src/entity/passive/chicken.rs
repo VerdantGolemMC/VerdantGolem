@@ -3,11 +3,11 @@ use std::sync::{
     atomic::{AtomicI32, AtomicU8, Ordering, Ordering::Relaxed},
 };
 
+use rand::RngExt;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::sound::Sound;
 use verdantgolem_data::{entity::EntityType, item::Item};
 use verdantgolem_protocol::codec::var_int::VarInt;
-use rand::RngExt;
 
 use crate::entity::{
     Entity, EntityBase,

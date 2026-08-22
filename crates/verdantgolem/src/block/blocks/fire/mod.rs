@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use rand::RngExt;
+use soul_fire::SoulFireBlock;
 use verdantgolem_data::dimension::Dimension;
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::world::WorldEvent;
@@ -7,17 +9,15 @@ use verdantgolem_data::{Block, BlockDirection, tag};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::random::RandomGenerator;
 use verdantgolem_util::random::xoroshiro128::Xoroshiro;
-use rand::RngExt;
-use soul_fire::SoulFireBlock;
 
 use crate::block::blocks::fire::fire::FireBlock;
 use crate::block::{BlockBehaviour, CanPlaceAtArgs, OnEntityCollisionArgs};
 use crate::entity::EntityBase;
 use crate::world::World;
 use crate::world::portal::nether::NetherPortal;
+use std::sync::atomic::Ordering;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::entity::EntityType;
-use std::sync::atomic::Ordering;
 
 #[expect(clippy::module_inception)]
 pub mod fire;

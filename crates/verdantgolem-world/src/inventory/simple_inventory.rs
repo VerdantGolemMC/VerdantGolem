@@ -1,7 +1,7 @@
 use crate::inventory::{Clearable, Inventory};
-use verdantgolem_data::item_stack::ItemStack;
 use std::any::Any;
 use std::sync::RwLock;
+use verdantgolem_data::item_stack::ItemStack;
 
 pub struct SimpleInventory {
     pub stacks: RwLock<Vec<ItemStack>>,

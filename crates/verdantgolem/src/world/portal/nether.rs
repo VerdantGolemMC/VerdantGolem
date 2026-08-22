@@ -1,13 +1,15 @@
 use super::poi;
+use std::sync::Arc;
 use verdantgolem_data::{
     Block, BlockDirection, BlockState,
     block_properties::{BlockProperties, HorizontalAxis, NetherPortalLikeProperties},
     tag,
     tag::Taggable,
 };
-use verdantgolem_util::math::{boundingbox::EntityDimensions, position::BlockPos, vector3::Vector3};
+use verdantgolem_util::math::{
+    boundingbox::EntityDimensions, position::BlockPos, vector3::Vector3,
+};
 use verdantgolem_world::{chunk::ChunkHeightmapType, world::BlockFlags};
-use std::sync::Arc;
 
 use crate::world::World;
 

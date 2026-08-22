@@ -1,6 +1,9 @@
 use crate::entity::player::Player;
 use base64::{Engine as _, engine::general_purpose};
 use core::error;
+use std::{fs, path::Path};
+use tracing::{debug, info, warn};
+use uuid::Uuid;
 use verdantgolem_config::BasicConfiguration;
 use verdantgolem_data::packet::{CURRENT_MC_VERSION, LOWEST_SUPPORTED_MC_VERSION};
 use verdantgolem_protocol::{
@@ -8,9 +11,6 @@ use verdantgolem_protocol::{
     java::client::{config::CPluginMessage, status::CStatusResponse},
 };
 use verdantgolem_util::text::TextComponent;
-use std::{fs, path::Path};
-use tracing::{debug, info, warn};
-use uuid::Uuid;
 
 const DEFAULT_ICON: &[u8] = include_bytes!("../../../../assets/default_icon.png");
 const MAX_SAMPLE_PLAYERS: usize = 12;
@@ -114,9 +114,12 @@ impl CachedStatus {
     }
 
     fn build_sample_list(&self) -> Vec<Sample> {
+        // carpet rule pingPlayerListLimit caps the sample list
+        let limit = crate::carpet::values().ping_player_list_limit;
+        let limit = usize::try_from(limit).unwrap_or(MAX_SAMPLE_PLAYERS);
         self.player_samples
             .iter()
-            .take(MAX_SAMPLE_PLAYERS)
+            .take(limit.min(MAX_SAMPLE_PLAYERS))
             .map(|(id, name)| Sample {
                 name: name.clone(),
                 id: id.to_string(),

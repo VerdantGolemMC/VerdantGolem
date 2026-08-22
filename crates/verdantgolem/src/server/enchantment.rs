@@ -1,7 +1,7 @@
-use verdantgolem_data::enchantment::AttributeModifierSlot;
-use verdantgolem_util::text::TextComponent;
 use std::collections::HashMap;
 use tokio::sync::RwLock;
+use verdantgolem_data::enchantment::AttributeModifierSlot;
+use verdantgolem_util::text::TextComponent;
 
 #[derive(Clone, Debug)]
 pub struct CustomEnchantmentEntry {

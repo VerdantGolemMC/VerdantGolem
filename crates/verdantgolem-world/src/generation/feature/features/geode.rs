@@ -10,8 +10,8 @@ use crate::generation::feature::features::spring_feature::BlockWrapper;
 use crate::{
     block::BlockStateCodec, generation::proto_chunk::GenerationCache, world::WorldPortalExt,
 };
-use verdantgolem_util::random::RandomImpl;
 use std::cmp::Ordering;
+use verdantgolem_util::random::RandomImpl;
 
 /// Minimal wrapper around the perlin sampler used for geode generation, to avoid exposing the entire noise module to this file.
 struct NormalNoise(crate::generation::noise::perlin::DoublePerlinNoiseSampler);

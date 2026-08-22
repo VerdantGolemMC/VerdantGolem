@@ -1,5 +1,7 @@
 use verdantgolem_data::translation;
-use verdantgolem_protocol::java::client::play::{ArgumentType, CommandSuggestion, SuggestionProviders};
+use verdantgolem_protocol::java::client::play::{
+    ArgumentType, CommandSuggestion, SuggestionProviders,
+};
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::text::color::NamedColor;
 

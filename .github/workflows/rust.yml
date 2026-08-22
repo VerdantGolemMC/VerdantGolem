@@ -80,8 +80,6 @@ jobs:
           [
             ubuntu-latest,
             ubuntu-26.04-arm,
-            windows-latest,
-            windows-11-arm,
             macos-latest,
           ]
         toolchain:

@@ -6,8 +6,8 @@ use crate::{
     ServerPacket,
     ser::{NetworkReadExt, NetworkReadSliceExt, ReadingError},
 };
-use verdantgolem_util::version::JavaMinecraftVersion;
 use std::io::Read;
+use verdantgolem_util::version::JavaMinecraftVersion;
 
 #[java_packet(SET_TEST_BLOCK)]
 pub struct SSetTestBlock<'a> {

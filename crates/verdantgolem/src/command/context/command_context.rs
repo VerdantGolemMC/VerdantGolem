@@ -8,10 +8,10 @@ use crate::command::node::tree::Tree;
 use crate::command::node::{Command, RedirectModifier};
 use crate::server::Server;
 use crate::world::World;
-use verdantgolem_util::text::TextComponent;
 use rustc_hash::FxHashMap;
 use std::any::Any;
 use std::sync::Arc;
+use verdantgolem_util::text::TextComponent;
 
 /// Represents the current stage of the chain.
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -550,8 +550,8 @@ mod test {
     use crate::command::node::{
         CommandExecutor, CommandExecutorResult, RedirectModifier, Redirection,
     };
-    use verdantgolem_util::math::vector3::Vector3;
     use std::sync::Arc;
+    use verdantgolem_util::math::vector3::Vector3;
 
     struct TenExecutor;
     impl CommandExecutor for TenExecutor {

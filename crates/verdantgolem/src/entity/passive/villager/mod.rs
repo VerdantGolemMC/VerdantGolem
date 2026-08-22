@@ -66,10 +66,10 @@ pub(crate) fn trigger_trade_advancement(player: &Player) {
 fn enchanted_book_offer_items(
     rng: &mut impl rand::Rng,
 ) -> Option<(ItemStack, ItemStack, Option<ItemStack>)> {
-    use verdantgolem_data::data_component::DataComponent;
-    use verdantgolem_data::data_component_impl::StoredEnchantmentsImpl;
     use rand::{RngExt, seq::IndexedRandom};
     use std::borrow::Cow;
+    use verdantgolem_data::data_component::DataComponent;
+    use verdantgolem_data::data_component_impl::StoredEnchantmentsImpl;
 
     let enchantment_id = *EnchantmentTag::MINECRAFT_TRADEABLE.1.choose(rng)? as u8;
     let enchantment = Enchantment::from_id(enchantment_id)?;
@@ -103,8 +103,8 @@ fn enchant_trade_item(
     min_level: i32,
     max_level: i32,
 ) -> Option<(ItemStack, i32)> {
-    use verdantgolem_data::data_component_impl::EnchantableImpl;
     use rand::RngExt;
+    use verdantgolem_data::data_component_impl::EnchantableImpl;
 
     let mut stack = ItemStack::new(1, item);
     let enchantability = stack
@@ -165,9 +165,9 @@ fn enchant_trade_item(
 }
 
 pub(crate) fn apply_random_dye(rng: &mut impl rand::Rng, stack: &mut ItemStack) {
+    use rand::RngExt;
     use verdantgolem_data::data_component::DataComponent;
     use verdantgolem_data::data_component_impl::{DataComponentImpl, DyedColorImpl};
-    use rand::RngExt;
 
     const COLORS: [i32; 16] = [
         0xF9FFFE, 0xF9801D, 0xC74EBD, 0x3AB3DA, 0xFED83D, 0x80C71F, 0xF38BAA, 0x474F52, 0x9D9D97,
@@ -198,12 +198,12 @@ pub(crate) fn apply_random_dye(rng: &mut impl rand::Rng, stack: &mut ItemStack) 
 }
 
 pub(crate) fn apply_random_stew_effect(rng: &mut impl rand::Rng, stack: &mut ItemStack) {
+    use rand::RngExt;
+    use std::borrow::Cow;
     use verdantgolem_data::data_component::DataComponent;
     use verdantgolem_data::data_component_impl::{
         DataComponentImpl, SuspiciousStewEffect, SuspiciousStewEffectsImpl,
     };
-    use rand::RngExt;
-    use std::borrow::Cow;
 
     const EFFECTS: [(&str, i32); 6] = [
         ("minecraft:night_vision", 100),
@@ -634,11 +634,11 @@ impl VillagerEntity {
     }
 
     pub fn add_trades(&self, profession: VillagerProfession, level: i32) {
-        use verdantgolem_data::villager::VillagerTradeModifier;
-        use verdantgolem_protocol::codec::item_stack_seralizer::ItemStackSerializer;
         use rand::seq::IndexedRandom;
         use rand::{RngExt, SeedableRng, rngs::StdRng};
         use std::borrow::Cow;
+        use verdantgolem_data::villager::VillagerTradeModifier;
+        use verdantgolem_protocol::codec::item_stack_seralizer::ItemStackSerializer;
 
         let villager_type = self
             .villager_data

@@ -8,6 +8,7 @@ use crate::{
     entity::{Entity, item::ItemEntity},
     world::World,
 };
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockStateId,
     block_properties::{BlockProperties, ComposterLikeProperties},
@@ -21,7 +22,6 @@ use verdantgolem_inventory::screen_handler::InventoryPlayer;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::{tick::TickPriority, world::BlockFlags};
-use rand::RngExt;
 
 #[pumpkin_block("minecraft:composter")]
 pub struct ComposterBlock;

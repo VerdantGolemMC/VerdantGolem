@@ -170,7 +170,8 @@ pub(crate) fn build() -> TokenStream {
                                     arr.iter().map(json_to_nbt_tag).collect(),
                                 ),
                                 Value::Object(obj) => {
-                                    let mut compound = verdantgolem_nbt::compound::NbtCompound::new();
+                                    let mut compound =
+                                        verdantgolem_nbt::compound::NbtCompound::new();
                                     for (k, val) in obj {
                                         compound.put(k, json_to_nbt_tag(val));
                                     }
@@ -180,11 +181,12 @@ pub(crate) fn build() -> TokenStream {
                         }
 
                         let nbt_tag = json_to_nbt_tag(entry_data);
-                        let bytes = if let verdantgolem_nbt::tag::NbtTag::Compound(compound) = nbt_tag {
-                            verdantgolem_nbt::Nbt::from(compound).write_unnamed()
-                        } else {
-                            Vec::new().into()
-                        };
+                        let bytes =
+                            if let verdantgolem_nbt::tag::NbtTag::Compound(compound) = nbt_tag {
+                                verdantgolem_nbt::Nbt::from(compound).write_unnamed()
+                            } else {
+                                Vec::new().into()
+                            };
                         let byte_literal = Literal::byte_string(&bytes);
 
                         quote! {

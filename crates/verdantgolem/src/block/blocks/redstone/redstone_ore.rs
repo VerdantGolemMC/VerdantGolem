@@ -3,11 +3,11 @@ use crate::block::{
     RandomTickArgs, registry::BlockActionResult,
 };
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::block_properties::{BlockProperties, RedstoneOreLikeProperties};
 use verdantgolem_data::{Block, BlockId, BlockState};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 pub struct RedstoneOreBlock;
 

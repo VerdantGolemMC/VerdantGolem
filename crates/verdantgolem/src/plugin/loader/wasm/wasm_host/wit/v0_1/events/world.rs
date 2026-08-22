@@ -88,13 +88,17 @@ impl ToFromWasmEvent for ChunkLoad {
                     pending_block_entities: std::sync::Mutex::new(
                         std::collections::HashMap::default(),
                     ),
-                    light_engine: std::sync::Mutex::new(verdantgolem_world::chunk::ChunkLight::default()),
+                    light_engine: std::sync::Mutex::new(
+                        verdantgolem_world::chunk::ChunkLight::default(),
+                    ),
                     light_populated: std::sync::atomic::AtomicBool::new(false),
                     status: verdantgolem_data::chunk::ChunkStatus::Empty,
                     blending_data: None,
                     dirty: std::sync::atomic::AtomicBool::new(false),
                     inhabited_time: std::sync::atomic::AtomicU64::new(0),
-                    custom_data: std::sync::Mutex::new(verdantgolem_nbt::compound::NbtCompound::new()),
+                    custom_data: std::sync::Mutex::new(
+                        verdantgolem_nbt::compound::NbtCompound::new(),
+                    ),
                 };
                 Self {
                     world,
@@ -141,13 +145,17 @@ impl ToFromWasmEvent for ChunkSave {
                     pending_block_entities: std::sync::Mutex::new(
                         std::collections::HashMap::default(),
                     ),
-                    light_engine: std::sync::Mutex::new(verdantgolem_world::chunk::ChunkLight::default()),
+                    light_engine: std::sync::Mutex::new(
+                        verdantgolem_world::chunk::ChunkLight::default(),
+                    ),
                     light_populated: std::sync::atomic::AtomicBool::new(false),
                     status: verdantgolem_data::chunk::ChunkStatus::Empty,
                     blending_data: None,
                     dirty: std::sync::atomic::AtomicBool::new(false),
                     inhabited_time: std::sync::atomic::AtomicU64::new(0),
-                    custom_data: std::sync::Mutex::new(verdantgolem_nbt::compound::NbtCompound::new()),
+                    custom_data: std::sync::Mutex::new(
+                        verdantgolem_nbt::compound::NbtCompound::new(),
+                    ),
                 };
                 Self {
                     world,
@@ -190,13 +198,17 @@ impl ToFromWasmEvent for ChunkSend {
                     pending_block_entities: std::sync::Mutex::new(
                         std::collections::HashMap::default(),
                     ),
-                    light_engine: std::sync::Mutex::new(verdantgolem_world::chunk::ChunkLight::default()),
+                    light_engine: std::sync::Mutex::new(
+                        verdantgolem_world::chunk::ChunkLight::default(),
+                    ),
                     light_populated: std::sync::atomic::AtomicBool::new(false),
                     status: verdantgolem_data::chunk::ChunkStatus::Empty,
                     blending_data: None,
                     dirty: std::sync::atomic::AtomicBool::new(false),
                     inhabited_time: std::sync::atomic::AtomicU64::new(0),
-                    custom_data: std::sync::Mutex::new(verdantgolem_nbt::compound::NbtCompound::new()),
+                    custom_data: std::sync::Mutex::new(
+                        verdantgolem_nbt::compound::NbtCompound::new(),
+                    ),
                 };
                 Self {
                     world,
@@ -377,7 +389,10 @@ impl ToFromWasmEvent for crate::plugin::api::events::world::chunk_populate::Chun
     fn from_wasm_event(event: Event, _state: &mut PluginHostState) -> Self {
         match event {
             Event::ChunkPopulateEvent(data) => Self {
-                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(data.chunk_x, data.chunk_z),
+                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(
+                    data.chunk_x,
+                    data.chunk_z,
+                ),
                 cancelled: data.cancelled,
             },
             _ => panic!("unexpected event type"),
@@ -404,7 +419,10 @@ impl ToFromWasmEvent for crate::plugin::api::events::world::chunk_unload::ChunkU
     fn from_wasm_event(event: Event, _state: &mut PluginHostState) -> Self {
         match event {
             Event::ChunkUnloadEvent(data) => Self {
-                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(data.chunk_x, data.chunk_z),
+                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(
+                    data.chunk_x,
+                    data.chunk_z,
+                ),
                 cancelled: data.cancelled,
             },
             _ => panic!("unexpected event type"),
@@ -432,7 +450,10 @@ impl ToFromWasmEvent for crate::plugin::api::events::world::entities_load::Entit
     fn from_wasm_event(event: Event, _state: &mut PluginHostState) -> Self {
         match event {
             Event::EntitiesLoadEvent(data) => Self {
-                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(data.chunk_x, data.chunk_z),
+                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(
+                    data.chunk_x,
+                    data.chunk_z,
+                ),
                 entity_count: data.entity_count as usize,
                 cancelled: data.cancelled,
             },
@@ -461,7 +482,10 @@ impl ToFromWasmEvent for crate::plugin::api::events::world::entities_unload::Ent
     fn from_wasm_event(event: Event, _state: &mut PluginHostState) -> Self {
         match event {
             Event::EntitiesUnloadEvent(data) => Self {
-                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(data.chunk_x, data.chunk_z),
+                chunk_pos: verdantgolem_util::math::vector2::Vector2::new(
+                    data.chunk_x,
+                    data.chunk_z,
+                ),
                 entity_count: data.entity_count as usize,
                 cancelled: data.cancelled,
             },

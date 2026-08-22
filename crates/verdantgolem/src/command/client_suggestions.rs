@@ -1,3 +1,4 @@
+use std::sync::Arc;
 use verdantgolem_protocol::{
     bedrock::client::CommandPermissionLevel,
     codec::var_int::VarInt,
@@ -5,7 +6,6 @@ use verdantgolem_protocol::{
         ArgumentType, CCommands, ProtoNode, ProtoNodeType, StringProtoArgBehavior,
     },
 };
-use std::sync::Arc;
 
 use super::tree::{Node, NodeType};
 use crate::command::node::{

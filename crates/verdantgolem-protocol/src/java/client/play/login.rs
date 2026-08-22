@@ -80,10 +80,10 @@ impl<'a> CLogin<'a> {
 pub fn build_v1_20_registry_codec(
     version: JavaMinecraftVersion,
 ) -> verdantgolem_nbt::compound::NbtCompound {
+    use std::io::Cursor;
     use verdantgolem_nbt::compound::NbtCompound;
     use verdantgolem_nbt::deserializer::NbtReadHelperJava;
     use verdantgolem_nbt::tag::NbtTag;
-    use std::io::Cursor;
 
     let mut root = NbtCompound::new();
     let synced = verdantgolem_data::registry::Registry::get_synced(version);
@@ -171,9 +171,9 @@ pub fn get_dimension_type_nbt(
     version: JavaMinecraftVersion,
     dimension_name: &str,
 ) -> verdantgolem_nbt::compound::NbtCompound {
+    use std::io::Cursor;
     use verdantgolem_nbt::compound::NbtCompound;
     use verdantgolem_nbt::deserializer::NbtReadHelperJava;
-    use std::io::Cursor;
 
     let target_dim = dimension_name
         .strip_prefix("minecraft:")
@@ -264,7 +264,8 @@ impl ClientPacket for CLogin<'_> {
                     // In 1.16.2 - 1.18.2, this field is the dimension type NBT Compound!
                     let dim_type_compound =
                         get_dimension_type_nbt(*version, self.spawn_data.dimension.minecraft_name);
-                    let dim_bytes = verdantgolem_nbt::Nbt::new(String::new(), dim_type_compound).write();
+                    let dim_bytes =
+                        verdantgolem_nbt::Nbt::new(String::new(), dim_type_compound).write();
                     write.write_all(&dim_bytes)?;
                 } else {
                     // In 1.16 - 1.16.1 and 1.19 - 1.20.1, this field is the dimension Identifier string

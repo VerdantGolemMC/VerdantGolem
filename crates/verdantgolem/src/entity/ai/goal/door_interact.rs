@@ -1,6 +1,6 @@
+use std::sync::atomic::Ordering;
 use verdantgolem_data::tag::{self, Taggable};
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::atomic::Ordering;
 
 use super::{Controls, Goal};
 use crate::block::blocks::doors::DoorBlock;

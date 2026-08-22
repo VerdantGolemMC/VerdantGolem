@@ -1,8 +1,3 @@
-use verdantgolem_data::data_component_impl::{WritableBookContentImpl, WrittenBookContentImpl};
-use verdantgolem_data::item_stack::ItemStack;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_nbt::tag::NbtTag;
-use verdantgolem_util::math::position::BlockPos;
 use std::{
     any::Any,
     sync::{
@@ -10,6 +5,11 @@ use std::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
     },
 };
+use verdantgolem_data::data_component_impl::{WritableBookContentImpl, WrittenBookContentImpl};
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_nbt::tag::NbtTag;
+use verdantgolem_util::math::position::BlockPos;
 
 use crate::block::entities::BlockEntity;
 use verdantgolem_world::inventory::{Clearable, Inventory};

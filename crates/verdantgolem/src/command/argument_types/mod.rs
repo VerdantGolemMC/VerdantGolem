@@ -3,11 +3,11 @@ use crate::command::errors::error_types::{
     CommandErrorType, READER_INVALID_DOUBLE, READER_INVALID_FLOAT, READER_INVALID_INT,
 };
 use crate::command::string_reader::StringReader;
+use std::str::FromStr;
 use verdantgolem_data::translation;
 use verdantgolem_util::identifier::Identifier;
 use verdantgolem_util::math::bounds::{Bounds, DoubleBounds, FloatDegreeBounds, IntBounds};
 use verdantgolem_util::text::TextComponent;
-use std::str::FromStr;
 
 /// Creates a [`Vec<String>`] of examples from
 /// the given string literals.

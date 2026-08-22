@@ -4,18 +4,18 @@ use crate::chunk::{
 };
 use crate::generation::biome_coords;
 use crate::tick::scheduler::ChunkTickScheduler;
-use verdantgolem_config::lighting::LightingEngineConfig;
-use verdantgolem_data::dimension::Dimension;
 use rustc_hash::FxHashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64};
+use verdantgolem_config::lighting::LightingEngineConfig;
+use verdantgolem_data::dimension::Dimension;
 
 use crate::ProtoChunk;
 use crate::level::SyncChunk;
 
+use std::sync::Mutex;
 use verdantgolem_data::chunk::ChunkStatus;
 use verdantgolem_nbt::compound::NbtCompound;
-use std::sync::Mutex;
 
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, Eq, Ord, PartialEq, PartialOrd)]
@@ -307,8 +307,10 @@ impl Chunk {
                 && let Some(y) = nbt.get_int("y")
                 && let Some(z) = nbt.get_int("z")
             {
-                pending_block_entities
-                    .insert(verdantgolem_util::math::position::BlockPos::new(x, y, z), nbt);
+                pending_block_entities.insert(
+                    verdantgolem_util::math::position::BlockPos::new(x, y, z),
+                    nbt,
+                );
             }
         }
 

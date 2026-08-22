@@ -7,12 +7,12 @@ use crate::generation::structure::structures::{
 use crate::generation::structure::template::{
     BlockMirror, BlockPlacer, BlockRotation, PaletteEntry, StructureTemplate,
 };
+use serde::Deserialize;
+use std::sync::Arc;
 use verdantgolem_util::math::block_box::BlockBox;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::random::RandomImpl;
-use serde::Deserialize;
-use std::sync::Arc;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum JigsawProjection {
@@ -259,7 +259,11 @@ impl PoolElementKind {
     }
 
     #[must_use]
-    pub fn get_bounding_box(&self, offset: BlockPos, rotation: verdantgolem_data::Rotation) -> BlockBox {
+    pub fn get_bounding_box(
+        &self,
+        offset: BlockPos,
+        rotation: verdantgolem_data::Rotation,
+    ) -> BlockBox {
         match self {
             Self::Single { template, .. } => {
                 crate::generation::structure::template::get_template(template).map_or_else(
@@ -372,7 +376,11 @@ impl PoolElement {
     }
 
     #[must_use]
-    pub fn get_bounding_box(&self, offset: BlockPos, rotation: verdantgolem_data::Rotation) -> BlockBox {
+    pub fn get_bounding_box(
+        &self,
+        offset: BlockPos,
+        rotation: verdantgolem_data::Rotation,
+    ) -> BlockBox {
         self.kind.get_bounding_box(offset, rotation)
     }
 
@@ -658,8 +666,11 @@ impl StructurePieceBase for PoolElementStructurePiece {
         _seed: i64,
         chunk_box: &verdantgolem_util::math::block_box::BlockBox,
     ) {
-        let origin =
-            verdantgolem_util::math::vector3::Vector3::new(self.pos.0.x, self.pos.0.y, self.pos.0.z);
+        let origin = verdantgolem_util::math::vector3::Vector3::new(
+            self.pos.0.x,
+            self.pos.0.y,
+            self.pos.0.z,
+        );
 
         self.element
             .for_each_template(|_name, processor_list, legacy, template| {

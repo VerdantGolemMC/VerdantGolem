@@ -165,6 +165,8 @@ use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::server::Server;
 use crate::world::World;
+use rustc_hash::FxHashMap;
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_rotation::{Mirror, Rotation};
 use verdantgolem_data::data_component_impl::EquipmentSlot;
@@ -176,8 +178,6 @@ use verdantgolem_protocol::java::server::play::SUseItemOn;
 use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rustc_hash::FxHashMap;
-use std::sync::Arc;
 
 use super::BlockIsReplacing;
 use super::blocks::plant::crop::gourds::attached_stem::AttachedStemBlock;

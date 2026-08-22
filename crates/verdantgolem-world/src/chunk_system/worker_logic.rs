@@ -6,12 +6,12 @@ use crate::chunk::format::LightContainer;
 use crate::chunk::io::LoadedData::Loaded;
 use crate::chunk::io::{FileIO, LoadedData};
 use crate::level::Level;
-use verdantgolem_config::lighting::LightingEngineConfig;
-use verdantgolem_data::chunk::ChunkStatus;
 use std::collections::hash_map::Entry;
 use std::sync::Arc;
 use std::sync::atomic::Ordering::Relaxed;
 use tracing::{debug, error, warn};
+use verdantgolem_config::lighting::LightingEngineConfig;
+use verdantgolem_data::chunk::ChunkStatus;
 
 pub enum RecvChunk {
     IO(Chunk),

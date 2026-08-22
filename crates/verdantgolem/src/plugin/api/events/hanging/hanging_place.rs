@@ -1,7 +1,7 @@
+use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_macros::{Event, cancellable};
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 use crate::entity::{EntityBase, player::Player};
 

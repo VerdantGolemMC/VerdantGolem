@@ -65,9 +65,12 @@ impl CommandExecutor for ForceloadAddExecutor {
         let count_z = max_z - min_z + 1;
         let total_chunks = count_x * count_z;
 
-        if total_chunks > 256 {
+        let forceload_limit = crate::carpet::values()
+            .forceload_limit
+            .clamp(1, i32::MAX as i64) as i32;
+        if total_chunks > forceload_limit {
             return Err(ERROR_TOO_MANY.create_without_context(
-                TextComponent::text("256"),
+                TextComponent::text(forceload_limit.to_string()),
                 TextComponent::text(total_chunks.to_string()),
             ));
         }
@@ -149,9 +152,12 @@ impl CommandExecutor for ForceloadRemoveExecutor {
         let count_z = max_z - min_z + 1;
         let total_chunks = count_x * count_z;
 
-        if total_chunks > 256 {
+        let forceload_limit = crate::carpet::values()
+            .forceload_limit
+            .clamp(1, i32::MAX as i64) as i32;
+        if total_chunks > forceload_limit {
             return Err(ERROR_TOO_MANY.create_without_context(
-                TextComponent::text("256"),
+                TextComponent::text(forceload_limit.to_string()),
                 TextComponent::text(total_chunks.to_string()),
             ));
         }

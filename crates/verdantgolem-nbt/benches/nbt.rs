@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used)]
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use verdantgolem_nbt::{Nbt, NbtCompound, deserializer, tag::NbtTag};
 use std::io::Cursor;
+use verdantgolem_nbt::{Nbt, NbtCompound, deserializer, tag::NbtTag};
 
 fn create_large_compound(depth: usize) -> NbtCompound {
     let mut compound = NbtCompound::new();

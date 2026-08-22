@@ -1,5 +1,5 @@
-use verdantgolem_macros::{Event, cancellable};
 use std::sync::Arc;
+use verdantgolem_macros::{Event, cancellable};
 
 use super::PlayerEvent;
 use crate::entity::player::Player;

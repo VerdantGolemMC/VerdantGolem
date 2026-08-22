@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockId, BlockStateId,
     dimension::Dimension,
@@ -13,7 +14,6 @@ use verdantgolem_util::{
     math::{position::BlockPos, vector3::Vector3},
 };
 use verdantgolem_world::{tick::TickPriority, world::BlockFlags};
-use rand::RngExt;
 
 use crate::{
     block::{

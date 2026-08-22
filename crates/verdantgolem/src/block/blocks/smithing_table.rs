@@ -1,6 +1,8 @@
 use crate::block::registry::BlockActionResult;
 use crate::block::{BlockBehaviour, NormalUseArgs};
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use verdantgolem_data::translation;
 use verdantgolem_inventory::player::player_inventory::PlayerInventory;
 use verdantgolem_inventory::screen_handler::{
@@ -9,8 +11,6 @@ use verdantgolem_inventory::screen_handler::{
 use verdantgolem_inventory::smithing_table_screen_handler::SmithingTableScreenHandler;
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::text::TextComponent;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 #[pumpkin_block("minecraft:smithing_table")]
 pub struct SmithingTableBlock;

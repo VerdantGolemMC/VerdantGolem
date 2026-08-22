@@ -2,10 +2,10 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::CURRENT_MC_VERSION;
-use verdantgolem_data::game_rules::GameRuleRegistry;
-use verdantgolem_util::{Difficulty, serde_enum_as_integer, world_seed::Seed};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use verdantgolem_data::game_rules::GameRuleRegistry;
+use verdantgolem_util::{Difficulty, serde_enum_as_integer, world_seed::Seed};
 
 pub mod anvil;
 pub mod data_files;

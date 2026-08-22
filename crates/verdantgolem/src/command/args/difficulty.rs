@@ -1,6 +1,8 @@
 use std::str::FromStr;
 
-use verdantgolem_protocol::java::client::play::{ArgumentType, CommandSuggestion, SuggestionProviders};
+use verdantgolem_protocol::java::client::play::{
+    ArgumentType, CommandSuggestion, SuggestionProviders,
+};
 use verdantgolem_util::Difficulty;
 
 use crate::{

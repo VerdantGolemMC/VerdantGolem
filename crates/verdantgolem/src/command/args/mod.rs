@@ -6,7 +6,9 @@ use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_data::particle::Particle;
 use verdantgolem_data::sound::SoundCategory;
-use verdantgolem_protocol::java::client::play::{ArgumentType, CommandSuggestion, SuggestionProviders};
+use verdantgolem_protocol::java::client::play::{
+    ArgumentType, CommandSuggestion, SuggestionProviders,
+};
 use verdantgolem_util::Difficulty;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::{

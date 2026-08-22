@@ -4,7 +4,9 @@ use crate::entity::player::Player;
 use crate::item::{ItemBehaviour, ItemMetadata};
 use crate::server::Server;
 use verdantgolem_data::data_component::DataComponent;
-use verdantgolem_data::data_component_impl::{DataComponentImpl, LodestoneTarget, LodestoneTrackerImpl};
+use verdantgolem_data::data_component_impl::{
+    DataComponentImpl, LodestoneTarget, LodestoneTrackerImpl,
+};
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::sound::{Sound, SoundCategory};

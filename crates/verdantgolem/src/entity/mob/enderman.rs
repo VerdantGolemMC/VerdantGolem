@@ -8,6 +8,7 @@ use crate::entity::attributes::ModifierOperation;
 use verdantgolem_data::{BlockStateId, attributes::Attributes};
 
 use crossbeam::atomic::AtomicCell;
+use rand::RngExt;
 use verdantgolem_data::{
     damage::DamageType,
     data_component_impl::EquipmentSlot,
@@ -24,7 +25,6 @@ use verdantgolem_protocol::{
     java::client::play::{CEntityPositionSync, Metadata},
 };
 use verdantgolem_util::math::{boundingbox::BoundingBox, position::BlockPos, vector3::Vector3};
-use rand::RngExt;
 
 use crate::entity::{
     Entity, EntityBase,

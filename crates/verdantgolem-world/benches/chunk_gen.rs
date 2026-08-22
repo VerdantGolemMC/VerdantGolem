@@ -1,6 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
+use std::sync::Arc;
 use verdantgolem_config::lighting::LightingEngineConfig;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::dimension::Dimension;
@@ -10,8 +12,6 @@ use verdantgolem_world::chunk_system::{Cache, Chunk, StagedChunkEnum, generate_s
 use verdantgolem_world::generation::generator::WorldGenerator;
 use verdantgolem_world::generation::get_world_gen;
 use verdantgolem_world::world::WorldPortalExt;
-use std::hint::black_box;
-use std::sync::Arc;
 
 const SEED: Seed = Seed(42);
 

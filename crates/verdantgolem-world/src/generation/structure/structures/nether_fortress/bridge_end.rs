@@ -90,7 +90,8 @@ impl StructurePieceBase for BridgeEndPiece {
         let nb = Block::NETHER_BRICKS.default_state;
 
         // Use a seeded local random so geometry is deterministic.
-        let mut rng = verdantgolem_util::random::xoroshiro128::Xoroshiro::from_seed(self.seed as u64);
+        let mut rng =
+            verdantgolem_util::random::xoroshiro128::Xoroshiro::from_seed(self.seed as u64);
 
         for i in 0..=4i32 {
             for j in 3..=4i32 {

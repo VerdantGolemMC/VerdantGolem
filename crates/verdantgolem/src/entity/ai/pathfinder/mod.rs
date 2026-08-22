@@ -10,10 +10,10 @@ use crate::entity::ai::pathfinder::node_evaluator::{MobData, NodeEvaluator};
 use crate::entity::ai::pathfinder::path::Path;
 use crate::entity::ai::pathfinder::pathfinding_context::PathfindingContext;
 use crate::entity::ai::pathfinder::walk_node_evaluator::WalkNodeEvaluator;
-use verdantgolem_data::attributes::Attributes;
-use verdantgolem_util::math::wrap_degrees;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::sync::atomic::{AtomicBool, Ordering};
+use verdantgolem_data::attributes::Attributes;
+use verdantgolem_util::math::wrap_degrees;
 
 pub mod binary_heap;
 pub mod node;

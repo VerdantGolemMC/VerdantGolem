@@ -182,10 +182,14 @@ pub fn check_for_updates() -> Result<CheckUpdateResponse, UpdateError> {
 #[must_use]
 pub fn evaluate_license(grace_period_days: u32) -> LicenseStatus {
     let Some(folder) = get_data_folder() else {
-        return LicenseStatus::Invalid("verdantgolem_plugin_utils has not been initialized".to_string());
+        return LicenseStatus::Invalid(
+            "verdantgolem_plugin_utils has not been initialized".to_string(),
+        );
     };
     let Some(meta) = get_metadata() else {
-        return LicenseStatus::Invalid("verdantgolem_plugin_utils has not been initialized".to_string());
+        return LicenseStatus::Invalid(
+            "verdantgolem_plugin_utils has not been initialized".to_string(),
+        );
     };
     let checker = LicenseChecker::new(folder);
     checker.evaluate_license(meta, grace_period_days)

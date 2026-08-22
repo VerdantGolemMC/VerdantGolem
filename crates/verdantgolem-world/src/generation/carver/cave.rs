@@ -1,9 +1,9 @@
 use super::{CarveRun, Carver, overworld_carve_state, place_carved_block};
+use std::f32::consts::PI;
 use verdantgolem_data::carver::{CarverAdditionalConfig, CarverConfig, HeightProvider};
 use verdantgolem_util::math::vector2::Vector2;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::random::{RandomGenerator, RandomImpl};
-use std::f32::consts::PI;
 
 pub struct CaveCarver;
 

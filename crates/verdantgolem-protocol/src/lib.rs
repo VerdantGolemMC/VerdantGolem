@@ -11,12 +11,12 @@ use aes::cipher::BlockSizeUser;
 use bytes::Bytes;
 use codec::var_int::VarInt;
 use hybrid_array::{Array, sizes::U1};
+use ser::{ReadingError, WritingError};
 use verdantgolem_util::{
     resource_location::ResourceLocation,
     text::{TextComponent, style::Style},
     version::JavaMinecraftVersion,
 };
-use ser::{ReadingError, WritingError};
 
 use thiserror::Error;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};

@@ -2,6 +2,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 
 use crossbeam::atomic::AtomicCell;
+use rand::RngExt;
+use uuid::Uuid;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_data::entity::EntityType;
@@ -11,8 +13,6 @@ use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_protocol::java::client::play::{CEntityPositionSync, CEntityVelocity};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use rand::RngExt;
-use uuid::Uuid;
 
 use crate::entity::mob::shulker::Axis;
 use crate::entity::{Entity, EntityBase};

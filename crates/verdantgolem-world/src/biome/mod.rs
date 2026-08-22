@@ -58,9 +58,9 @@ pub fn hash_seed(seed: u64) -> i64 {
 
 #[cfg(test)]
 mod test {
+    use serde::Deserialize;
     use verdantgolem_data::{chunk::Biome, dimension::Dimension};
     use verdantgolem_util::read_data_from_file;
-    use serde::Deserialize;
 
     use crate::{
         ProtoChunk,

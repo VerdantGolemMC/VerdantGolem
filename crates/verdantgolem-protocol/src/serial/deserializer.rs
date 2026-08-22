@@ -4,8 +4,8 @@ use std::{
     net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6},
 };
 
-use verdantgolem_util::math::{position::BlockPos, vector2::Vector2, vector3::Vector3};
 use uuid::Uuid;
+use verdantgolem_util::math::{position::BlockPos, vector2::Vector2, vector3::Vector3};
 
 use crate::{
     codec::{var_int::VarInt, var_uint::VarUInt},

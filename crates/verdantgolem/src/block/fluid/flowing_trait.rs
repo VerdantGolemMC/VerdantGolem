@@ -1,12 +1,12 @@
 use super::{pathfinder, physics};
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::{
     Block, BlockDirection, BlockStateId,
     fluid::{EnumVariants, Falling, Fluid, FluidProperties, Level},
 };
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::{tick::TickPriority, world::BlockFlags};
-use std::sync::Arc;
 pub type FlowingFluidProperties = verdantgolem_data::fluid::FlowingWaterLikeFluidProperties;
 
 #[allow(async_fn_in_trait)]

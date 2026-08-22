@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
-use verdantgolem_macros::{Event, cancellable};
 use std::sync::Arc;
+use verdantgolem_macros::{Event, cancellable};
 
 /// An event that occurs when a player selects a trade recipe with a merchant.
 #[cancellable]

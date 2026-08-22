@@ -1,11 +1,11 @@
 use std::fs;
 
+use tracing::error;
 use verdantgolem_data::translation;
 use verdantgolem_util::PermissionLvl;
 use verdantgolem_util::permission::{Permission, PermissionDefault, PermissionRegistry};
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::text::color::NamedColor;
-use tracing::error;
 
 use crate::command::argument_builder::{ArgumentBuilder, argument, command, literal};
 use crate::command::argument_types::core::string::StringArgumentType;

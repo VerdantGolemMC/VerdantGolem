@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use crate::block::entities::BlockEntity;
 use crate::block::entities::chest::ChestBlockEntity;
+use std::sync::Mutex;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{
     BlockProperties, ChestLikeProperties, ChestType, HorizontalFacing,
@@ -10,7 +11,9 @@ use verdantgolem_data::chest_loot_table::get_chest_loot_table;
 use verdantgolem_data::entity::EntityPose;
 use verdantgolem_data::{Block, BlockDirection, translation};
 use verdantgolem_inventory::double::DoubleInventory;
-use verdantgolem_inventory::generic_container_screen_handler::{create_generic_9x3, create_generic_9x6};
+use verdantgolem_inventory::generic_container_screen_handler::{
+    create_generic_9x3, create_generic_9x6,
+};
 use verdantgolem_inventory::player::player_inventory::PlayerInventory;
 use verdantgolem_inventory::screen_handler::{
     InventoryPlayer, ScreenHandlerFactory, SharedScreenHandler,
@@ -21,7 +24,6 @@ use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::inventory::Inventory;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Mutex;
 
 use crate::block::{
     BrokenArgs, EmitsRedstonePowerArgs, GetComparatorOutputArgs, GetRedstonePowerArgs,
@@ -132,7 +134,9 @@ fn player_placed_chest_impl(args: &PlayerPlacedArgs<'_>) {
     args.world.play_bedrock_level_sound(
         "place",
         &position,
-        i32::from(verdantgolem_data::BlockState::to_be_network_id(args.state_id)),
+        i32::from(verdantgolem_data::BlockState::to_be_network_id(
+            args.state_id,
+        )),
     );
 }
 

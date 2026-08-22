@@ -6,8 +6,8 @@ use verdantgolem_util::math::{
 };
 use verdantgolem_util::version::JavaMinecraftVersion;
 
-use verdantgolem_macros::java_packet;
 use std::io::Write;
+use verdantgolem_macros::java_packet;
 
 use crate::{
     ClientPacket,

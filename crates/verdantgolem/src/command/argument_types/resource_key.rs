@@ -5,11 +5,11 @@ use crate::command::errors::command_syntax_error::CommandSyntaxError;
 use crate::command::errors::error_types::CommandErrorType;
 use crate::command::string_reader::StringReader;
 use crate::command::suggestion::suggestions::{Suggestions, SuggestionsBuilder};
+use std::string::ToString;
 use verdantgolem_data::{Advancement, translation};
 use verdantgolem_util::identifier::Identifier;
 use verdantgolem_util::resource::ResourceKey;
 use verdantgolem_util::text::TextComponent;
-use std::string::ToString;
 
 pub static ADVANCEMENT_REGISTRY: &Identifier = &Identifier::vanilla_static("advancement");
 pub static BIOME_REGISTRY: &Identifier = &Identifier::vanilla_static("worldgen/biome");

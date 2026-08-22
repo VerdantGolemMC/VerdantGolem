@@ -2,8 +2,8 @@ schema: comet.native.v4
 name: rename-to-verdantgolem
 language: zh-CN
 phase: verify
-status: active
-state_version: 3
+status: await-user
+state_version: 8
 brief: brief.md
 spec_changes:
   - capability: project-identity
@@ -15,175 +15,233 @@ workspace:
   target_branch: master
   finish: null
 loop:
-  stage: verify-ready
+  stage: await-user
   goal_cycle: 1
-  iteration: 1
-  attempt: 0
+  iteration: 2
+  attempt: 1
   retry_epoch: 0
-  failed_iteration_count: 0
+  failed_iteration_count: 1
   no_progress_count: 0
   execution_failure_count: 0
   previous_unresolved_ids: []
-  next_action: run-required-checks-and-dispatch-verifier
+  next_action: confirm-skill-coordinated-pass
 acceptance:
   - id: A1
     source: brief.md
     text: "A1: `git submodule update --init crates/pumpkin-plugin-wit` 后 `cargo
       build --release` 成功，产物二进制名为 `verdantgolem`，workspace 无 pumpkin* 目录。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A2
     source: brief.md
     text: "A2: `cargo nextest run` 与 `cargo test --doc`（CI 同款）全部通过。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A3
     source: brief.md
     text: "A3: `cargo clippy --all-targets --all-features`（CI 同款）无新增错误。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A4
     source: brief.md
     text: "A4: 品牌残留扫描为零（白名单除外）：crate 名/导入/品牌字符串/URL/文档标题不再有品牌类 pumpkin token；白名单 =
       游戏内容 token、保留的契约标识（PumpkinCustomData、pumpkin.toml、pumpkin:
       命名空间、pumpkin.metadata 等）、保留的内部标识符（PumpkinServer 等类型/宏/常量名、pumpkin_plugin
       日志 target）、子模块路径与上游社区/市场 URL、NOTICE/README 中的出处表述。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 本轮实测通过：git show f490fec76 确认 3 文件 4 行注释级修复与声称一致；git grep
+        复核三处旧残留（pumpkin-plugin-utils、'use pumpkin random'、pumpkin's
+        Xoroshiro）代码中零命中；全仓抽样（包名/目录/导入/旧 crate 名模式/TODO 注释）均为零或白名单类
+      truncated: false
   - id: A5
     source: brief.md
     text: 'A5: 运行时品牌正确：BRAND 常量为 "VerdantGolem"、默认 MOTD、banner、crash
       报告文本、`/verdantgolem` 命令输出均为新品牌；`/pumpkin` 不再注册。'
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A6
     source: brief.md
     text: "A6: codegen 三个输出路径常量与新目录一致；`crates/verdantgolem-data/src/generated` 与主
       crate 的 WIT mapping 生成文件引用新 crate 名（`use verdantgolem_util::` 等），游戏枚举段与改名前
       bit 级一致（git diff 仅导入行变化）。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A7
     source: brief.md
     text: "A7: CI/部署无失效引用：rust.yml artifact 名与二进制路径、docker.yml
       守卫仓库、Dockerfile、compose、egg-verdantgolem.json、flake.nix、typos.toml
       排除路径、CODEOWNERS 路径全部指向新命名。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A8
     source: brief.md
     text: 'A8:
       保留契约零回归：`PumpkinCustomData`、`pumpkin_custom_data.nbt`、`pumpkin.toml`、`PUMPKIN_NAMESPACE
       = "pumpkin"`、WIT `pumpkin:plugin`、`PUMPKIN_API_VERSION`、wasm section
       名在代码中与改名前一致（grep 逐项核对）。'
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A9
     source: specs/project-identity/spec.md
     text: 本 capability 定义 VerdantGolem 仓库（Pumpkin-MC/Pumpkin 的生电特性
       fork）改名后的完整命名体系：哪些标识属于 VerdantGolem 项目自描述层（改名），哪些属于上游契约、游戏内容或同步友好保留层（不改名）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A10
     source: specs/project-identity/spec.md
     text: 品牌名：`VerdantGolem`（显示）、`verdantgolem`（代码/包名，一体式小写，无连字符无缩写）、`VERDANTGOLEM`（如需大写环境变量）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A11
     source: specs/project-identity/spec.md
     text: "| 旧 | 新 |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A12
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin | crates/verdantgolem |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A13
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-api-macros | crates/verdantgolem-api-macros |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A14
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-codecs | crates/verdantgolem-codecs |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A15
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-config | crates/verdantgolem-config |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A16
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-data | crates/verdantgolem-data |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A17
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-inventory | crates/verdantgolem-inventory |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A18
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-macros | crates/verdantgolem-macros |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A19
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-nbt | crates/verdantgolem-nbt |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A20
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-plugin-api | crates/verdantgolem-plugin-api |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A21
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-plugin-utils | crates/verdantgolem-plugin-utils |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A22
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-protocol | crates/verdantgolem-protocol |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A23
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-util | crates/verdantgolem-util |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A24
     source: specs/project-identity/spec.md
     text: "| crates/pumpkin-world | crates/verdantgolem-world |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A25
     source: specs/project-identity/spec.md
     text: "| tools/pumpkin-codegen | tools/verdantgolem-codegen |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A26
     source: specs/project-identity/spec.md
     text: "| tools/pumpkin-fuzzer | tools/verdantgolem-fuzzer |"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A27
     source: specs/project-identity/spec.md
     text: package name、依赖键、`[workspace.dependencies]` path、`default-run`、fuzz 子
       crate（verdantgolem-nbt-fuzz、verdantgolem-protocol-fuzz）与各自 Cargo.lock
       条目同步。导入路径统一变为 `use verdantgolem*::`（连字符包名在 use 中即 `verdantgolem_util` 形式）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A28
     source: specs/project-identity/spec.md
     text: "`crates/pumpkin-plugin-wit`：git 子模块，路径与
       URL（Pumpkin-MC/pumpkin-plugin-wit）不变，`.gitmodules`
       及所有相对路径引用（bindgen!/wit_bindgen!、cargo-component metadata target、codegen
       WIT_OUT_DIR）不变。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮已 ls/git grep 复核目录与包名）
+      truncated: false
   - id: A29
     source: specs/project-identity/spec.md
     text: '**构建产物**：二进制名 `verdantgolem`；Windows 资源 FileDescription
@@ -194,16 +252,20 @@ acceptance:
       verdantgolem` 与 importTOML 新路径；typos.toml 排除
       `crates/verdantgolem-data/src/generated` 并收录 verdantgolem 词；docker.yml
       仓库守卫 `VerdantGolemMC/VerdantGolem` 与 `VERDANTGOLEM_VERSION`。'
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A30
     source: specs/project-identity/spec.md
     text: '**运行时显示**：server brand `"VerdantGolem"`（minecraft:brand plugin
       message）；默认 MOTD 含 VerdantGolem；启动 banner；crash 报告头/标签；默认 level_name
       "VerdantGolem world"、server_version "VerdantGolem Rust
       Server"；插件加载器错误文案中的品牌词。'
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A31
     source: specs/project-identity/spec.md
     text: "**命令**：`/verdantgolem`（别名 version、ver），源文件 `verdantgolem.rs`，注册键与
@@ -211,23 +273,29 @@ acceptance:
       `https://github.com/VerdantGolemMC/VerdantGolem`。翻译键名 `commands.pumpkin.*`
       与查询串 `pumpkin:commands.pumpkin.*` 保留（属于 pumpkin: 翻译命名空间契约），仅修改 JSON
       值中的品牌词与 GitHub 链接。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮抽样确认契约与内部标识符保留）
+      truncated: false
   - id: A32
     source: specs/project-identity/spec.md
     text: "**文档**：README 标题与正文以 VerdantGolem 为主体，声明为 Pumpkin 的生电特性分支（carpet
       式还原生电特性的目标）；CONTRIBUTING、devcontainer 名称、doc 注释中指本项目的品牌词、截图文件名
       verdantgolem-chunk-loading.webp；上游文档/社区/捐赠链接作为出处保留。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A33
     source: specs/project-identity/spec.md
     text: "**代码生成**：codegen `OUT_DIR` →
       `crates/verdantgolem-data/src/generated`、`MAPPING_OUT_DIR` → 主 crate
       新路径；generated 文件与 WIT mapping 重新生成，内嵌 crate 路径为
       `verdantgolem_util/verdantgolem_codecs` 等。"
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A34
     source: specs/project-identity/spec.md
     text: 一切原版南瓜标识：`minecraft:pumpkin*`
@@ -235,265 +303,200 @@ acceptance:
       枚举与常量、`PumpkinBlock/CarvedPumpkinBlock` 游戏 struct、`patch_pumpkin` 等
       worldgen、recipe/loot datapack 文件与内容、`BlockPumpkinCarve`
       音效、`block.pumpkin.*`/`tile.pumpkin.name` 翻译键、`assets/` 下原版数据文件。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮抽样确认契约与内部标识符保留）
+      truncated: false
   - id: A35
     source: specs/project-identity/spec.md
     text: NBT 键 `"PumpkinCustomData"`（实体/区块/世界自定义数据）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A36
     source: specs/project-identity/spec.md
     text: 世界目录文件 `pumpkin_custom_data.nbt`。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A37
     source: specs/project-identity/spec.md
     text: 配置文件名 `pumpkin.toml`（及 .gitignore/.dockerignore 对应行）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A38
     source: specs/project-identity/spec.md
     text: 标识符命名空间值 `"pumpkin"`：`PUMPKIN_NAMESPACE`、recipe_id
       `pumpkin:recipe_{n}`、Bedrock 皮肤 id `pumpkin:{uuid}`、物品自定义数据键
       `pumpkin:enchantments`、翻译注册 `pumpkin:{key}`、命令树命名空间列表与 `pumpkin:command.*`
       注册键的命名空间段。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮抽样确认契约与内部标识符保留）
+      truncated: false
   - id: A39
     source: specs/project-identity/spec.md
     text: WIT 包名 `pumpkin:plugin@0.1.0` 及全部生成/手写代码中的 `pumpkin::plugin` 模块路径。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮抽样确认契约与内部标识符保留）
+      truncated: false
   - id: A40
     source: specs/project-identity/spec.md
     text: 原生插件 ABI 符号 `PUMPKIN_API_VERSION`（api-macros 生成端与 native 加载端）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A41
     source: specs/project-identity/spec.md
     text: 'wasm custom section `pumpkin.metadata`/`pumpkin.signature`、市场公钥与
       `market.pumpkinmc.org` 全部 URL、HTTP `User-Agent: "Pumpkin-MC"`。'
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮抽样确认契约与内部标识符保留）
+      truncated: false
   - id: A42
     source: specs/project-identity/spec.md
     text: 子模块 `crates/pumpkin-plugin-wit`（见 1.2）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A43
     source: specs/project-identity/spec.md
     text: 类型名（`PumpkinServer/PumpkinConfig/PumpkinError/PumpkinCommandCompleter/PumpkinMetadata`
       等）、宏名（`pumpkin_block/pumpkin_block_from_tag`）、函数/访问器名（`get_pumpkin_block/get_pumpkin_version`）、常量与静态名（`PUMPKIN_API_VERSION/PUMPKIN_METADATA_SECTION/PUMPKIN_EN_US_JSON`
       等含既有拼写）、日志 target `"pumpkin_plugin"`。这些符号的名称不因本 change 改变；其所在 crate 路径改变。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（本轮抽样确认契约与内部标识符保留）
+      truncated: false
   - id: A44
     source: specs/project-identity/spec.md
     text: 根 LICENSE（GPLv3）与 plugin-api 的 MIT/Apache 双许可文件内容不变。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A45
     source: specs/project-identity/spec.md
     text: NOTICE.md 保留对 Pumpkin 源码与 Plugin API 的出处表述，仅更新其中涉及的 crate 目录路径。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A46
     source: specs/project-identity/spec.md
     text: README 明确 VerdantGolem 是 Pumpkin-MC/Pumpkin 的
       fork，生电特性分支，保留指向上游的文档/社区/捐赠链接。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A47
     source: specs/project-identity/spec.md
     text: 游戏逻辑、协议行为、功能语义零变化；仅品牌字符串与标识符路径变化。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A48
     source: specs/project-identity/spec.md
     text: 旧 Pumpkin 世界/配置无需迁移即可继续使用（键名未变）。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
   - id: A49
     source: specs/project-identity/spec.md
     text: 替换必须区分大小写并限定品牌语境模式（`pumpkin_`/`pumpkin::`/`"pumpkin:`/crate 名/指项目的
       `Pumpkin` 词），游戏内容 token 零触碰；`translate_cross` 宏的路径段匹配表与调用点同步为
       `verdantgolem_data`。
-    result: pending
-    reason: null
+    result: passed
+    reason:
+      text: 第 1 轮证据 + 本轮 f490fec76 仅注释级修复未影响该项（4 行全部为注释，无代码语义变化）
+      truncated: false
 builder_handoff:
-  candidate_id: 9b5b0388-3f12-49e6-8074-04805e802970
+  candidate_id: d3bb6557-230a-4090-9db0-8be2836697c1
   identity_provider: skill-coordinated
-  builder_execution_ref: skill-coordinated:builder:5878754b-5ac0-4438-94a9-75d776958c60
-  iteration: 1
+  builder_execution_ref: skill-coordinated:builder:f7b488d4-2271-466f-8e22-3b7855de3013
+  iteration: 2
   summary:
-    text: "完成 Pumpkin→VerdantGolem 项目自描述层改名：16 个 crate/tool 目录与包名（verdantgolem
-      一体式）、全部 use/宏生成路径、二进制名
-      verdantgolem；显示品牌（BRAND/MOTD/banner/crash/默认世界名）、/pumpkin→/verdantgolem
-      命令（NAMES/注册键/权限描述/dispatcher 测试/GitHub API 与链接指向
-      VerdantGolemMC/VerdantGolem）、25 个语言文件值（键名保留）；文档与部署（README 重写为生电分支并保留 fork
-      出处、CONTRIBUTING/NOTICE/devcontainer/Dockerfile/compose/egg-verdantgolem.j\
-      son/flake/typos/CODEOWNERS/workflows/截图改名）；translate_cross 匹配表与 api-macros
-      生成路径同步、codegen 三个输出常量修正；Cargo.lock 由 cargo
-      重写。保留层未动：PumpkinCustomData/pumpkin_custom_data.nbt/pumpkin.toml/pumpkin:
-      命名空间、WIT pumpkin:plugin、PUMPKIN_API_VERSION 双端、wasm
-      section、pumpkin-plugin-wit 子模块、PumpkinServer 等内部标识符、全部游戏内容南瓜 token、上游市场/社区
-      URL。codegen 已成功端到端运行验证路径正确，但生成内容恢复为 HEAD+改名（上游生成产物相对 codegen 存在既有漂移，如新增
-      c-update-trade WIT，不属于本 change）。新增根
-      Clippy.toml（doc-valid-idents：VerdantGolem 及本地 clippy 1.97 既有的
-      MiB/WebRTC/JavaScript）。A9-A49（spec 逐行映射项）与 A1-A8 由同一实现覆盖。"
+    text: iteration 2：修复 Verifier 指出的 A4 三处注释级品牌残留（plugin-utils lib.rs 两处旧 crate
+      名、sea_pickles.rs TODO 注释、block_direction.rs Xoroshiro 出处注释），提交 f490fec76
+      已推送。注释级变更，无功能影响，其余 48 项验收结论不受影响。
     truncated: false
   addressed_acceptance_ids:
-    - A1
-    - A2
-    - A3
     - A4
-    - A5
-    - A6
-    - A7
-    - A8
-    - A9
-    - A10
-    - A11
-    - A12
-    - A13
-    - A14
-    - A15
-    - A16
-    - A17
-    - A18
-    - A19
-    - A20
-    - A21
-    - A22
-    - A23
-    - A24
-    - A25
-    - A26
-    - A27
-    - A28
-    - A29
-    - A30
-    - A31
-    - A32
-    - A33
-    - A34
-    - A35
-    - A36
-    - A37
-    - A38
-    - A39
-    - A40
-    - A41
-    - A42
-    - A43
-    - A44
-    - A45
-    - A46
-    - A47
-    - A48
-    - A49
   checks:
     - name:
-        text: cargo build (debug)
-        truncated: false
-      result: passed
-      note:
-        text: 全 workspace 编译通过
-        truncated: false
-    - name:
-        text: cargo build --release
-        truncated: false
-      result: passed
-      note:
-        text: 产物 target/release/verdantgolem（约 95MB），二进制名为 verdantgolem
-        truncated: false
-    - name:
-        text: cargo fmt --check
-        truncated: false
-      result: passed
-      note:
-        text: cargo fmt 全仓重排（导入排序因 p→v 变化）后通过
-        truncated: false
-    - name:
-        text: cargo clippy --all-targets --all-features (debug)
-        truncated: false
-      result: passed
-      note:
-        text: 需新增根 Clippy.toml doc-valid-idents（VerdantGolem 驼峰词；MiB/WebRTC/JavaScript
-          为本地 clippy 1.97 对未改动行的既有 stricter 行为，上游 CI 工具链不受影响，仅放宽不收紧）
-        truncated: false
-    - name:
-        text: cargo clippy --release --all-targets --all-features
-        truncated: false
-      result: passed
-      note: null
-    - name:
-        text: cargo nextest run
-        truncated: false
-      result: passed
-      note:
-        text: 693/693 通过（含改名后的 verdantgolem_command_aliases 与命令树测试）
-        truncated: false
-    - name:
-        text: cargo test --doc
-        truncated: false
-      result: passed
-      note: null
-    - name:
-        text: cargo run -p verdantgolem-codegen
-        truncated: false
-      result: passed
-      note:
-        text: 端到端运行成功，验证三个输出路径常量正确；生成内容随后恢复为 HEAD+仅改名（上游漂移不纳入本 change）
-        truncated: false
-    - name:
-        text: A4/A8 grep 扫描
-        truncated: false
-      result: passed
-      note:
-        text: 品牌残留仅存白名单（契约/内部标识符/游戏内容/出处/上游 URL）；7 处 PumpkinCustomData、2 处
-          pumpkin_custom_data.nbt、1 处
-          pumpkin.toml、PUMPKIN_NAMESPACE="pumpkin"、WIT
-          pumpkin:plugin、PUMPKIN_API_VERSION 双端、pumpkin.metadata/signature 全部原样
-        truncated: false
-    - name:
-        text: generated 游戏枚举核对
-        truncated: false
-      result: passed
-      note:
-        text: git diff 过滤 crate 名后 generated/ 全目录 0 行非改名差异
-        truncated: false
-    - name:
-        text: typos (CI typos.yml)
+        text: cargo check（注释级变更，无编译影响）
         truncated: false
       result: not-run
       note:
-        text: 本地未安装 typos CLI；已更新 typos.toml 排除路径并收录 verdantgolem 词
-        truncated: false
-    - name:
-        text: 服务器运行时冒烟
-        truncated: false
-      result: not-run
-      note:
-        text: 未实际启动服务器；A5 基于代码常量核对
+        text: 3 处纯注释修改，不改变任何代码语义；GitHub CI 将在下次推送时覆盖
         truncated: false
   checks_truncated: false
   known_limits:
-    - text: CI 工作流变更（rust.yml artifact 名、docker.yml 守卫改为
-        VerdantGolemMC/VerdantGolem）未在 GitHub Actions 实际运行；docker.yml 守卫变更后该仓库
-        CI 将首次真正触发 docker 构建发布，需要仓库 secrets 才能完整成功
-      truncated: false
-    - text: codegen 与 checked-in 生成文件间的上游漂移（WIT 子模块缺 c-update-trade、attribute remap
-        格式）保持原样，留给上游同步流程处理
-      truncated: false
-    - text: egg-verdantgolem.json 的 Pterodactyl 安装脚本未实际执行验证
+    - text: 本次修复为注释级，未单独触发 CI（可随下次特性提交一起验证）
       truncated: false
   known_limits_truncated: false
-  submitted_at: 2026-08-22T08:37:48.132Z
-blockers: []
-verification: null
-history: []
+  submitted_at: 2026-08-22T11:41:49.108Z
+blockers:
+  - owner: user
+    reason:
+      text: The generic Skill bridge cannot prove an independent Verifier execution;
+        user confirmation is required before Archive.
+      truncated: false
+    acceptance_ids: []
+    resolution_action: await-user
+verification:
+  candidate_id: d3bb6557-230a-4090-9db0-8be2836697c1
+  identity_provider: skill-coordinated
+  verifier_execution_ref: skill-coordinated:verifier:5727868e-d5a7-4ea6-bf48-c4209fc3308f
+  iteration: 2
+  attempt: 1
+  assurance: skill-coordinated
+  verdict: pass
+  checks: []
+  summary:
+    text: "第 2 轮复核通过（49/49）。f490fec76 与声称一致：3 文件 4 行注释级改动，A4 三处残留清除，全仓抽样无新问题，其余 48
+      项维持第 1 轮通过结论。verdict: pass。"
+    truncated: false
+  risks:
+    - text: 本轮为只读复核，未重跑 cargo（4 行纯注释改动且父提交 CI 全绿；GitHub CI 将随下次推送覆盖）
+      truncated: false
+    - text: docs/comet 映射表中的旧名属变更自述文档，非品牌残留
+      truncated: false
+  risks_truncated: false
+  completed_at: 2026-08-22T11:46:34.867Z
+history:
+  - goal_cycle: 1
+    iteration: 1
+    attempt: 1
+    outcome: fail
+    unresolved_ids:
+      - A4
+    summary:
+      text: 49 项中 48 项通过；唯一失败项 A4 存在 3 处注释级品牌残留（旧 crate 名引用与两处项目自称），修复为小提交即可整体通过。其余：CI
+        全绿、生成文件零语义差异、保留契约零回归。
+      truncated: false
+    completed_at: 2026-08-22T11:31:30.058Z
+  - goal_cycle: 1
+    iteration: 2
+    attempt: 1
+    outcome: pass
+    unresolved_ids: []
+    summary:
+      text: "第 2 轮复核通过（49/49）。f490fec76 与声称一致：3 文件 4 行注释级改动，A4 三处残留清除，全仓抽样无新问题，其余 48
+        项维持第 1 轮通过结论。verdict: pass。"
+      truncated: false
+    completed_at: 2026-08-22T11:46:34.867Z
 history_overflow:
   dropped_entries: 0
   first_dropped_at: null
@@ -504,7 +507,7 @@ history_overflow:
     blocked: 0
     execution-error: 0
     recovery: 0
-verification_result: pending
-verification_report: null
+verification_result: pass
+verification_report: verification.md
 archived: false
 created_at: 2026-08-22T06:47:18.699Z

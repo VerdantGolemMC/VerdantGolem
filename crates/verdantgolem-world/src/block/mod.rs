@@ -3,8 +3,8 @@ pub mod viewer;
 
 use std::collections::HashMap;
 
-use verdantgolem_data::{Block, BlockState, BlockStateId};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use verdantgolem_data::{Block, BlockState, BlockStateId};
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]

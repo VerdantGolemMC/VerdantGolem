@@ -1,8 +1,8 @@
+use tracing::info;
 use verdantgolem_protocol::bedrock::client::transfer::CTransfer as BedrockCTransfer;
 use verdantgolem_protocol::codec::var_int::VarInt;
 use verdantgolem_protocol::java::client::play::CTransfer as JavaCTransfer;
 use verdantgolem_util::text::TextComponent;
-use tracing::info;
 
 use crate::command::CommandResult;
 use crate::command::args::bounded_num::BoundedNumArgumentConsumer;

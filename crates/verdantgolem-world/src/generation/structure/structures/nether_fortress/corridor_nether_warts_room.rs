@@ -171,16 +171,19 @@ impl StructurePieceBase for CorridorNetherWartsRoomPiece {
         // Staircase going up (north-facing stairs, going from z=4 up to z=10)
         let mut stair_props = OakStairsLikeProperties::default(&Block::NETHER_BRICK_STAIRS);
         stair_props.facing = HorizontalFacing::North;
-        let stair_n =
-            verdantgolem_data::BlockState::from_id(stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS));
+        let stair_n = verdantgolem_data::BlockState::from_id(
+            stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS),
+        );
 
         stair_props.facing = HorizontalFacing::East;
-        let stair_e =
-            verdantgolem_data::BlockState::from_id(stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS));
+        let stair_e = verdantgolem_data::BlockState::from_id(
+            stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS),
+        );
 
         stair_props.facing = HorizontalFacing::West;
-        let stair_w =
-            verdantgolem_data::BlockState::from_id(stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS));
+        let stair_w = verdantgolem_data::BlockState::from_id(
+            stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS),
+        );
 
         for j in 0..=6i32 {
             let k = j + 4;

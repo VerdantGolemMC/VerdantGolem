@@ -6,6 +6,7 @@ use crate::{
     entity::{Entity, EntityBase, projectile::ThrownItemEntity},
     server::Server,
 };
+use uuid::Uuid;
 use verdantgolem_data::entity::EntityStatus;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_protocol::bedrock::server::actor_event::ActorEventID;
@@ -13,7 +14,6 @@ use verdantgolem_protocol::java::client::play::CWorldEvent;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector2::{Vector2, to_chunk_pos};
 use verdantgolem_util::math::vector3::Vector3;
-use uuid::Uuid;
 
 const GRAVITY: f64 = 0.05;
 

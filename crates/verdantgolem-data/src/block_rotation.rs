@@ -5,8 +5,8 @@
 
 use crate::BlockDirection;
 use crate::block_properties::HorizontalFacing;
-use verdantgolem_util::math::vector3::Vector3;
 use serde::Deserialize;
+use verdantgolem_util::math::vector3::Vector3;
 
 /// Rotation around the Y axis in 90-degree increments.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
@@ -194,7 +194,9 @@ impl Rotation {
     pub const fn to_axis(self) -> verdantgolem_util::math::vector3::Axis {
         match self {
             Self::None | Self::Rotate180 => verdantgolem_util::math::vector3::Axis::Z,
-            Self::Clockwise90 | Self::CounterClockwise90 => verdantgolem_util::math::vector3::Axis::X,
+            Self::Clockwise90 | Self::CounterClockwise90 => {
+                verdantgolem_util::math::vector3::Axis::X
+            }
         }
     }
 

@@ -6,14 +6,14 @@ use std::{
     time::Duration,
 };
 
+use rand::RngExt;
+use tokio::{net::UdpSocket, sync::RwLock, time};
+use tracing::{error, info};
 use verdantgolem_protocol::query::{
     CBasicStatus, CFullStatus, CHandshake, PacketType, RawQueryPacket, SHandshake, SStatusRequest,
 };
 use verdantgolem_util::text::{TextComponent, color::NamedColor};
 use verdantgolem_world::CURRENT_MC_VERSION;
-use rand::RngExt;
-use tokio::{net::UdpSocket, sync::RwLock, time};
-use tracing::{error, info};
 
 use crate::{SHOULD_STOP, STOP_INTERRUPT, server::Server};
 

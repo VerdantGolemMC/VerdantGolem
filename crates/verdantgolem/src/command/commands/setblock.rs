@@ -1,6 +1,15 @@
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::world::BlockFlags;
 
+/// carpet rule fillUpdates: false makes /setblock skip neighbor updates.
+fn setblock_flags() -> BlockFlags {
+    if crate::carpet::values().fill_updates {
+        BlockFlags::FORCE_STATE | BlockFlags::NOTIFY_NEIGHBORS
+    } else {
+        BlockFlags::FORCE_STATE
+    }
+}
+
 use crate::command::args::block::BlockArgumentConsumer;
 use crate::command::args::position_block::BlockPosArgumentConsumer;
 use crate::command::args::{ConsumedArgs, FindArg};
@@ -50,29 +59,17 @@ impl CommandExecutor for Executor {
         let success = match mode {
             Mode::Destroy => {
                 world.break_block(&pos, None, BlockFlags::SKIP_DROPS | BlockFlags::FORCE_STATE);
-                world.set_block_state(
-                    &pos,
-                    block_state_id,
-                    BlockFlags::FORCE_STATE | BlockFlags::NOTIFY_NEIGHBORS,
-                );
+                world.set_block_state(&pos, block_state_id, setblock_flags());
                 true
             }
             Mode::Replace => {
-                world.set_block_state(
-                    &pos,
-                    block_state_id,
-                    BlockFlags::FORCE_STATE | BlockFlags::NOTIFY_NEIGHBORS,
-                );
+                world.set_block_state(&pos, block_state_id, setblock_flags());
                 true
             }
             Mode::Keep => {
                 let old_state = world.get_block_state(&pos);
                 if old_state.is_air() {
-                    world.set_block_state(
-                        &pos,
-                        block_state_id,
-                        BlockFlags::FORCE_STATE | BlockFlags::NOTIFY_NEIGHBORS,
-                    );
+                    world.set_block_state(&pos, block_state_id, setblock_flags());
                     true
                 } else {
                     false

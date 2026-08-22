@@ -7,12 +7,12 @@ use std::{
 };
 
 use packet::{ClientboundPacket, Packet, PacketError, ServerboundPacket};
-use verdantgolem_config::RCONConfig;
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     select,
 };
 use tracing::{debug, error, info, warn};
+use verdantgolem_config::RCONConfig;
 
 use crate::command::CommandSender;
 use crate::{SHOULD_STOP, STOP_INTERRUPT, server::Server};

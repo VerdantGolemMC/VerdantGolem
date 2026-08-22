@@ -10,10 +10,10 @@ use crate::entity_type::EntityType;
 use crate::sound::Sound;
 use crc_fast::CrcAlgorithm::Crc32Iscsi;
 use crc_fast::Digest;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_nbt::tag::NbtTag;
 use std::borrow::Cow;
 use std::hash::Hash;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_nbt::tag::NbtTag;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Operation {

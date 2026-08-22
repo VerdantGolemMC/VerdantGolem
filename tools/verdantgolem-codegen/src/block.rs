@@ -1,7 +1,5 @@
 use heck::{ToShoutySnakeCase, ToUpperCamelCase};
 use proc_macro2::{Span, TokenStream};
-use verdantgolem_nbt::deserializer::{NbtReadHelper, NbtReadHelperBedrock};
-use verdantgolem_util::math::{experience::Experience, vector3::Vector3};
 use quote::{ToTokens, format_ident, quote};
 use serde::Deserialize;
 use std::{
@@ -11,6 +9,8 @@ use std::{
     panic,
 };
 use syn::{Ident, LitInt, LitStr};
+use verdantgolem_nbt::deserializer::{NbtReadHelper, NbtReadHelperBedrock};
+use verdantgolem_util::math::{experience::Experience, vector3::Vector3};
 
 use crate::{
     bitsets::{Bitset, gen_u16_bitset},
@@ -859,7 +859,8 @@ pub fn build() -> TokenStream {
 
     let geyser_blocks_data = fs::read("../../assets/bedrock/blocks.nbt").unwrap();
     let geyser_nbt_compound =
-        verdantgolem_nbt::nbt_compress::read_gzip_compound_tag(Cursor::new(geyser_blocks_data)).unwrap();
+        verdantgolem_nbt::nbt_compress::read_gzip_compound_tag(Cursor::new(geyser_blocks_data))
+            .unwrap();
     let bedrock_mappings_list = geyser_nbt_compound
         .get_list("bedrock_mappings")
         .expect("Missing bedrock_mappings list in Geyser blocks.nbt");
@@ -1500,8 +1501,9 @@ fn get_be_data_from_nbt<R: Read + Seek>(
     let data_end = reader.seek(SeekFrom::End(0)).unwrap();
     let _ = reader.seek(SeekFrom::Start(data_start));
 
-    let nbt_reader =
-        &mut NbtReadHelperBedrock::new(verdantgolem_nbt::deserializer::NbtStreamReader(&mut *reader));
+    let nbt_reader = &mut NbtReadHelperBedrock::new(
+        verdantgolem_nbt::deserializer::NbtStreamReader(&mut *reader),
+    );
 
     loop {
         if nbt_reader.reader().0.stream_position().unwrap() >= data_end {

@@ -11,8 +11,6 @@ use super::{
 use crate::chunk::io::Dirtiable;
 use crate::level::{Level, SyncChunk};
 use dashmap::DashMap;
-use verdantgolem_config::lighting::LightingEngineConfig;
-use verdantgolem_util::math::vector2::Vector2;
 use slotmap::Key;
 use std::cmp::{Ordering, max};
 use std::collections::{BinaryHeap, HashMap};
@@ -22,6 +20,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
 use tracing::{debug, error, info, trace, warn};
+use verdantgolem_config::lighting::LightingEngineConfig;
+use verdantgolem_util::math::vector2::Vector2;
 
 pub(crate) struct TaskHeapNode(i8, NodeKey);
 impl PartialEq for TaskHeapNode {

@@ -1,3 +1,5 @@
+use rand::RngExt;
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::biome::Biome;
 use verdantgolem_data::block_properties::{BlockProperties, HorizontalAxis};
@@ -10,8 +12,6 @@ use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::tick::TickPriority;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
-use std::sync::Arc;
 
 use crate::block::blocks::tnt::TNTBlock;
 use crate::block::{

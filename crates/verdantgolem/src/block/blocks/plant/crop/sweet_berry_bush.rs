@@ -9,6 +9,7 @@ use crate::{
     },
     world::World,
 };
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockStateId,
     block_properties::{BlockProperties, NetherWartLikeProperties},
@@ -21,7 +22,6 @@ use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 #[pumpkin_block("minecraft:sweet_berry_bush")]
 pub struct SweetBerryBushBlock;

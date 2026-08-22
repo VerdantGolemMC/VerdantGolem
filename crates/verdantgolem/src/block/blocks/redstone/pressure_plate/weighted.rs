@@ -18,7 +18,8 @@ use super::{PressurePlate, detection_box_at};
 /// This is for Gold and Iron Pressure Plate
 pub struct WeightedPressurePlateBlock;
 
-type PressurePlateProps = verdantgolem_data::block_properties::LightWeightedPressurePlateLikeProperties;
+type PressurePlateProps =
+    verdantgolem_data::block_properties::LightWeightedPressurePlateLikeProperties;
 
 impl BlockMetadata for WeightedPressurePlateBlock {
     fn ids() -> Box<[BlockId]> {

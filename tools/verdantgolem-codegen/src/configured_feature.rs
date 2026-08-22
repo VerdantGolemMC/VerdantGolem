@@ -1607,7 +1607,9 @@ fn value_to_feature_ref(v: &Value) -> TokenStream {
             let cf = value_to_configured_feature(v);
             quote! { Feature::Inlined(Box::new(#cf)) }
         }
-        _ => quote! { Feature::Named(verdantgolem_data::configured_feature::ConfiguredFeature::NoOp) },
+        _ => {
+            quote! { Feature::Named(verdantgolem_data::configured_feature::ConfiguredFeature::NoOp) }
+        }
     }
 }
 

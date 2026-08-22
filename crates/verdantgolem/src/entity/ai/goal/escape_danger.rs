@@ -2,8 +2,8 @@ use std::sync::atomic::Ordering::Relaxed;
 
 use super::{Controls, Goal};
 use crate::entity::{ai::pathfinder::NavigatorGoal, mob::Mob};
-use verdantgolem_util::math::vector3::Vector3;
 use rand::RngExt;
+use verdantgolem_util::math::vector3::Vector3;
 
 const RANGE: i32 = 5;
 const RECENT_DAMAGE_TICKS: i32 = 100;

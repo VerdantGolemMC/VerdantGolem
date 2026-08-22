@@ -1,8 +1,8 @@
+use std::fmt::Display;
+use tracing::Level;
 use verdantgolem_inventory::InventoryError;
 use verdantgolem_protocol::ser::ReadingError;
 use verdantgolem_world::data::player_data::PlayerDataError;
-use std::fmt::Display;
-use tracing::Level;
 
 use crate::log_at_level;
 

@@ -1,13 +1,13 @@
 use super::physics;
 use crate::block::fluid::flowing_trait::FlowingFluid;
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::{
     Block, BlockDirection,
     fluid::{EnumVariants, Falling, Fluid, FluidProperties, Level},
 };
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 /// Represents a node in the BFS pathfinding queue for fluid flow calculation.
 #[derive(Clone, Copy)]

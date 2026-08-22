@@ -15,13 +15,13 @@ use crate::command::node::dispatcher::CommandDispatcher;
 use crate::command::node::tree::Tree;
 use crate::command::node::{RedirectModifier, Redirection};
 use crate::entity::r#type::from_type;
+use std::sync::Arc;
+use uuid::Uuid;
 use verdantgolem_util::PermissionLvl;
 use verdantgolem_util::identifier::Identifier;
 use verdantgolem_util::math::vector2::Vector2;
 use verdantgolem_util::permission::{Permission, PermissionDefault, PermissionRegistry};
 use verdantgolem_util::text::TextComponent;
-use std::sync::Arc;
-use uuid::Uuid;
 
 const DESCRIPTION: &str = "Execute a command with a modified context.";
 const PERMISSION: &str = "minecraft:command.execute";

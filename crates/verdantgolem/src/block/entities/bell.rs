@@ -1,12 +1,12 @@
 use crate::block::entities::BlockEntity;
 use crate::world::World;
 use crossbeam::atomic::AtomicCell;
+use std::any::Any;
+use std::sync::Arc;
 use verdantgolem_data::block_properties::HorizontalFacing;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::math::position::BlockPos;
-use std::any::Any;
-use std::sync::Arc;
 
 pub struct BellBlockEntity {
     pub position: BlockPos,

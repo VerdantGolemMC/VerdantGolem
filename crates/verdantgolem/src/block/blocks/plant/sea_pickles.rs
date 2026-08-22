@@ -6,6 +6,7 @@ use crate::block::{
     UseWithItemArgs,
 };
 use crate::entity::EntityBase;
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::BlockProperties;
 use verdantgolem_data::entity::EntityPose;
@@ -15,7 +16,6 @@ use verdantgolem_data::{Block, BlockDirection, tag};
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 type SeaPickleProperties = verdantgolem_data::block_properties::SeaPickleLikeProperties;
 

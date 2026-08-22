@@ -5,6 +5,7 @@ use crate::block::{
         crop::{CropBlockBase, get_available_moisture},
     },
 };
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockDirection, BlockId, BlockStateId,
     block_properties::{
@@ -17,7 +18,6 @@ use verdantgolem_util::{
     random::{RandomGenerator, xoroshiro128::Xoroshiro},
 };
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 type StemProperties = WheatLikeProperties;
 type AttachedStemProperties = WallTorchLikeProperties;

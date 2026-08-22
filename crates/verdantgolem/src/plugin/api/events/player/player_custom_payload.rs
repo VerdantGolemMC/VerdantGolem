@@ -1,6 +1,6 @@
 use bytes::Bytes;
-use verdantgolem_macros::Event;
 use std::sync::Arc;
+use verdantgolem_macros::Event;
 
 use crate::entity::player::Player;
 

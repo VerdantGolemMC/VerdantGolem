@@ -7,13 +7,13 @@ use fancy::LargeOakFoliagePlacer;
 use jungle::JungleFoliagePlacer;
 use mega_pine::MegaPineFoliagePlacer;
 use pine::PineFoliagePlacer;
+use random_spread::RandomSpreadFoliagePlacer;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::BlockState;
 use verdantgolem_util::{
     math::{int_provider::IntProvider, position::BlockPos, vector3::Vector3},
     random::{RandomGenerator, RandomImpl},
 };
-use random_spread::RandomSpreadFoliagePlacer;
 
 use spruce::SpruceFoliagePlacer;
 

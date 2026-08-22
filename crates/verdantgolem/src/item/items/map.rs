@@ -1,13 +1,13 @@
 use crate::entity::player::Player;
 use crate::item::ItemBehaviour;
 use crate::item::ItemMetadata;
+use std::any::Any;
 use verdantgolem_data::data_component::DataComponent;
 use verdantgolem_data::data_component_impl::DataComponentImpl;
 use verdantgolem_data::data_component_impl::MapIdImpl;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_util::GameMode;
-use std::any::Any;
 
 pub struct MapItem;
 

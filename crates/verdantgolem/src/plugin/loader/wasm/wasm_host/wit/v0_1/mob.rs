@@ -132,16 +132,26 @@ pub const fn to_wit_villager_profession(prof_id: i32) -> WitVillagerProfession {
         }
         verdantgolem_data::villager::VillagerProfession::Cleric => WitVillagerProfession::Cleric,
         verdantgolem_data::villager::VillagerProfession::Farmer => WitVillagerProfession::Farmer,
-        verdantgolem_data::villager::VillagerProfession::Fisherman => WitVillagerProfession::Fisherman,
-        verdantgolem_data::villager::VillagerProfession::Fletcher => WitVillagerProfession::Fletcher,
+        verdantgolem_data::villager::VillagerProfession::Fisherman => {
+            WitVillagerProfession::Fisherman
+        }
+        verdantgolem_data::villager::VillagerProfession::Fletcher => {
+            WitVillagerProfession::Fletcher
+        }
         verdantgolem_data::villager::VillagerProfession::Leatherworker => {
             WitVillagerProfession::Leatherworker
         }
-        verdantgolem_data::villager::VillagerProfession::Librarian => WitVillagerProfession::Librarian,
+        verdantgolem_data::villager::VillagerProfession::Librarian => {
+            WitVillagerProfession::Librarian
+        }
         verdantgolem_data::villager::VillagerProfession::Mason => WitVillagerProfession::Mason,
         verdantgolem_data::villager::VillagerProfession::Nitwit => WitVillagerProfession::Nitwit,
-        verdantgolem_data::villager::VillagerProfession::Shepherd => WitVillagerProfession::Shepherd,
-        verdantgolem_data::villager::VillagerProfession::Toolsmith => WitVillagerProfession::Toolsmith,
+        verdantgolem_data::villager::VillagerProfession::Shepherd => {
+            WitVillagerProfession::Shepherd
+        }
+        verdantgolem_data::villager::VillagerProfession::Toolsmith => {
+            WitVillagerProfession::Toolsmith
+        }
         verdantgolem_data::villager::VillagerProfession::Weaponsmith => {
             WitVillagerProfession::Weaponsmith
         }
@@ -161,16 +171,26 @@ pub const fn from_wit_villager_profession(
         }
         WitVillagerProfession::Cleric => verdantgolem_data::villager::VillagerProfession::Cleric,
         WitVillagerProfession::Farmer => verdantgolem_data::villager::VillagerProfession::Farmer,
-        WitVillagerProfession::Fisherman => verdantgolem_data::villager::VillagerProfession::Fisherman,
-        WitVillagerProfession::Fletcher => verdantgolem_data::villager::VillagerProfession::Fletcher,
+        WitVillagerProfession::Fisherman => {
+            verdantgolem_data::villager::VillagerProfession::Fisherman
+        }
+        WitVillagerProfession::Fletcher => {
+            verdantgolem_data::villager::VillagerProfession::Fletcher
+        }
         WitVillagerProfession::Leatherworker => {
             verdantgolem_data::villager::VillagerProfession::Leatherworker
         }
-        WitVillagerProfession::Librarian => verdantgolem_data::villager::VillagerProfession::Librarian,
+        WitVillagerProfession::Librarian => {
+            verdantgolem_data::villager::VillagerProfession::Librarian
+        }
         WitVillagerProfession::Mason => verdantgolem_data::villager::VillagerProfession::Mason,
         WitVillagerProfession::Nitwit => verdantgolem_data::villager::VillagerProfession::Nitwit,
-        WitVillagerProfession::Shepherd => verdantgolem_data::villager::VillagerProfession::Shepherd,
-        WitVillagerProfession::Toolsmith => verdantgolem_data::villager::VillagerProfession::Toolsmith,
+        WitVillagerProfession::Shepherd => {
+            verdantgolem_data::villager::VillagerProfession::Shepherd
+        }
+        WitVillagerProfession::Toolsmith => {
+            verdantgolem_data::villager::VillagerProfession::Toolsmith
+        }
         WitVillagerProfession::Weaponsmith => {
             verdantgolem_data::villager::VillagerProfession::Weaponsmith
         }

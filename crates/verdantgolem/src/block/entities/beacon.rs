@@ -1,8 +1,8 @@
-use verdantgolem_data::data_component_impl::IDSetContent;
-use verdantgolem_data::tag::Taggable;
 use std::any::Any;
 use std::sync::atomic::{AtomicBool, AtomicI32, Ordering};
 use std::sync::{Arc, Mutex};
+use verdantgolem_data::data_component_impl::IDSetContent;
+use verdantgolem_data::tag::Taggable;
 
 use verdantgolem_data::effect::StatusEffect;
 use verdantgolem_data::item_stack::ItemStack;
@@ -137,7 +137,8 @@ impl BeaconBlockEntity {
                     let state = world.get_block_state(&block_pos);
                     let block = world.get_block(&block_pos);
 
-                    if !block.has_tag(&verdantgolem_data::tag::Block::MINECRAFT_BEACON_BASE_BLOCKS) {
+                    if !block.has_tag(&verdantgolem_data::tag::Block::MINECRAFT_BEACON_BASE_BLOCKS)
+                    {
                         layer_valid = false;
                         break;
                     }

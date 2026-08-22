@@ -2,10 +2,10 @@ use std::{collections::BTreeMap, fs};
 
 use heck::ToShoutySnakeCase;
 use proc_macro2::TokenStream;
-use verdantgolem_util::text::TextComponent;
-use verdantgolem_util::text::TextContent::Translate;
 use quote::{format_ident, quote};
 use serde::Deserialize;
+use verdantgolem_util::text::TextComponent;
+use verdantgolem_util::text::TextContent::Translate;
 
 /// Raw deserialization shape for a single enchantment entry from `enchantment/*.json`.
 #[derive(Deserialize)]

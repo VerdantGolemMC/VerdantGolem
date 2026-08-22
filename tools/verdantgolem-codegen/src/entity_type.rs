@@ -2,10 +2,10 @@ use std::{collections::BTreeMap, fs};
 
 use heck::ToPascalCase;
 use proc_macro2::TokenStream;
-use verdantgolem_util::HeightMap;
 use quote::{ToTokens, format_ident, quote};
 use serde::Deserialize;
 use syn::LitInt;
+use verdantgolem_util::HeightMap;
 
 use crate::loot::LootTableStruct;
 

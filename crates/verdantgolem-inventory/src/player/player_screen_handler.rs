@@ -24,12 +24,12 @@ use crate::crafting::crafting_screen_handler::CraftingScreenHandler;
 use crate::crafting::recipes::{RecipeFinderScreenHandler, RecipeInputInventory};
 use crate::screen_handler::{InventoryPlayer, ScreenHandler, ScreenHandlerBehaviour};
 use crate::slot::{ArmorSlot, NormalSlot, Slot};
+use std::any::Any;
+use std::sync::Arc;
 use verdantgolem_data::data_component_impl::{EquipmentSlot, EquipmentType, EquippableImpl};
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::screen::WindowType;
 use verdantgolem_world::inventory::Inventory;
-use std::any::Any;
-use std::sync::Arc;
 
 /// Screen handler for the player's inventory.
 ///

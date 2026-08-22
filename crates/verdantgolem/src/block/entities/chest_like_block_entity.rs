@@ -320,9 +320,10 @@ macro_rules! impl_chest_helper_methods {
                 );
 
                 let (block, state) = world.get_block_and_state(&self.position);
-                let properties = verdantgolem_data::block_properties::ChestLikeProperties::from_state_id(
-                    state.id, block,
-                );
+                let properties =
+                    verdantgolem_data::block_properties::ChestLikeProperties::from_state_id(
+                        state.id, block,
+                    );
                 let position = match properties.r#type {
                     verdantgolem_data::block_properties::ChestType::Left => return,
                     verdantgolem_data::block_properties::ChestType::Single => {

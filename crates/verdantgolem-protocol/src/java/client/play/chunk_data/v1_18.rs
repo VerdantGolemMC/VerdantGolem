@@ -3,6 +3,7 @@ use crate::VarInt;
 use crate::WritingError;
 use crate::codec::bit_set::BitSet;
 use crate::ser::NetworkWriteExt;
+use std::io::Write;
 use verdantgolem_data::block_state_remap::remap_block_state_for_version;
 use verdantgolem_data::packet::CURRENT_MC_VERSION;
 use verdantgolem_util::math::position::get_local_cord;
@@ -10,7 +11,6 @@ use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::ChunkData;
 use verdantgolem_world::chunk::format::LightContainer;
 use verdantgolem_world::chunk::palette::NetworkPalette;
-use std::io::Write;
 
 /// Serializes chunk data for Minecraft 1.18+ through 26.2+.
 #[expect(clippy::too_many_lines)]

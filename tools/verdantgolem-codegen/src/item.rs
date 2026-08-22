@@ -2,10 +2,6 @@ use crate::block::{Block, BlockAssets};
 use crate::enchantments::AttributeModifierSlot;
 use heck::{ToPascalCase, ToShoutySnakeCase};
 use proc_macro2::{Span, TokenStream};
-use verdantgolem_nbt::{Nbt, compound::NbtCompound};
-use verdantgolem_util::registry::TagType;
-use verdantgolem_util::text::TextContent;
-use verdantgolem_util::{registry::RegistryEntryList, text::TextComponent};
 use quote::{ToTokens, format_ident, quote};
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
@@ -15,6 +11,10 @@ use std::{
     io::Cursor,
 };
 use syn::{Ident, LitBool, LitByteStr, LitFloat, LitInt, LitStr};
+use verdantgolem_nbt::{Nbt, compound::NbtCompound};
+use verdantgolem_util::registry::TagType;
+use verdantgolem_util::text::TextContent;
+use verdantgolem_util::{registry::RegistryEntryList, text::TextComponent};
 
 /// Deserialized item entry from `items.json`.
 #[derive(Deserialize)]

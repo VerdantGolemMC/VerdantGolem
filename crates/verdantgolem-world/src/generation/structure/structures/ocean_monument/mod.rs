@@ -52,7 +52,8 @@ pub(crate) fn has_valid_biomes(
 ) -> bool {
     let start_x = get_center_x(chunk_x);
     let start_z = get_center_z(chunk_z);
-    let start_biomes = verdantgolem_data::tag::WorldgenBiome::MINECRAFT_HAS_STRUCTURE_OCEAN_MONUMENT.1;
+    let start_biomes =
+        verdantgolem_data::tag::WorldgenBiome::MINECRAFT_HAS_STRUCTURE_OCEAN_MONUMENT.1;
     if !start_biomes.contains(
         &(biome_supplier
             .biome(
@@ -74,7 +75,8 @@ pub(crate) fn has_valid_biomes(
     let max_y = biome_coords::from_block(sea_level + 29);
     let min_z = biome_coords::from_block(center_z - 29);
     let max_z = biome_coords::from_block(center_z + 29);
-    let allowed = verdantgolem_data::tag::WorldgenBiome::MINECRAFT_REQUIRED_OCEAN_MONUMENT_SURROUNDING.1;
+    let allowed =
+        verdantgolem_data::tag::WorldgenBiome::MINECRAFT_REQUIRED_OCEAN_MONUMENT_SURROUNDING.1;
 
     (min_x..=max_x).all(|x| {
         (min_z..=max_z).all(|z| {

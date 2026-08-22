@@ -1,10 +1,10 @@
 use block_match::BlockMatchRuleTest;
 use block_state_match::BlockStateMatchRuleTest;
-use verdantgolem_data::BlockStateId;
-use verdantgolem_util::random::RandomGenerator;
 use random_block_match::RandomBlockMatchRuleTest;
 use random_block_state_match::RandomBlockStateMatchRuleTest;
 use tag_match::TagMatchRuleTest;
+use verdantgolem_data::BlockStateId;
+use verdantgolem_util::random::RandomGenerator;
 
 pub mod block_match;
 pub mod block_state_match;

@@ -1,7 +1,7 @@
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_macros::Event;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 /// An event that occurs when the world spawn point changes.
 #[derive(Event, Clone)]

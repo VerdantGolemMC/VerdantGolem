@@ -2,13 +2,13 @@ use crate::command::argument_builder::{ArgumentBuilder, command};
 use crate::command::context::command_context::CommandContext;
 use crate::command::node::dispatcher::CommandDispatcher;
 use crate::command::node::{CommandExecutor, CommandExecutorResult};
+use std::borrow::Cow;
 use verdantgolem_data::translation;
 use verdantgolem_util::PermissionLvl;
 use verdantgolem_util::permission::{Permission, PermissionDefault, PermissionRegistry};
 use verdantgolem_util::text::click::ClickEvent;
 use verdantgolem_util::text::hover::HoverEvent;
 use verdantgolem_util::text::{TextComponent, color::NamedColor};
-use std::borrow::Cow;
 
 const DESCRIPTION: &str = "Displays the world seed.";
 const PERMISSION: &str = "minecraft:command.seed";

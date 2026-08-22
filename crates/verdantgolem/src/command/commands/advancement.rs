@@ -13,12 +13,12 @@ use crate::command::suggestion::suggestions::SuggestionsBuilder;
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::entity::player::advancement::PlayerAdvancement;
+use std::sync::Arc;
 use verdantgolem_data::advancement_data::AdvancementNode;
 use verdantgolem_data::{ADVANCEMENT_TREE, Advancement, translation};
 use verdantgolem_util::PermissionLvl;
 use verdantgolem_util::permission::{Permission, PermissionDefault, PermissionRegistry};
 use verdantgolem_util::text::TextComponent;
-use std::sync::Arc;
 
 const NAME: &str = "advancement";
 const DESCRIPTION: &str = "manage advancement of players";

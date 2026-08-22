@@ -1,6 +1,7 @@
 use crate::entity::player::Player;
 use crate::entity::{Entity, EntityBase, living::LivingEntity};
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::sound::{Sound, SoundCategory};
@@ -8,7 +9,6 @@ use verdantgolem_data::tag::Taggable;
 use verdantgolem_util::math::boundingbox::{BoundingBox, EntityDimensions};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::Arc;
 
 pub struct LeashKnotEntity {
     entity: Entity,

@@ -1,9 +1,9 @@
 use crate::entity::EntityBase;
 use crate::entity::ai::control::Control;
 use crate::entity::mob::{Mob, MobEntity};
+use std::sync::Arc;
 use verdantgolem_util::math::clamp_angle;
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::Arc;
 
 // Please keep the atomic values out of here!!!
 #[derive(Default)]

@@ -61,7 +61,9 @@ impl<'a> CUpdateTagsPlay<'a> {
 
 fn remap_tag_entry_id(key: RegistryKey, id: u16, version: JavaMinecraftVersion) -> u16 {
     match key {
-        RegistryKey::Item => verdantgolem_data::item_id_remap::remap_item_id_for_version(id, version),
+        RegistryKey::Item => {
+            verdantgolem_data::item_id_remap::remap_item_id_for_version(id, version)
+        }
         RegistryKey::EntityType => {
             verdantgolem_data::entity_id_remap::remap_entity_id_for_version(id, version)
         }

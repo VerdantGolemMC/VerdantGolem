@@ -269,10 +269,10 @@ impl ParsedMappings {
     /// # Returns
     /// `Some(ParsedMappings)` if the section exists, or `None` if the section is absent.
     pub fn parse_mapping_file(path: &str, section: &str) -> Option<Self> {
-        use verdantgolem_nbt::Nbt;
-        use verdantgolem_nbt::deserializer::NbtReadHelperJava;
         use std::fs;
         use std::io::Cursor;
+        use verdantgolem_nbt::Nbt;
+        use verdantgolem_nbt::deserializer::NbtReadHelperJava;
 
         let bytes = fs::read(path).unwrap_or_else(|_| panic!("Failed to read {path}"));
         let mut reader = NbtReadHelperJava::new(Cursor::new(bytes));

@@ -15,6 +15,11 @@ use std::{
 use tracing::{debug, error, warn};
 
 use bytes::Bytes;
+use tokio::{
+    sync::mpsc::{Receiver, Sender},
+    sync::{Mutex, RwLock, oneshot},
+    task::JoinHandle,
+};
 use verdantgolem_config::networking::compression::CompressionInfo;
 use verdantgolem_protocol::{
     BClientPacket, PacketDecodeError, RawPacket,
@@ -45,11 +50,6 @@ use verdantgolem_protocol::{
     },
     packet::Packet,
     serial::{PacketRead, PacketReadSlice},
-};
-use tokio::{
-    sync::mpsc::{Receiver, Sender},
-    sync::{Mutex, RwLock, oneshot},
-    task::JoinHandle,
 };
 
 use tokio_util::{sync::CancellationToken, task::TaskTracker};

@@ -31,6 +31,11 @@ use crate::{
     slot::{NormalSlot, Slot},
     sync_handler::{SyncHandler, TrackedStack},
 };
+use std::cmp::max;
+use std::sync::Mutex;
+use std::sync::atomic::{AtomicU32, Ordering};
+use std::{any::Any, collections::HashMap, sync::Arc};
+use tracing::warn;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::{
     Enchantment,
@@ -53,11 +58,6 @@ use verdantgolem_world::{
     block::entities::PropertyDelegate,
     inventory::{ComparableInventory, Inventory},
 };
-use std::cmp::max;
-use std::sync::Mutex;
-use std::sync::atomic::{AtomicU32, Ordering};
-use std::{any::Any, collections::HashMap, sync::Arc};
-use tracing::warn;
 
 /// Slot index indicating a click outside the inventory.
 const SLOT_INDEX_OUTSIDE: i32 = -999;

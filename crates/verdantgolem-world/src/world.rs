@@ -1,9 +1,9 @@
 use crate::generation::proto_chunk::GenerationCache;
 use bitflags::bitflags;
+use thiserror::Error;
 use verdantgolem_data::{Block, BlockState, BlockStateId, Mirror, Rotation, chunk::Biome};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::math::position::BlockPos;
-use thiserror::Error;
 
 bitflags! {
     /// Flags used to control the side effects of a block state change.

@@ -1,9 +1,6 @@
 use super::{Entity, EntityBase, living::LivingEntity};
 use crate::server::Server;
 use core::f32;
-use verdantgolem_data::Block;
-use verdantgolem_protocol::{codec::var_int::VarInt, java::client::play::Metadata};
-use verdantgolem_util::math::vector3::Vector3;
 use std::{
     f64::consts::TAU,
     sync::atomic::{
@@ -11,6 +8,9 @@ use std::{
         Ordering::{self, Relaxed},
     },
 };
+use verdantgolem_data::Block;
+use verdantgolem_protocol::{codec::var_int::VarInt, java::client::play::Metadata};
+use verdantgolem_util::math::vector3::Vector3;
 
 pub struct TNTEntity {
     entity: Entity,
@@ -19,6 +19,20 @@ pub struct TNTEntity {
 }
 
 impl TNTEntity {
+    /// Launch velocity for a freshly primed TNT, honoring the carpet rules
+    /// `hardcodeTNTangle` and `tntPrimerMomentumRemoved`.
+    pub fn primer_velocity() -> Vector3<f64> {
+        let rules = crate::carpet::values();
+        let angle = if rules.hardcode_tnt_angle >= 0.0 {
+            rules.hardcode_tnt_angle
+        } else if rules.tnt_primer_momentum_removed {
+            return Vector3::new(0.0, 0.2, 0.0);
+        } else {
+            rand::random::<f64>() * TAU
+        };
+        Vector3::new(-angle.sin() * 0.02, 0.2, -angle.cos() * 0.02)
+    }
+
     pub const fn new(entity: Entity, power: f32, fuse: u32) -> Self {
         Self {
             entity,
@@ -61,11 +75,47 @@ impl EntityBase for TNTEntity {
             self.entity.remove();
             let world = self.entity.world.load_full();
             let pos = self.entity.pos.load();
-            let power = self.power;
+            let power = {
+                let rules = crate::carpet::values();
+                if rules.tnt_random_range >= 0.0 {
+                    rules.tnt_random_range as f32
+                } else {
+                    self.power
+                }
+            };
             if world.level_info.load().game_rules.tnt_explodes {
                 world.explode(pos, power, crate::world::ExplosionInteraction::Tnt);
             }
         } else {
+            // carpet rule mergeTNT: fold stationary primed TNT into one entity.
+            if crate::carpet::values().merge_tnt
+                && entity.on_ground.load(Ordering::Relaxed)
+                && fuse % 20 == 0
+            {
+                let world = entity.world.load();
+                let entities = world.entities.load();
+                let bounding_box = entity.bounding_box.load();
+                for other in entities.iter() {
+                    if let Some(other_tnt) = other.clone().get_tnt_entity() {
+                        let other_id = other_tnt.entity.entity_id;
+                        if other_id != entity.entity_id
+                            && !other_tnt.entity.removed.load(Ordering::Relaxed)
+                            && other_tnt
+                                .entity
+                                .bounding_box
+                                .load()
+                                .intersects(&bounding_box)
+                        {
+                            let other_fuse = other_tnt.fuse.load(Relaxed);
+                            if other_fuse < self.fuse.load(Relaxed) {
+                                self.fuse.store(other_fuse, Relaxed);
+                            }
+                            other_tnt.entity.remove();
+                        }
+                    }
+                }
+            }
+
             // Safe decrement
             self.fuse.store(fuse - 1, Relaxed);
             entity.update_fluid_state(caller);
@@ -73,10 +123,8 @@ impl EntityBase for TNTEntity {
     }
 
     fn init_data_tracker(&self) {
-        let pos: f64 = rand::random::<f64>() * TAU;
-
-        self.entity
-            .set_velocity(Vector3::new(-pos.sin() * 0.02, 0.2, -pos.cos() * 0.02));
+        let velocity = Self::primer_velocity();
+        self.entity.set_velocity(velocity);
 
         self.entity.send_meta_data(
             &[
@@ -99,6 +147,10 @@ impl EntityBase for TNTEntity {
 
     fn get_living_entity(&self) -> Option<&LivingEntity> {
         None
+    }
+
+    fn get_tnt_entity(self: Arc<Self>) -> Option<Arc<TNTEntity>> {
+        Some(self)
     }
 
     fn get_gravity(&self) -> f64 {

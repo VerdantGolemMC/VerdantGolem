@@ -380,8 +380,10 @@ impl EntityBase for ItemFrameEntity {
                 verdantgolem_data::tracked_data::item_frame::ITEM,
                 item_serializer,
             );
-            let meta_rot =
-                Metadata::new(verdantgolem_data::tracked_data::item_frame::ROTATION, rotation);
+            let meta_rot = Metadata::new(
+                verdantgolem_data::tracked_data::item_frame::ROTATION,
+                rotation,
+            );
 
             if meta_item.write(&mut data, &ver).is_ok() && meta_rot.write(&mut data, &ver).is_ok() {
                 data.push(255);

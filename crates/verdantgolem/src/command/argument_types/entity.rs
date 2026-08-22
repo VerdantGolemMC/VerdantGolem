@@ -11,8 +11,8 @@ use crate::command::string_reader::StringReader;
 use crate::command::suggestion::suggestions::{Suggestions, SuggestionsBuilder};
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
-use verdantgolem_data::translation;
 use std::sync::Arc;
+use verdantgolem_data::translation;
 
 /// A [`CommandErrorType`] to tell that no entities could be found.
 pub const NO_ENTITIES_ERROR_TYPE: CommandErrorType<0> = CommandErrorType::new(

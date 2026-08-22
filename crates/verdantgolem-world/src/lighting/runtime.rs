@@ -2,10 +2,10 @@ use crate::chunk::io::Dirtiable;
 use crate::chunk::palette::BlockPalette;
 use crate::level::Level;
 use crossbeam::queue::SegQueue;
+use std::sync::Arc;
 use verdantgolem_config::lighting::LightingEngineConfig;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 pub struct DynamicLightEngine {
     block_decrease: SegQueue<(BlockPos, u8)>,

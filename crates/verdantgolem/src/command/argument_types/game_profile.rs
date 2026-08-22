@@ -14,9 +14,9 @@ use crate::net::authentication::lookup_profile_by_name;
 use crate::net::{GameProfile, offline_uuid};
 use crate::server::Server;
 use arc_swap::ArcSwap;
-use verdantgolem_data::translation;
 use std::sync::Arc;
 use uuid::Uuid;
+use verdantgolem_data::translation;
 
 pub const UNKNOWN_PLAYER_ERROR_TYPE: CommandErrorType<0> = CommandErrorType::new(
     translation::java::ARGUMENT_PLAYER_UNKNOWN,

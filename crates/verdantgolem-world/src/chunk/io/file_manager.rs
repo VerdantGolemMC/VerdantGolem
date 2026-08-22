@@ -5,12 +5,12 @@ use std::{
 };
 
 use futures::future::join_all;
-use verdantgolem_util::math::vector2::Vector2;
 use tokio::{
     join,
     sync::{OnceCell, RwLock, mpsc},
 };
 use tracing::{debug, error, trace};
+use verdantgolem_util::math::vector2::Vector2;
 
 use crate::{
     chunk::{ChunkReadingError, ChunkWritingError, io::Dirtiable},

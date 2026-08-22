@@ -3,9 +3,9 @@ use super::{Controls, Goal, to_goal_ticks};
 use crate::entity::ai::target_predicate::TargetPredicate;
 use crate::entity::living::LivingEntity;
 use crate::entity::mob::Mob;
-use verdantgolem_data::attributes::Attributes;
 use rand::RngExt;
 use std::sync::atomic::{AtomicI32, Ordering};
+use verdantgolem_data::attributes::Attributes;
 
 const UNSET: i32 = 0;
 const CAN_TRACK: i32 = 1;

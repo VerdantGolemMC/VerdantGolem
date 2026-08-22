@@ -1,8 +1,8 @@
 use std::{borrow::Cow, fmt::Display};
 
-use verdantgolem_codecs::{DataResult, FlatTryFrom, comap_flat_map_codec_impl};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use verdantgolem_codecs::{DataResult, FlatTryFrom, comap_flat_map_codec_impl};
 
 /// Default Minecraft namespace string (`"minecraft"`).
 pub const VANILLA_NAMESPACE: &str = "minecraft";
@@ -402,9 +402,9 @@ impl FlatTryFrom<String> for Identifier {
 #[cfg(test)]
 mod test {
     use crate::identifier::{Identifier, IdentifierError};
+    use serde_json::json;
     use verdantgolem_codecs::json_ops::JsonOps;
     use verdantgolem_codecs::{assert_decode, assert_encode_success};
-    use serde_json::json;
 
     #[test]
     fn new() -> Result<(), IdentifierError> {

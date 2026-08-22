@@ -2,9 +2,9 @@ use crate::command::errors::command_syntax_error::{
     CommandSyntaxError, CommandSyntaxErrorContext, ContextProvider,
 };
 use crate::command::errors::error_types::{self, CommandErrorType};
-use verdantgolem_util::text::TextComponent;
 use std::borrow::Cow;
 use std::str::FromStr;
+use verdantgolem_util::text::TextComponent;
 
 /// A structure that can read a string character by character for commands.
 ///

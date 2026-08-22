@@ -7,7 +7,9 @@ use crate::command::dispatcher::CommandError;
 use crate::command::tree::RawArgs;
 use crate::server::Server;
 use verdantgolem_data::sound::SoundCategory;
-use verdantgolem_protocol::java::client::play::{ArgumentType, CommandSuggestion, SuggestionProviders};
+use verdantgolem_protocol::java::client::play::{
+    ArgumentType, CommandSuggestion, SuggestionProviders,
+};
 
 /// `ArgumentConsumer` for Minecraft sound categories (master, music, record, etc.)
 pub struct SoundCategoryArgumentConsumer;

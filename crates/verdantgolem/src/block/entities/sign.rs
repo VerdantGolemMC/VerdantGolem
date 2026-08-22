@@ -4,9 +4,9 @@ use std::sync::{
 };
 
 use super::BlockEntity;
+use std::sync::Mutex;
 use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Mutex;
 
 pub use verdantgolem_data::dye_color::DyeColor;
 

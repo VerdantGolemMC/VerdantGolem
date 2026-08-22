@@ -1,9 +1,9 @@
-use verdantgolem_nbt::compound::NbtCompound;
 use std::fs::{File, create_dir_all};
 use std::io;
 use std::path::PathBuf;
 use tracing::{debug, error};
 use uuid::Uuid;
+use verdantgolem_nbt::compound::NbtCompound;
 
 /// Manages the storage and retrieval of player data from disk and memory cache.
 ///
@@ -140,7 +140,8 @@ impl PlayerDataStorage {
         // Create the file and write directly with GZip compression
         match File::create(&path) {
             Ok(file) => {
-                if let Err(e) = verdantgolem_nbt::nbt_compress::write_gzip_compound_tag(data, file) {
+                if let Err(e) = verdantgolem_nbt::nbt_compress::write_gzip_compound_tag(data, file)
+                {
                     error!("Failed to write compressed player data for {uuid}: {e}");
                     Err(PlayerDataError::Nbt(e.to_string()))
                 } else {

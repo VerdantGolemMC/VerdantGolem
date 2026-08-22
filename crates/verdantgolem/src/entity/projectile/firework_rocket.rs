@@ -3,6 +3,7 @@ use crate::{
     server::Server,
     world::World,
 };
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use verdantgolem_data::entity::EntityStatus;
 use verdantgolem_protocol::bedrock::server::actor_event::ActorEventID;
 use verdantgolem_protocol::{codec::optional_int::OptionalInt, java::client::play::Metadata};
@@ -10,7 +11,6 @@ use verdantgolem_util::{
     math::vector3::Vector3,
     random::{RandomGenerator, RandomImpl, get_seed, xoroshiro128::Xoroshiro},
 };
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
 const GRAVITY: f64 = 0.0;
 

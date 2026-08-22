@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use rand::{RngExt, rng};
 use verdantgolem_data::sound::SoundCategory;
 use verdantgolem_data::translation;
 use verdantgolem_util::text::TextComponent;
-use rand::{RngExt, rng};
 
 use crate::entity::EntityBase;
 use crate::{

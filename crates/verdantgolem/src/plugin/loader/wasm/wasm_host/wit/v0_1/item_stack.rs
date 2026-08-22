@@ -13,12 +13,12 @@ use wasmtime::component::Resource;
 
 use super::common::{WitNbtTree, from_wit_nbt_tree, to_wit_nbt_tree};
 use crate::plugin::loader::wasm::wasm_host::wit::v0_1::player::text_component_from_resource;
+use std::borrow::Cow;
 use verdantgolem_data::Enchantment;
 use verdantgolem_data::data_component::DataComponent;
 use verdantgolem_data::data_component_impl::{CustomNameImpl, EnchantmentsImpl, LoreImpl};
 use verdantgolem_nbt::tag::NbtTag;
 use verdantgolem_protocol::codec::data_component::{deserialize, serialize};
-use std::borrow::Cow;
 
 pub(crate) fn to_wit_data_component(id: DataComponent) -> WitDataComponent {
     // SAFETY: WIT enum is generated in the same order as the internal enum
@@ -105,9 +105,9 @@ impl HostItemStack for PluginHostState {
             .components
             .iter()
             .find(|(id, _)| *id == DataComponent::MaxStackSize)
-            && let Some(max_size) = data
-                .as_any()
-                .downcast_ref::<verdantgolem_data::data_component_impl::MaxStackSizeImpl>()
+            && let Some(max_size) =
+                data.as_any()
+                    .downcast_ref::<verdantgolem_data::data_component_impl::MaxStackSizeImpl>()
         {
             return Ok(max_size.size);
         }

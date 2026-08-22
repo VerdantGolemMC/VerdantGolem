@@ -1,8 +1,8 @@
 // Last verified for v2169
 
-use verdantgolem_macros::packet;
 use std::borrow::Cow;
 use uuid::Uuid;
+use verdantgolem_macros::packet;
 
 use crate::serial::{PacketRead, PacketReadSlice};
 

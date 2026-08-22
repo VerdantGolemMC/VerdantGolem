@@ -120,7 +120,11 @@ impl StructurePieceBase for OceanRuinPiece {
         chunk_box: &BlockBox,
     ) {
         let origin = self.piece.bounding_box.min;
-        let sample_y = chunk.get_top_y(&verdantgolem_util::HeightMap::OceanFloorWg, origin.x, origin.z);
+        let sample_y = chunk.get_top_y(
+            &verdantgolem_util::HeightMap::OceanFloorWg,
+            origin.x,
+            origin.z,
+        );
         let target_y = sample_y - 2; // slightly buried on ocean floor
         let mut final_origin = origin;
         final_origin.y = target_y;

@@ -1,7 +1,7 @@
+use std::collections::HashMap;
 pub use verdantgolem_data::statistic::{CustomStatistic, StatisticCategory};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_nbt::tag::NbtTag;
-use std::collections::HashMap;
 
 #[derive(Default)]
 pub struct Statistics {

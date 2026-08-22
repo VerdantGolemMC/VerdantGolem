@@ -161,7 +161,10 @@ impl ArrowEntity {
         }
     }
 
-    fn write_item_stack_nbt(item_stack: &ItemStack, nbt: &mut verdantgolem_nbt::compound::NbtCompound) {
+    fn write_item_stack_nbt(
+        item_stack: &ItemStack,
+        nbt: &mut verdantgolem_nbt::compound::NbtCompound,
+    ) {
         let mut item = verdantgolem_nbt::compound::NbtCompound::new();
         item_stack.copy_with_count(1).write_item_stack(&mut item);
         nbt.put_compound("item", item);

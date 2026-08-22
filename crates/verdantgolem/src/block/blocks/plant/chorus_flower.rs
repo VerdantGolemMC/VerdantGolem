@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockDirection, BlockStateId,
     block_properties::{BlockProperties, ChorusFlowerLikeProperties},
@@ -12,7 +13,6 @@ use verdantgolem_world::{
     tick::TickPriority,
     world::{BlockAccessor, BlockFlags},
 };
-use rand::RngExt;
 
 use super::chorus_plant;
 use crate::{

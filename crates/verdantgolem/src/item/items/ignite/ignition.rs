@@ -1,11 +1,11 @@
 use crate::block::blocks::fire::FireBlockBase;
 use crate::block::blocks::fire::fire::FireBlock;
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::fluid::Fluid;
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::{Block, BlockStateId, tag};
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 pub struct Ignition;
 

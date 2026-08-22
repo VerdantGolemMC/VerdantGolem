@@ -43,11 +43,16 @@ impl BlockBehaviour for CreakingHeartBlock {
     fn on_place(&self, args: OnPlaceArgs<'_>) -> BlockStateId {
         let mut props =
             CreakingHeartLikeProperties::from_state_id(args.block.default_state.id, args.block);
-        props.axis = match args.direction {
-            verdantgolem_data::BlockDirection::North | verdantgolem_data::BlockDirection::South => Axis::Z,
-            verdantgolem_data::BlockDirection::East | verdantgolem_data::BlockDirection::West => Axis::X,
-            verdantgolem_data::BlockDirection::Up | verdantgolem_data::BlockDirection::Down => Axis::Y,
-        };
+        props.axis =
+            match args.direction {
+                verdantgolem_data::BlockDirection::North
+                | verdantgolem_data::BlockDirection::South => Axis::Z,
+                verdantgolem_data::BlockDirection::East
+                | verdantgolem_data::BlockDirection::West => Axis::X,
+                verdantgolem_data::BlockDirection::Up | verdantgolem_data::BlockDirection::Down => {
+                    Axis::Y
+                }
+            };
         props.creaking_heart_state = CreakingHeartState::Uprooted;
         props.to_state_id(args.block)
     }

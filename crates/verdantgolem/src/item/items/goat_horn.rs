@@ -21,9 +21,11 @@ impl ItemBehaviour for GoatHornItem {
             &player.position(),
         );
         let stack = player.inventory().held_item();
-        player
-            .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, Self::USE_DURATION);
+        player.living_entity.set_active_hand(
+            verdantgolem_util::Hand::Right,
+            stack,
+            Self::USE_DURATION,
+        );
     }
 
     fn get_use_duration(&self) -> i32 {

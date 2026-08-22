@@ -2,9 +2,9 @@ use crate::{
     codec::var_uint::VarUInt,
     serial::{PacketRead, PacketReadSlice, PacketWrite, read_str_slice},
 };
-use verdantgolem_macros::packet;
 use std::borrow::Cow;
 use std::io::{Error, ErrorKind, Read, Write};
+use verdantgolem_macros::packet;
 
 #[derive(Debug)]
 #[packet(9)]

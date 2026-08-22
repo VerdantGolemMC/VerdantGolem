@@ -3,6 +3,11 @@ use crate::entity::living::LivingEntity;
 use crate::entity::player::Player;
 use crate::server::Server;
 use core::f64;
+use std::sync::Mutex;
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, AtomicU32, Ordering},
+};
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
@@ -13,11 +18,6 @@ use verdantgolem_protocol::{
     codec::item_stack_seralizer::ItemStackSerializer, java::client::play::Metadata,
 };
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::Mutex;
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, AtomicU32, Ordering},
-};
 
 use super::{Entity, EntityBase};
 
@@ -235,10 +235,11 @@ impl EntityBase for EyeOfEnder {
             let mut data = Vec::new();
             if metadata.write(&mut data, &client.version.load()).is_ok() {
                 data.push(255);
-                let meta_packet = verdantgolem_protocol::java::client::play::CSetEntityMetadata::new(
-                    self.entity.entity_id.into(),
-                    data.into(),
-                );
+                let meta_packet =
+                    verdantgolem_protocol::java::client::play::CSetEntityMetadata::new(
+                        self.entity.entity_id.into(),
+                        data.into(),
+                    );
                 if let Ok(meta_data) = client.serialize_packet(&meta_packet) {
                     client.try_enqueue_packet(meta_data);
                 }

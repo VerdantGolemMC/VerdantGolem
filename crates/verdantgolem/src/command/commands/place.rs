@@ -346,24 +346,25 @@ impl CommandExecutor for PlaceStructureExecutor {
             } else {
                 let random = RandomGenerator::Legacy(LegacyRand::from_seed(seed));
 
-                let position = verdantgolem_world::generation::structure::generate_structure_position(
-                    &key,
-                    structure,
-                    StructureGeneratorContext {
-                        seed: seed as i64,
-                        chunk_x: block_pos.0.x >> 4,
-                        chunk_z: block_pos.0.z >> 4,
-                        random,
-                        sea_level: settings.sea_level,
-                        min_y: world_gen.dimension().min_y,
-                        height_sampler: None,
-                        structure_key: Some(key),
-                    },
-                )
-                .ok_or_else(|| {
-                    STRUCTURE_INVALID
-                        .create_without_context(TextComponent::text(structure_name.clone()))
-                })?;
+                let position =
+                    verdantgolem_world::generation::structure::generate_structure_position(
+                        &key,
+                        structure,
+                        StructureGeneratorContext {
+                            seed: seed as i64,
+                            chunk_x: block_pos.0.x >> 4,
+                            chunk_z: block_pos.0.z >> 4,
+                            random,
+                            sea_level: settings.sea_level,
+                            min_y: world_gen.dimension().min_y,
+                            height_sampler: None,
+                            structure_key: Some(key),
+                        },
+                    )
+                    .ok_or_else(|| {
+                        STRUCTURE_INVALID
+                            .create_without_context(TextComponent::text(structure_name.clone()))
+                    })?;
 
                 let mut collector = position
                     .collector

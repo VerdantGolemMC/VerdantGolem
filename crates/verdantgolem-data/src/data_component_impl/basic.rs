@@ -1,8 +1,8 @@
 use crate::data_component_impl::{DataComponentImpl, get_i32_hash, get_str_hash};
+use std::borrow::Cow;
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_nbt::tag::NbtTag;
 use verdantgolem_util::text::TextComponent;
-use std::borrow::Cow;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct CustomDataImpl {

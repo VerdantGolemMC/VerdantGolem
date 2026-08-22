@@ -96,10 +96,10 @@ mod tests {
     };
     use crate::generation::get_world_gen;
     use crate::world::WorldPortalExt;
+    use std::sync::Arc;
     use verdantgolem_data::BlockStateId;
     use verdantgolem_data::dimension::Dimension;
     use verdantgolem_util::world_seed::Seed;
-    use std::sync::Arc;
 
     struct BlockRegistry;
     impl WorldPortalExt for BlockRegistry {
@@ -340,8 +340,8 @@ mod tests {
         for y in 123..=146 {
             for x in -4896..=-4881 {
                 for z in -4400..=-4393 {
-                    let state =
-                        chunk.get_block_state(&verdantgolem_util::math::vector3::Vector3::new(x, y, z));
+                    let state = chunk
+                        .get_block_state(&verdantgolem_util::math::vector3::Vector3::new(x, y, z));
                     hash ^= u64::from(state.as_u16());
                     hash = hash.wrapping_mul(0x100000001b3);
                     non_air += usize::from(!state.to_state().is_air());
@@ -387,8 +387,12 @@ mod tests {
         };
 
         for (x, y, z) in [(1173, 70, -1311), (1173, 70, -1305)] {
-            let state = chunk.get_block_state(&verdantgolem_util::math::vector3::Vector3::new(x, y, z));
-            assert_eq!(state.to_block_id(), verdantgolem_data::Block::GRASS_BLOCK.id);
+            let state =
+                chunk.get_block_state(&verdantgolem_util::math::vector3::Vector3::new(x, y, z));
+            assert_eq!(
+                state.to_block_id(),
+                verdantgolem_data::Block::GRASS_BLOCK.id
+            );
         }
 
         let cage_chunk = generate_single_chunk(
@@ -401,8 +405,12 @@ mod tests {
         let super::Chunk::Proto(cage_chunk) = cage_chunk else {
             panic!("features stage should return a proto chunk");
         };
-        let state =
-            cage_chunk.get_block_state(&verdantgolem_util::math::vector3::Vector3::new(1183, 68, -1330));
-        assert_eq!(state.to_block_id(), verdantgolem_data::Block::GRASS_BLOCK.id);
+        let state = cage_chunk.get_block_state(&verdantgolem_util::math::vector3::Vector3::new(
+            1183, 68, -1330,
+        ));
+        assert_eq!(
+            state.to_block_id(),
+            verdantgolem_data::Block::GRASS_BLOCK.id
+        );
     }
 }

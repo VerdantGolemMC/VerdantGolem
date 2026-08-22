@@ -3,9 +3,9 @@ use crate::command::args::{Arg, ArgumentConsumer, ConsumeResult, FindArg, GetCli
 use crate::command::dispatcher::CommandError;
 use crate::command::tree::RawArgs;
 use crate::server::Server;
+use tracing::debug;
 use verdantgolem_protocol::java::client::play::{ArgumentType, SuggestionProviders};
 use verdantgolem_util::text::TextComponent;
-use tracing::debug;
 
 pub struct TextComponentArgConsumer;
 

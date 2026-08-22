@@ -1,13 +1,13 @@
+use serde::Deserialize;
+use std::{
+    collections::HashMap,
+    sync::{Arc, LazyLock},
+};
 use verdantgolem_data::{Block, BlockId, BlockState, tag::Taggable};
 use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
 use verdantgolem_util::{
     math::{int_provider::IntProvider, vector3::Vector3},
     random::{RandomImpl, hash_block_pos, legacy_rand::LegacyRand},
-};
-use serde::Deserialize;
-use std::{
-    collections::HashMap,
-    sync::{Arc, LazyLock},
 };
 
 use super::{BlockPlacer, BlockStateResolver, PaletteEntry};

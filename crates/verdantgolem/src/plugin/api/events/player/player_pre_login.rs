@@ -1,7 +1,7 @@
-use verdantgolem_macros::{Event, cancellable};
-use verdantgolem_util::text::TextComponent;
 use std::net::SocketAddr;
 use uuid::Uuid;
+use verdantgolem_macros::{Event, cancellable};
+use verdantgolem_util::text::TextComponent;
 
 /// An event that occurs synchronously when a player pre-logins.
 #[cancellable]

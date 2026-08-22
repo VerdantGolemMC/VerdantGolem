@@ -1,13 +1,13 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
 use crossbeam::atomic::AtomicCell;
+use rand::RngExt;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::particle::Particle;
 use verdantgolem_data::tag::{self, Taggable};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_protocol::java::client::play::Metadata;
 use verdantgolem_util::math::vector3::Vector3;
-use rand::RngExt;
 
 use crate::entity::{Entity, EntityBase, player::Player};
 

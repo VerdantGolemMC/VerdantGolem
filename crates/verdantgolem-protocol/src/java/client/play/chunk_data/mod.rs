@@ -6,10 +6,10 @@ pub mod v1_9;
 
 use crate::packet::MultiVersionJavaPacket;
 use crate::{ClientPacket, WritingError};
+use std::io::Write;
 use verdantgolem_data::packet::clientbound::play::LEVEL_CHUNK_WITH_LIGHT;
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::ChunkData;
-use std::io::Write;
 
 /// Sent by the server to provide the client with the full data for a chunk.
 ///
@@ -102,19 +102,25 @@ mod tests {
     #[test]
     fn populated_chunk_data_all_versions() {
         let chunk = ChunkData::empty(0, 0);
-        chunk
-            .section
-            .set_block_absolute_y(0, 64, 0, verdantgolem_data::Block::STONE.default_state.id);
-        chunk
-            .section
-            .set_block_absolute_y(1, 64, 1, verdantgolem_data::Block::DIRT.default_state.id);
+        chunk.section.set_block_absolute_y(
+            0,
+            64,
+            0,
+            verdantgolem_data::Block::STONE.default_state.id,
+        );
+        chunk.section.set_block_absolute_y(
+            1,
+            64,
+            1,
+            verdantgolem_data::Block::DIRT.default_state.id,
+        );
 
         let mut nbt = verdantgolem_nbt::compound::NbtCompound::new();
         nbt.put_string("id", "minecraft:chest".to_string());
         chunk.pending_block_entities.lock().unwrap().insert(
-            verdantgolem_util::math::position::BlockPos(verdantgolem_util::math::vector3::Vector3::new(
-                0, 64, 0,
-            )),
+            verdantgolem_util::math::position::BlockPos(
+                verdantgolem_util::math::vector3::Vector3::new(0, 64, 0),
+            ),
             nbt,
         );
 

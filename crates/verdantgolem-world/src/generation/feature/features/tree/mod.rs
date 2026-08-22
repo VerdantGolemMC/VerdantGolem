@@ -1,11 +1,11 @@
 use decorator::TreeDecorator;
 use foliage::FoliagePlacer;
+use root::RootPlacer;
 use verdantgolem_data::BlockState;
 use verdantgolem_data::block_properties::{BlockProperties, OakLeavesLikeProperties};
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::{BlockId, tag};
 use verdantgolem_util::{math::position::BlockPos, random::RandomGenerator};
-use root::RootPlacer;
 
 use trunk::TrunkPlacer;
 

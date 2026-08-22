@@ -144,8 +144,8 @@ impl CommandExecutor for LootExecutor {
                         None
                     };
 
-                    let tool_stack =
-                        tool_item.map(|item| verdantgolem_data::item_stack::ItemStack::new(1, item));
+                    let tool_stack = tool_item
+                        .map(|item| verdantgolem_data::item_stack::ItemStack::new(1, item));
 
                     let params = crate::world::loot::LootContextParameters {
                         block_state: Some(world.get_block_state(&pos)),

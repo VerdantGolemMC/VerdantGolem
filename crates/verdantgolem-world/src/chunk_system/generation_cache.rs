@@ -5,6 +5,7 @@ use crate::generation::generator;
 use crate::generation::height_limit::HeightLimitView;
 use crate::generation::proto_chunk::GenerationCache;
 use crate::world::{BlockAccessor, WorldPortalExt};
+use tracing::debug;
 use verdantgolem_config::lighting::LightingEngineConfig;
 use verdantgolem_data::biome::Biome;
 use verdantgolem_data::block_properties::is_air;
@@ -14,7 +15,6 @@ use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::HeightMap;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use tracing::debug;
 
 pub struct Cache {
     pub x: i32,

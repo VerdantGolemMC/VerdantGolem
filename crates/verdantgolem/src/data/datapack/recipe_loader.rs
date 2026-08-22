@@ -1,9 +1,9 @@
+use serde_json::Value;
 use verdantgolem_data::recipes::RecipeCategoryTypes;
 use verdantgolem_protocol::codec::recipe::{
     DynamicRecipe, OwnedCookingRecipe, OwnedCookingRecipeType, OwnedCraftingRecipe,
     OwnedRecipeIngredient, OwnedRecipeResult,
 };
-use serde_json::Value;
 
 pub fn parse_recipe(namespace: &str, name: &str, json_str: &str) -> Option<DynamicRecipe> {
     let value: Value = serde_json::from_str(json_str).ok()?;

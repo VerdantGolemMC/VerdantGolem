@@ -1,13 +1,13 @@
 use std::sync::atomic::{AtomicI32, Ordering};
 
 use crossbeam::atomic::AtomicCell;
+use rand::RngExt;
 use verdantgolem_data::entity::EntityStatus;
 use verdantgolem_data::particle::Particle;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_protocol::bedrock::server::actor_event::ActorEventID;
 use verdantgolem_util::math::vector3::Vector3;
-use rand::RngExt;
 
 use crate::entity::Entity;
 

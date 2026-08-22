@@ -12,14 +12,14 @@ use crate::entity::{
     ai::goal::{Goal, active_target::ActiveTargetGoal, look_at_entity::LookAtEntityGoal},
 };
 use crate::world::World;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Weak};
 use verdantgolem_data::data_component_impl::EquipmentSlot;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::Difficulty;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Weak};
 
 pub mod drowned;
 pub mod husk;

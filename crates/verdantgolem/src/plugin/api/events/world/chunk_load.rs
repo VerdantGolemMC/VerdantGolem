@@ -1,8 +1,8 @@
 use crate::world::World;
-use verdantgolem_macros::{Event, cancellable};
-use verdantgolem_world::chunk::ChunkData;
 use std::sync::Arc;
 use tokio::sync::RwLock;
+use verdantgolem_macros::{Event, cancellable};
+use verdantgolem_world::chunk::ChunkData;
 
 /// An event that occurs when a chunk is loaded in a world.
 ///

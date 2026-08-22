@@ -1,4 +1,7 @@
 use arc_swap::ArcSwap;
+use std::sync::Arc;
+use tracing::debug;
+use uuid::Uuid;
 use verdantgolem_data::translation;
 use verdantgolem_protocol::{
     ConnectionState, KnownPack, Label, Link, LinkType,
@@ -14,9 +17,6 @@ use verdantgolem_protocol::{
     },
 };
 use verdantgolem_util::{text::TextComponent, version::JavaMinecraftVersion};
-use std::sync::Arc;
-use tracing::debug;
-use uuid::Uuid;
 
 use crate::{
     net::{

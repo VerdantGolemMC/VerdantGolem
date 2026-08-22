@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::block_properties::{BlockProperties, BrownMushroomBlockLikeProperties};
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::{Block, BlockId, BlockState, BlockStateId, tag};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 use crate::block::{
     BlockBehaviour, BlockMetadata, BonemealArgs, CanPlaceAtArgs, GetStateForNeighborUpdateArgs,

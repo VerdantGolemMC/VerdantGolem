@@ -21,9 +21,11 @@ impl ItemBehaviour for SpyglassItem {
             &player.position(),
         );
         let stack = player.inventory().held_item();
-        player
-            .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, Self::USE_DURATION);
+        player.living_entity.set_active_hand(
+            verdantgolem_util::Hand::Right,
+            stack,
+            Self::USE_DURATION,
+        );
     }
 
     fn on_stopped_using(&self, _stack: &verdantgolem_data::item_stack::ItemStack, player: &Player) {

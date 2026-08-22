@@ -16,7 +16,8 @@ pub struct LanternBlock;
 
 impl BlockBehaviour for LanternBlock {
     fn on_place(&self, args: OnPlaceArgs<'_>) -> BlockStateId {
-        let mut props = verdantgolem_data::block_properties::LanternLikeProperties::default(args.block);
+        let mut props =
+            verdantgolem_data::block_properties::LanternLikeProperties::default(args.block);
         props.r#waterlogged = args.replacing.water_source();
 
         let block_up_state = args.world.get_block_state(&args.position.up());

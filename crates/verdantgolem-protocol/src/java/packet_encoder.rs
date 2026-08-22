@@ -1,9 +1,9 @@
 use aes::cipher::KeyIvInit;
 use bytes::Bytes;
 use flate2::{Compress, Compression, FlushCompress, Status};
-use verdantgolem_util::version::JavaMinecraftVersion;
 use thiserror::Error;
 use tokio::io::{AsyncWrite, AsyncWriteExt};
+use verdantgolem_util::version::JavaMinecraftVersion;
 
 use crate::{
     Aes128Cfb8Enc, ClientPacket, CompressionLevel, CompressionThreshold, MAX_PACKET_DATA_SIZE,

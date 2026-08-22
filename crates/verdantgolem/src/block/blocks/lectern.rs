@@ -11,6 +11,7 @@ use crate::block::{
 use crate::entity::Entity;
 use crate::entity::item::ItemEntity;
 use crate::world::World;
+use std::sync::Mutex;
 use verdantgolem_data::block_properties::{BlockProperties, LecternLikeProperties};
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::sound::{Sound, SoundCategory};
@@ -29,7 +30,6 @@ use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::inventory::Inventory;
 use verdantgolem_world::tick::TickPriority;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Mutex;
 
 /// Bridges the screen handler back into the world: page changes emit the
 /// vanilla redstone pulse and taking the book clears `has_book`.

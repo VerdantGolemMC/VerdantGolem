@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
+use uuid::Uuid;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use uuid::Uuid;
 
 use crate::entity::boss::ender_dragon::EnderDragonEntity;
 use crate::entity::boss::wither::WitherEntity;
@@ -124,8 +124,8 @@ use crate::entity::vehicle::boat::BoatEntity;
 use crate::entity::vehicle::minecart::MinecartEntity;
 use crate::entity::{Entity, EntityBase, mob};
 use crate::world::World;
-use verdantgolem_data::Block;
 use std::sync::atomic::AtomicBool;
+use verdantgolem_data::Block;
 
 #[expect(clippy::too_many_lines)]
 pub fn from_type(

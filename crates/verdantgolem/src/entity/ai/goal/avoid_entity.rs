@@ -2,9 +2,9 @@ use std::sync::Arc;
 
 use super::{Controls, Goal};
 use crate::entity::{EntityBase, ai::pathfinder::NavigatorGoal, mob::Mob};
+use rand::RngExt;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
-use rand::RngExt;
 
 const FAST_DISTANCE_SQ: f64 = 49.0;
 const HORIZONTAL_RANGE: f64 = 16.0;

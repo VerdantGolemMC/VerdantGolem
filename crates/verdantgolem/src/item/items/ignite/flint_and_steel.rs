@@ -3,6 +3,7 @@ use crate::item::ItemBehaviour;
 use crate::item::ItemMetadata;
 use crate::server::Server;
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
@@ -10,7 +11,6 @@ use verdantgolem_data::{Block, BlockStateId};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
-use std::sync::Arc;
 
 use crate::item::items::ignite::ignition::Ignition;
 

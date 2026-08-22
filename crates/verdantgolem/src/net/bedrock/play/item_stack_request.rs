@@ -40,7 +40,8 @@ impl BedrockClient {
                         } => {
                             let index = (creative_item_id.0.saturating_sub(1)) as usize;
                             if index < verdantgolem_data::bedrock_creative::CREATIVE_ENTRIES.len() {
-                                let entry = verdantgolem_data::bedrock_creative::CREATIVE_ENTRIES[index];
+                                let entry =
+                                    verdantgolem_data::bedrock_creative::CREATIVE_ENTRIES[index];
                                 if let Some(mapping) =
                                     verdantgolem_data::item::JavaToBedrockItemMapping::from_bedrock(
                                         entry.item_id,
@@ -921,12 +922,12 @@ fn update_slot_stack(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::Mutex;
     use verdantgolem_data::item::Item;
     use verdantgolem_inventory::{
         build_equipment_slots, crafting::crafting_screen_handler::CraftingTableScreenHandler,
         entity_equipment::EntityEquipment,
     };
-    use std::sync::Mutex;
 
     #[tokio::test]
     async fn crafting_table_maps_bedrock_player_inventory_after_its_ten_slots() {

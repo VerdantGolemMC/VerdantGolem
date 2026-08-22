@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
-use verdantgolem_macros::{Event, cancellable};
 use std::sync::Arc;
+use verdantgolem_macros::{Event, cancellable};
 
 /// The type of animation performed by a player.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -12,6 +12,7 @@ use crate::command::string_reader::StringReader;
 use crate::command::suggestion::SuggestionText;
 use crate::command::suggestion::suggestions::{Suggestions, SuggestionsBuilder};
 use bitflags::bitflags;
+use uuid::Uuid;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::translation;
 use verdantgolem_util::GameMode;
@@ -20,7 +21,6 @@ use verdantgolem_util::math::bounds::{DoubleBounds, FloatDegreeBounds, IntBounds
 use verdantgolem_util::math::vector2::Vector2;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::text::TextComponent;
-use uuid::Uuid;
 
 pub const INVALID_NAME_OR_UUID_ERROR_TYPE: CommandErrorType<0> = CommandErrorType::new(
     translation::java::ARGUMENT_ENTITY_INVALID,

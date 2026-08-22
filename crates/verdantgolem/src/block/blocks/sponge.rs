@@ -1,7 +1,7 @@
-use verdantgolem_macros::pumpkin_block;
-use verdantgolem_util::math::vector3::Vector3;
 use std::collections::{HashSet, VecDeque};
 use std::sync::Arc;
+use verdantgolem_macros::pumpkin_block;
+use verdantgolem_util::math::vector3::Vector3;
 
 use crate::block::{BlockBehaviour, OnNeighborUpdateArgs, PlacedArgs};
 use verdantgolem_data::dimension::Dimension;

@@ -1,6 +1,6 @@
-use verdantgolem_util::permission::PermissionLvl;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use verdantgolem_util::permission::PermissionLvl;
 
 /// Represents an operator (admin) on the server.
 ///

@@ -208,9 +208,10 @@ impl HostInventory for PluginHostState {
             }
             InventoryProvider::PlayerMain(player) => {
                 for slot in 0..36 {
-                    player
-                        .inventory()
-                        .set_stack(slot, verdantgolem_data::item_stack::ItemStack::EMPTY.clone());
+                    player.inventory().set_stack(
+                        slot,
+                        verdantgolem_data::item_stack::ItemStack::EMPTY.clone(),
+                    );
                     let empty_serializer = ItemStackSerializer::from(
                         verdantgolem_data::item_stack::ItemStack::EMPTY.clone(),
                     );

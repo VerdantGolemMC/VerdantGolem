@@ -19,12 +19,6 @@ use crate::{
 };
 use arc_swap::ArcSwap;
 use dashmap::{DashMap, Entry};
-use verdantgolem_config::{chunk::ChunkConfig, lighting::LightingEngineConfig, world::LevelConfig};
-use verdantgolem_data::biome::Biome;
-use verdantgolem_data::dimension::Dimension;
-use verdantgolem_data::{Block, BlockStateId, block_properties::has_random_ticks, fluid::Fluid};
-use verdantgolem_util::math::{position::BlockPos, vector2::Vector2};
-use verdantgolem_util::world_seed::Seed;
 use rustc_hash::FxHashSet;
 use std::sync::{Arc, Mutex, Weak};
 use std::time::Duration;
@@ -36,6 +30,12 @@ use std::{
 use tokio::time::timeout;
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error, info, trace, warn};
+use verdantgolem_config::{chunk::ChunkConfig, lighting::LightingEngineConfig, world::LevelConfig};
+use verdantgolem_data::biome::Biome;
+use verdantgolem_data::dimension::Dimension;
+use verdantgolem_data::{Block, BlockStateId, block_properties::has_random_ticks, fluid::Fluid};
+use verdantgolem_util::math::{position::BlockPos, vector2::Vector2};
+use verdantgolem_util::world_seed::Seed;
 // use tokio::runtime::Handle;
 use tokio::{
     select,
@@ -978,8 +978,8 @@ impl Level {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use verdantgolem_config::world::LevelConfig;
     use tempfile::TempDir;
+    use verdantgolem_config::world::LevelConfig;
 
     #[tokio::test]
     async fn dimension_paths_26_2() {

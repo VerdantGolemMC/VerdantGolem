@@ -1,11 +1,3 @@
-use verdantgolem_data::block_properties::{BarrelLikeProperties, BlockProperties};
-use verdantgolem_data::sound::{Sound, SoundCategory};
-use verdantgolem_data::{Block, FacingExt, item_stack::ItemStack};
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_util::math::position::BlockPos;
-use verdantgolem_util::math::vector3::Vector3;
-use verdantgolem_util::random::xoroshiro128::Xoroshiro;
-use verdantgolem_util::random::{RandomImpl, get_seed};
 use std::any::Any;
 use std::sync::RwLock;
 use std::{
@@ -15,6 +7,14 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
 };
+use verdantgolem_data::block_properties::{BarrelLikeProperties, BlockProperties};
+use verdantgolem_data::sound::{Sound, SoundCategory};
+use verdantgolem_data::{Block, FacingExt, item_stack::ItemStack};
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_util::math::position::BlockPos;
+use verdantgolem_util::math::vector3::Vector3;
+use verdantgolem_util::random::xoroshiro128::Xoroshiro;
+use verdantgolem_util::random::{RandomImpl, get_seed};
 
 use crate::block::viewer::{ViewerCountListener, ViewerCountTracker, ViewerCountTrackerExt};
 use crate::world::{BlockFlags, World};

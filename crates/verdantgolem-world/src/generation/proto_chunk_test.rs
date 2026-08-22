@@ -69,7 +69,10 @@ mod test {
         let Chunk::Level(chunk_data) = staged else {
             unreachable!()
         };
-        assert_eq!(chunk_data.status, verdantgolem_data::chunk::ChunkStatus::Noise);
+        assert_eq!(
+            chunk_data.status,
+            verdantgolem_data::chunk::ChunkStatus::Noise
+        );
 
         let mut resumed = ProtoChunk::from_chunk_data(&chunk_data, &world_gen);
         assert_eq!(resumed.stage, StagedChunkEnum::Noise);
@@ -172,8 +175,10 @@ mod test {
                     }
                     if mismatches < 10 {
                         let y = local_y as i32 + min_y;
-                        let act_block =
-                            verdantgolem_data::BlockState::from_id(actual).id.to_block().name;
+                        let act_block = verdantgolem_data::BlockState::from_id(actual)
+                            .id
+                            .to_block()
+                            .name;
                         let exp_block = verdantgolem_data::BlockState::from_id(
                             verdantgolem_data::BlockStateId::new(expected).unwrap(),
                         )

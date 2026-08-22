@@ -1,6 +1,6 @@
+use std::sync::Arc;
 use verdantgolem_macros::Event;
 use verdantgolem_util::Hand;
-use std::sync::Arc;
 
 use crate::entity::player::Player;
 

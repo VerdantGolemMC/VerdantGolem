@@ -1,6 +1,6 @@
-use verdantgolem_macros::packet;
 use serde::Deserialize;
 use std::io::{Error, ErrorKind, Read};
+use verdantgolem_macros::packet;
 
 use crate::{MAX_PACKET_DATA_SIZE, codec::var_uint::VarUInt, serial::PacketRead};
 

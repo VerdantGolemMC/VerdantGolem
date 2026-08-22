@@ -1,5 +1,3 @@
-use verdantgolem_protocol::bedrock::server::text::SText;
-use verdantgolem_util::{Hand, PermissionLvl};
 use rsa::pkcs1v15::{Signature as RsaPkcs1v15Signature, VerifyingKey};
 use rsa::signature::Verifier;
 use sha1::Sha1;
@@ -9,6 +7,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
 use thiserror::Error;
 use tracing::{Level, debug, error, info, trace, warn};
+use verdantgolem_protocol::bedrock::server::text::SText;
+use verdantgolem_util::{Hand, PermissionLvl};
 
 use crate::block::BlockHitResult;
 use crate::block::registry::BlockActionResult;

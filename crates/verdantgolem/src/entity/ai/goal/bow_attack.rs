@@ -1,10 +1,10 @@
+use std::sync::Arc;
 use verdantgolem_data::data_component_impl::EquipmentSlot;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_util::Hand;
-use std::sync::Arc;
 
 use crate::entity::ai::goal::{Controls, Goal};
 use crate::entity::ai::pathfinder::NavigatorGoal;

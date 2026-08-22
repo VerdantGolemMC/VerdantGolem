@@ -81,8 +81,8 @@ impl BrewingStandBlockEntity {
             }
 
             // Check potion recipes (modify potion type)
-            if let Some(pc) =
-                slot.get_data_component::<verdantgolem_data::data_component_impl::PotionContentsImpl>()
+            if let Some(pc) = slot
+                .get_data_component::<verdantgolem_data::data_component_impl::PotionContentsImpl>()
                 && let Some(potion_id) = pc.potion_id
             {
                 for recipe in &POTION_RECIPES {

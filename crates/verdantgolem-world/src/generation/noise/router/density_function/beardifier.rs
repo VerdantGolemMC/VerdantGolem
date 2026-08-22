@@ -2,8 +2,8 @@ use crate::generation::noise::router::chunk_density_function::ChunkNoiseFunction
 use crate::generation::noise::router::chunk_noise_router::{
     ChunkNoiseFunctionComponent, MutableChunkNoiseFunctionComponentImpl,
 };
-use verdantgolem_util::math::{block_box::BlockBox, vector3::Vector3};
 use std::sync::OnceLock;
+use verdantgolem_util::math::{block_box::BlockBox, vector3::Vector3};
 
 use super::{NoiseFunctionComponentRange, StaticIndependentChunkNoiseFunctionComponentImpl};
 

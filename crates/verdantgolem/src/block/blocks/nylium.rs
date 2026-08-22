@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::{Block, tag};
 use verdantgolem_macros::pumpkin_block_from_tag;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 use crate::block::{BlockBehaviour, BonemealArgs, RandomTickArgs};
 use crate::world::World;

@@ -3,9 +3,9 @@ use crate::{
     codec::var_ulong::VarULong,
     serial::PacketWrite,
 };
+use uuid::Uuid;
 use verdantgolem_macros::packet;
 use verdantgolem_util::math::{vector2::Vector2, vector3::Vector3};
-use uuid::Uuid;
 
 use super::{
     common::{ActorLink, BuildPlatform, SerializedAbilitiesData},

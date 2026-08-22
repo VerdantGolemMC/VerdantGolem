@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use crossbeam::atomic::AtomicCell;
+use uuid::Uuid;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::math::position::BlockPos;
-use uuid::Uuid;
 
 use crate::world::World;
 

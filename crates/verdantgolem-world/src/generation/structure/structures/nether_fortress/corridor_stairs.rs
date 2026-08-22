@@ -100,8 +100,9 @@ impl StructurePieceBase for CorridorStairsPiece {
         // Stair block facing south (going deeper into the structure)
         let mut stair_props = OakStairsLikeProperties::default(&Block::NETHER_BRICK_STAIRS);
         stair_props.facing = HorizontalFacing::South;
-        let stair =
-            verdantgolem_data::BlockState::from_id(stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS));
+        let stair = verdantgolem_data::BlockState::from_id(
+            stair_props.to_state_id(&Block::NETHER_BRICK_STAIRS),
+        );
 
         let fence = |north: bool, south: bool| {
             let mut props = OakFenceLikeProperties::default(&Block::NETHER_BRICK_FENCE);

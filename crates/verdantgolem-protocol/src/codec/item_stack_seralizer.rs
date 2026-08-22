@@ -1,6 +1,8 @@
 use crate::VarInt;
 use crate::codec::data_component::{deserialize, serialize};
 use crate::ser::{NetworkReadExt, NetworkWriteExt, ReadingError, WritingError};
+use std::borrow::Cow;
+use std::io::Cursor;
 use verdantgolem_data::data_component::DataComponent;
 use verdantgolem_data::data_component_impl::{CustomNameImpl, DataComponentImpl, ItemNameImpl};
 use verdantgolem_data::item::Item;
@@ -9,8 +11,6 @@ use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_nbt::tag::NbtTag;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use std::borrow::Cow;
-use std::io::Cursor;
 
 #[derive(Clone)]
 pub struct ItemStackSerializer<'a>(pub Cow<'a, ItemStack>);

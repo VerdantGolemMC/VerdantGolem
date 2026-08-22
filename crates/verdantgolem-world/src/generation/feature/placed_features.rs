@@ -1,9 +1,9 @@
-use verdantgolem_data::block_properties::is_air;
-use verdantgolem_data::{Block, BlockDirection, BlockStateId};
-use verdantgolem_util::HeightMap;
 use std::collections::HashMap;
 use std::iter;
 use std::sync::LazyLock;
+use verdantgolem_data::block_properties::is_air;
+use verdantgolem_data::{Block, BlockDirection, BlockStateId};
+use verdantgolem_util::HeightMap;
 
 use verdantgolem_util::biome::FOLIAGE_NOISE;
 use verdantgolem_util::math::int_provider::IntProvider;

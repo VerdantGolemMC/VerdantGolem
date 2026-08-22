@@ -1,6 +1,6 @@
+use rustc_hash::FxHashMap;
 use verdantgolem_data::{Block, BlockId, block_properties::blocks_movement};
 use verdantgolem_util::math::floor_div;
-use rustc_hash::FxHashMap;
 
 use crate::generation::{
     biome_coords,

@@ -1,7 +1,7 @@
 pub mod deserializer;
 pub mod serializer;
-pub use verdantgolem_macros::{PacketRead, PacketReadSlice, PacketWrite};
 use std::io::{Error, Read, Write};
+pub use verdantgolem_macros::{PacketRead, PacketReadSlice, PacketWrite};
 
 pub trait PacketWrite {
     fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error>;

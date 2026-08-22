@@ -3,11 +3,11 @@ use std::sync::Arc;
 use super::{Goal, to_goal_ticks};
 use crate::entity::mob::Mob;
 use crate::entity::mob::enderman::EndermanEntity;
+use rand::RngExt;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::tag::{self, Taggable};
 use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 pub struct PickUpBlockGoal {
     enderman: Arc<EndermanEntity>,

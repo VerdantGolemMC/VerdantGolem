@@ -1,9 +1,9 @@
 use super::BlockEntity;
-use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_util::math::position::BlockPos;
 use std::collections::HashSet;
 use std::sync::Mutex;
 use uuid::Uuid;
+use verdantgolem_nbt::compound::NbtCompound;
+use verdantgolem_util::math::position::BlockPos;
 
 pub struct VaultBlockEntity {
     pub position: BlockPos,

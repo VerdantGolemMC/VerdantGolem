@@ -1,7 +1,7 @@
+use rustc_hash::FxHashSet;
 use verdantgolem_data::chunk::{Biome, BiomeTree, NETHER_BIOME_SOURCE, OVERWORLD_BIOME_SOURCE};
 use verdantgolem_data::dimension::Dimension;
 use verdantgolem_util::math::position::BlockPos;
-use rustc_hash::FxHashSet;
 
 use crate::biome::{BiomeSupplier, MultiNoiseBiomeSupplier, end::TheEndBiomeSupplier};
 use crate::generation::biome_coords;
@@ -192,11 +192,11 @@ fn out_from_origin(origin: i32, min: i32, max: i32, step: i32) -> Vec<i32> {
 
 #[cfg(test)]
 mod test {
+    use rustc_hash::FxHashSet;
     use verdantgolem_data::chunk::Biome;
     use verdantgolem_data::dimension::Dimension;
     use verdantgolem_util::math::position::BlockPos;
     use verdantgolem_util::world_seed::Seed;
-    use rustc_hash::FxHashSet;
 
     use super::super::flat::FlatGenerator;
     use super::super::{GeneratorInit, VanillaGenerator, WorldGenerator};

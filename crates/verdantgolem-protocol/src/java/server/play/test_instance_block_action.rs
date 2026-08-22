@@ -8,8 +8,8 @@ use crate::{
     ServerPacket,
     ser::{NetworkReadExt, ReadingError},
 };
-use verdantgolem_util::version::JavaMinecraftVersion;
 use std::io::Read;
+use verdantgolem_util::version::JavaMinecraftVersion;
 
 #[java_packet(TEST_INSTANCE_BLOCK_ACTION)]
 pub struct STestInstanceBlockAction<'a> {

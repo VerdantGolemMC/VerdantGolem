@@ -25,15 +25,24 @@ impl ChangeOverTimeBlock<WeatherState> for CopperBulbBlock {
         get_chance_modifier(age)
     }
 
-    fn get_next(&self, block: &verdantgolem_data::Block) -> Option<&'static verdantgolem_data::Block> {
+    fn get_next(
+        &self,
+        block: &verdantgolem_data::Block,
+    ) -> Option<&'static verdantgolem_data::Block> {
         get_next(block)
     }
 
-    fn get_previous(&self, block: &verdantgolem_data::Block) -> Option<&'static verdantgolem_data::Block> {
+    fn get_previous(
+        &self,
+        block: &verdantgolem_data::Block,
+    ) -> Option<&'static verdantgolem_data::Block> {
         get_previous(block)
     }
 
-    fn get_first(&self, block: &verdantgolem_data::Block) -> Option<&'static verdantgolem_data::Block> {
+    fn get_first(
+        &self,
+        block: &verdantgolem_data::Block,
+    ) -> Option<&'static verdantgolem_data::Block> {
         get_first(block)
     }
 }

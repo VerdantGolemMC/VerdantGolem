@@ -4,8 +4,8 @@ use std::{
 };
 
 use proc_macro2::{Literal, TokenStream};
-use verdantgolem_nbt::{NbtCompound, nbt_compress::read_gzip_compound_tag, tag::NbtTag};
 use quote::quote;
+use verdantgolem_nbt::{NbtCompound, nbt_compress::read_gzip_compound_tag, tag::NbtTag};
 
 trait PacketWrite {
     fn write<W: Write>(&self, writer: &mut W) -> Result<(), Error>;

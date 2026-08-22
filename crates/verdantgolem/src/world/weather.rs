@@ -1,6 +1,6 @@
 use super::World;
-use verdantgolem_protocol::java::client::play::{CGameEvent, GameEvent};
 use rand::RngExt;
+use verdantgolem_protocol::java::client::play::{CGameEvent, GameEvent};
 
 // Weather timing constants
 const RAIN_DELAY_MIN: i32 = 12_000;

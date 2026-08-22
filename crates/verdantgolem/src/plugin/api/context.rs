@@ -9,11 +9,11 @@ use crate::{
     plugin_log,
 };
 use arc_swap::ArcSwap;
+use tracing::Level;
 use verdantgolem_util::{
     PermissionLvl,
     permission::{Permission, PermissionManager},
 };
-use tracing::Level;
 
 use crate::{
     entity::player::Player,

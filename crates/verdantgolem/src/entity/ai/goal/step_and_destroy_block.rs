@@ -3,10 +3,10 @@ use crate::entity::ai::goal::ParentHandle;
 use crate::entity::ai::goal::move_to_target_pos::{MoveToTargetPos, MoveToTargetPosGoal};
 use crate::entity::mob::Mob;
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_data::Block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::Arc;
 
 const MAX_COOLDOWN: i32 = 20;
 

@@ -2,11 +2,11 @@ use super::{Controls, Goal};
 use crate::entity::EntityBase;
 use crate::entity::mob::Mob;
 use crate::entity::player::Player;
+use rand::RngExt;
+use std::sync::Arc;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::tag::{self, Taggable};
 use verdantgolem_protocol::java::client::play::Metadata;
-use rand::RngExt;
-use std::sync::Arc;
 
 pub struct BegGoal {
     look_distance_sq: f64,

@@ -4,6 +4,7 @@ use crate::{
     entity::EntityBase,
     world::World,
 };
+use std::sync::Arc;
 use verdantgolem_data::{
     Block, BlockDirection, BlockState, BlockStateId,
     damage::DamageType,
@@ -14,7 +15,6 @@ use verdantgolem_data::{
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::{tick::TickPriority, world::BlockFlags};
-use std::sync::Arc;
 type FlowingFluidProperties = verdantgolem_data::fluid::FlowingWaterLikeFluidProperties;
 use std::sync::atomic::Ordering;
 

@@ -3,7 +3,9 @@ use std::sync::Arc;
 use std::sync::RwLock;
 
 use verdantgolem_data::{item_stack::ItemStack, screen::WindowType};
-use verdantgolem_inventory::screen_handler::{InventoryPlayer, ScreenHandler, ScreenHandlerBehaviour};
+use verdantgolem_inventory::screen_handler::{
+    InventoryPlayer, ScreenHandler, ScreenHandlerBehaviour,
+};
 use verdantgolem_inventory::slot::NormalSlot;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::inventory::{Clearable, Inventory};

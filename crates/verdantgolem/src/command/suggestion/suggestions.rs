@@ -1,8 +1,8 @@
 use crate::command::context::string_range::StringRange;
 use crate::command::suggestion::{Suggestion, SuggestionText};
-use verdantgolem_util::text::TextComponent;
 use std::borrow::Borrow;
 use std::cmp::Ordering;
+use verdantgolem_util::text::TextComponent;
 
 /// Represents a builder of [`Suggestion`]s.
 pub struct SuggestionsBuilder {

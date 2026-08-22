@@ -6,9 +6,9 @@ use crate::{
     codec::{var_int::VarInt, var_long::VarLong, var_uint::VarUInt, var_ulong::VarULong},
     serial::PacketWrite,
 };
+use std::io::Error;
 use verdantgolem_macros::packet;
 use verdantgolem_util::math::{position::BlockPos, vector3::Vector3};
-use std::io::Error;
 
 #[derive(PacketWrite)]
 #[packet(39)]

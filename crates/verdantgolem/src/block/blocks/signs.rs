@@ -3,6 +3,7 @@ use std::sync::atomic::Ordering;
 
 use crate::block::entities::hanging_sign::HangingSignBlockEntity;
 use crate::block::entities::sign::SignBlockEntity;
+use uuid::Uuid;
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::BlockId;
@@ -14,7 +15,6 @@ use verdantgolem_inventory::screen_handler::InventoryPlayer;
 use verdantgolem_macros::pumpkin_block_from_tag;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use uuid::Uuid;
 
 use crate::block::BlockBehaviour;
 use crate::block::CanPlaceAtArgs;

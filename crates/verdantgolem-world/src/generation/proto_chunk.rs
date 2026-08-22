@@ -1,6 +1,7 @@
 use crate::generation::structure::placement::GlobalStructureCache;
 use std::sync::Arc;
 
+use rustc_hash::FxHashMap;
 use verdantgolem_data::block_properties::is_air;
 use verdantgolem_data::chunk::DoublePerlinNoiseParameters;
 use verdantgolem_data::dimension::Dimension;
@@ -18,7 +19,6 @@ use verdantgolem_util::{
     math::{block_box::BlockBox, position::BlockPos, vector3::Vector3},
     random::{RandomGenerator, get_decorator_seed, xoroshiro128::Xoroshiro},
 };
-use rustc_hash::FxHashMap;
 
 use super::{
     GlobalRandomConfig, biome_coords,

@@ -1,9 +1,9 @@
 pub mod provider;
 pub mod suggestions;
 
-use verdantgolem_util::text::TextComponent;
 use std::fmt::Debug;
 use std::hash::Hash;
+use verdantgolem_util::text::TextComponent;
 
 use crate::command::context::string_range::StringRange;
 

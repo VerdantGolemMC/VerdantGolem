@@ -4,14 +4,14 @@ use crate::translation::java::{
     CHAT_TYPE_ADVANCEMENT_CHALLENGE, CHAT_TYPE_ADVANCEMENT_GOAL, CHAT_TYPE_ADVANCEMENT_TASK,
 };
 use crate::{ADVANCEMENT_TREE, Advancement};
-use verdantgolem_util::identifier::Identifier;
-use verdantgolem_util::text::TextComponent;
-use verdantgolem_util::text::color::NamedColor;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::hash::{Hash, Hasher};
 use std::sync::Arc;
+use verdantgolem_util::identifier::Identifier;
+use verdantgolem_util::text::TextComponent;
+use verdantgolem_util::text::color::NamedColor;
 
 #[derive(Clone)]
 pub struct AdvancementDisplay {

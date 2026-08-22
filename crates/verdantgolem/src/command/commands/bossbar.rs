@@ -16,10 +16,10 @@ use crate::command::{CommandExecutor, CommandResult, CommandSender};
 use crate::server::Server;
 use crate::world::bossbar::Bossbar;
 use crate::world::custom_bossbar::BossbarUpdateError;
+use uuid::Uuid;
 use verdantgolem_data::translation;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_util::text::hover::HoverEvent;
-use uuid::Uuid;
 
 const NAMES: [&str; 1] = ["bossbar"];
 const DESCRIPTION: &str = "Creates and modifies boss bars";

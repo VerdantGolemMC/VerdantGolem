@@ -68,7 +68,9 @@ impl<'a> CParticle<'a> {
 }
 
 #[must_use]
-pub const fn particle_name_for_v1_7(particle: verdantgolem_data::particle::Particle) -> &'static str {
+pub const fn particle_name_for_v1_7(
+    particle: verdantgolem_data::particle::Particle,
+) -> &'static str {
     use verdantgolem_data::particle::Particle::{
         AngryVillager, Block, BlockCrumble, BlockMarker, Bubble, BubbleColumnUp, BubblePop,
         CampfireSignalSmoke, Cloud, Composter, Crit, DamageIndicator, DragonBreath,

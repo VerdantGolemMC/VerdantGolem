@@ -1,7 +1,7 @@
 use crate::world::World;
+use std::sync::Arc;
 use verdantgolem_macros::{Event, cancellable};
 use verdantgolem_world::chunk::ChunkData;
-use std::sync::Arc;
 
 /// An event that occurs when a chunk is sent to a client.
 ///

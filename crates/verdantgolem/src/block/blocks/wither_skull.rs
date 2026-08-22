@@ -1,4 +1,6 @@
-use verdantgolem_data::{Block, BlockDirection, BlockStateId, entity::EntityType, world::WorldEvent};
+use verdantgolem_data::{
+    Block, BlockDirection, BlockStateId, entity::EntityType, world::WorldEvent,
+};
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_world::world::BlockFlags;
 

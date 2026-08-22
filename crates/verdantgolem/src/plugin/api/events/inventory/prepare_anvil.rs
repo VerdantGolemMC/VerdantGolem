@@ -1,6 +1,6 @@
 use crate::entity::player::Player;
-use verdantgolem_macros::Event;
 use std::sync::Arc;
+use verdantgolem_macros::Event;
 
 /// An event that occurs when an item is prepared in an anvil.
 #[derive(Event, Clone)]

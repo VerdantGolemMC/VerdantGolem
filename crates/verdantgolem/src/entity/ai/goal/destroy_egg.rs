@@ -3,11 +3,11 @@ use crate::entity::ai::goal::step_and_destroy_block::{StepAndDestroyBlockGoal, S
 use crate::entity::ai::goal::{Controls, Goal, ParentHandle};
 use crate::entity::mob::Mob;
 use crate::world::World;
+use rand::{RngExt, rng};
+use std::sync::Arc;
 use verdantgolem_data::Block;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_util::math::position::BlockPos;
-use rand::{RngExt, rng};
-use std::sync::Arc;
 
 pub struct DestroyEggGoal {
     step_and_destroy_block_goal: StepAndDestroyBlockGoal<Self, Self>,

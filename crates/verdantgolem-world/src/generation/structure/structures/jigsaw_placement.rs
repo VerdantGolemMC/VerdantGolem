@@ -4,14 +4,14 @@ use crate::generation::structure::{
     piece::StructurePieceType,
     structures::{HeightSampler, StructureGeneratorContext, StructurePiece, StructurePosition},
 };
-use verdantgolem_util::math::block_box::BlockBox;
-use verdantgolem_util::math::position::BlockPos;
-use verdantgolem_util::math::vector3::Vector3;
-use verdantgolem_util::random::{RandomGenerator, RandomImpl};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::rc::Rc;
 use std::sync::Arc;
+use verdantgolem_util::math::block_box::BlockBox;
+use verdantgolem_util::math::position::BlockPos;
+use verdantgolem_util::math::vector3::Vector3;
+use verdantgolem_util::random::{RandomGenerator, RandomImpl};
 
 use super::jigsaw::{
     JigsawBlock, JigsawJointType, JigsawJunction, JigsawProjection, PoolElementStructurePiece,

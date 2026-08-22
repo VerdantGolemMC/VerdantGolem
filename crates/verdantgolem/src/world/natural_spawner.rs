@@ -2,6 +2,11 @@ use crate::entity::EntityBase;
 use crate::entity::r#type::{check_spawn_rules, from_type};
 use crate::world::World;
 use arc_swap::ArcSwap;
+use rand::seq::IndexedRandom;
+use rand::{RngExt, rng};
+use std::fmt;
+use std::sync::Arc;
+use uuid::Uuid;
 use verdantgolem_data::biome::Spawner;
 use verdantgolem_data::chunk::Biome;
 use verdantgolem_data::entity::{EntityType, MobCategory, SpawnLocation};
@@ -20,11 +25,6 @@ use verdantgolem_util::random::xoroshiro128::Xoroshiro;
 use verdantgolem_util::random::{RandomImpl, get_seed};
 use verdantgolem_world::chunk::{ChunkData, ChunkHeightmapType};
 use verdantgolem_world::generation::proto_chunk::GenerationCache;
-use rand::seq::IndexedRandom;
-use rand::{RngExt, rng};
-use std::fmt;
-use std::sync::Arc;
-use uuid::Uuid;
 
 const MAGIC_NUMBER: i32 = 17 * 17;
 
@@ -374,8 +374,10 @@ impl SpawnState {
     }
     #[inline]
     pub fn can_spawn_for_category_global(&self, category: &'static MobCategory) -> bool {
+        // carpet rule mobCapMultiplier scales the global cap formula
+        let cap = (f64::from(category.max) * crate::carpet::values().mob_cap_multiplier) as i32;
         self.mob_category_counts.0[category.id].load(Relaxed)
-            < category.max * self.spawnable_chunk_count / MAGIC_NUMBER
+            < cap * self.spawnable_chunk_count / MAGIC_NUMBER
     }
     pub fn can_spawn_for_category_local(
         &self,

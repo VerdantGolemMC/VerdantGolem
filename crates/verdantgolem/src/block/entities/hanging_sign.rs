@@ -5,9 +5,9 @@ use std::sync::{
 
 use super::BlockEntity;
 use crate::block::entities::sign::Text;
+use std::sync::Mutex;
 use verdantgolem_nbt::compound::NbtCompound;
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Mutex;
 
 pub struct HangingSignBlockEntity {
     pub front_text: Text,

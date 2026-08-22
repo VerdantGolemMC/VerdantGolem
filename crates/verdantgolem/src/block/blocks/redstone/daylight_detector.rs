@@ -12,7 +12,8 @@ use crate::block::{
 };
 use crate::world::World;
 
-type DaylightDetectorProperties = verdantgolem_data::block_properties::DaylightDetectorLikeProperties;
+type DaylightDetectorProperties =
+    verdantgolem_data::block_properties::DaylightDetectorLikeProperties;
 
 #[pumpkin_block("minecraft:daylight_detector")]
 pub struct DaylightDetectorBlock;

@@ -1,6 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 use verdantgolem_data::{BlockStateId, dimension::Dimension};
 use verdantgolem_util::{math::vector2::Vector2, world_seed::Seed};
 use verdantgolem_world::{
@@ -9,7 +10,6 @@ use verdantgolem_world::{
     generation::get_world_gen,
     world::WorldPortalExt,
 };
-use std::hint::black_box;
 
 struct BlockRegistry;
 

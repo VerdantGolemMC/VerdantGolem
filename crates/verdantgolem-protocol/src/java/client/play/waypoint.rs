@@ -2,11 +2,11 @@ use std::io::Write;
 
 use crate::ser::NetworkWriteExt;
 use crate::{ClientPacket, VarInt, WritingError};
+use uuid::Uuid;
 use verdantgolem_data::packet::clientbound::play::WAYPOINT;
 use verdantgolem_macros::java_packet;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use uuid::Uuid;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(i32)]

@@ -6,6 +6,11 @@ use std::{
 
 use crate::server::Server;
 use bytes::Bytes;
+use tokio::{
+    net::UdpSocket,
+    sync::{Mutex, mpsc},
+};
+use tracing::trace;
 use verdantgolem_protocol::{
     BClientPacket,
     bedrock::status::{
@@ -16,11 +21,6 @@ use verdantgolem_protocol::{
     serial::PacketRead,
 };
 use verdantgolem_world::{CURRENT_BEDROCK_MC_PROTOCOL, CURRENT_BEDROCK_MC_VERSION};
-use tokio::{
-    net::UdpSocket,
-    sync::{Mutex, mpsc},
-};
-use tracing::trace;
 
 pub struct StatusResponder {
     ipv4: Arc<UdpSocket>,

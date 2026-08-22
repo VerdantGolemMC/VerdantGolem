@@ -40,7 +40,10 @@ impl BoatEntity {
         self.vehicle.entity.send_meta_data(
             &[
                 Metadata::new(verdantgolem_data::tracked_data::boat::ID_PADDLE_LEFT, left),
-                Metadata::new(verdantgolem_data::tracked_data::boat::ID_PADDLE_RIGHT, right),
+                Metadata::new(
+                    verdantgolem_data::tracked_data::boat::ID_PADDLE_RIGHT,
+                    right,
+                ),
             ],
             None,
         );

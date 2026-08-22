@@ -6,13 +6,13 @@ use std::{
 };
 use tracing::error;
 
+use serde::{Deserialize, Serialize};
 use verdantgolem_nbt::{
     compound::NbtCompound,
     nbt_compress::{read_gzip_compound_tag, write_gzip_compound_tag},
     tag::NbtTag,
 };
 use verdantgolem_util::{Difficulty, world_seed::Seed};
-use serde::{Deserialize, Serialize};
 
 use crate::world_info::{
     DataPacks, MAXIMUM_SUPPORTED_LEVEL_VERSION, MAXIMUM_SUPPORTED_WORLD_DATA_VERSION,
@@ -531,6 +531,12 @@ pub struct LevelDat {
 #[cfg(test)]
 mod test {
 
+    use std::{
+        fs::{self, File},
+        path::Path,
+        sync::LazyLock,
+    };
+    use tempfile::TempDir;
     use verdantgolem_data::game_rules::GameRuleRegistry;
     use verdantgolem_nbt::{
         compound::NbtCompound,
@@ -538,12 +544,6 @@ mod test {
         tag::NbtTag,
     };
     use verdantgolem_util::{Difficulty, world_seed::Seed};
-    use std::{
-        fs::{self, File},
-        path::Path,
-        sync::LazyLock,
-    };
-    use tempfile::TempDir;
 
     use crate::{
         CURRENT_MC_VERSION,

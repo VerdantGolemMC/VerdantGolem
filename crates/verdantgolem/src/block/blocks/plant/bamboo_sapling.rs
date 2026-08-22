@@ -1,3 +1,4 @@
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockDirection, BlockStateId,
     block_properties::{BambooLeaves, BambooLikeProperties, BlockProperties},
@@ -6,7 +7,6 @@ use verdantgolem_data::{
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 use crate::block::{
     BlockBehaviour, CanPlaceAtArgs, GetStateForNeighborUpdateArgs, OnNeighborUpdateArgs,

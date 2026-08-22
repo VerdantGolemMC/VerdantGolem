@@ -66,7 +66,8 @@ impl ItemBehaviour for SplashPotionItem {
             .then_some(main_s);
         if stack.is_none() {
             let off_s = player.inventory.off_hand_item();
-            if !off_s.is_empty() && off_s.item.id == verdantgolem_data::item::Item::SPLASH_POTION.id {
+            if !off_s.is_empty() && off_s.item.id == verdantgolem_data::item::Item::SPLASH_POTION.id
+            {
                 stack = Some(off_s);
                 used_main = false;
             }
@@ -118,7 +119,9 @@ impl ItemBehaviour for LingeringPotionItem {
             .then_some(main_s);
         if stack.is_none() {
             let off_s = player.inventory.off_hand_item();
-            if !off_s.is_empty() && off_s.item.id == verdantgolem_data::item::Item::LINGERING_POTION.id {
+            if !off_s.is_empty()
+                && off_s.item.id == verdantgolem_data::item::Item::LINGERING_POTION.id
+            {
                 stack = Some(off_s);
                 used_main = false;
             }

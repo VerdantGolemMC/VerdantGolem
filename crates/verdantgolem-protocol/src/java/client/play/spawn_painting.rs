@@ -1,9 +1,9 @@
+use uuid::Uuid;
 use verdantgolem_data::packet::clientbound::play::SPAWN_PAINTING;
 use verdantgolem_data::painting_variant_id_remap::remap_motive_id_for_version;
 use verdantgolem_macros::java_packet;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::version::JavaMinecraftVersion;
-use uuid::Uuid;
 
 use crate::{
     ClientPacket, ServerPacket, VarInt,

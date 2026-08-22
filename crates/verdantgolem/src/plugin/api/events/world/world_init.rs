@@ -1,6 +1,6 @@
 use crate::world::World;
-use verdantgolem_macros::Event;
 use std::sync::Arc;
+use verdantgolem_macros::Event;
 
 /// An event that occurs when a world is initialized.
 #[derive(Event, Clone)]

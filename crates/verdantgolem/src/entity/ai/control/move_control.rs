@@ -1,8 +1,8 @@
 use crate::entity::ai::control::{Control, MoveControlTrait};
 use crate::entity::mob::Mob;
+use std::sync::atomic::Ordering;
 use verdantgolem_data::attributes::Attributes;
 use verdantgolem_util::math::vector3::Vector3;
-use std::sync::atomic::Ordering;
 
 #[derive(Default, Clone, Copy, PartialEq, Eq)]
 pub enum Operation {

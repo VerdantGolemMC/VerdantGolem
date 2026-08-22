@@ -8,9 +8,9 @@ use crate::command::node::{
     OwnedNodeData, RedirectModifier, Redirection, Requirements,
 };
 use crate::command::string_reader::StringReader;
-use verdantgolem_util::text::TextComponent;
 use rustc_hash::FxHashMap;
 use std::num::NonZero;
+use verdantgolem_util::text::TextComponent;
 
 /// Represents the unique integral number
 /// of any node, with respect to a tree.

@@ -6,9 +6,9 @@ use tracing::{info, warn};
 use flate2::Compression;
 use flate2::read::ZlibDecoder;
 use flate2::write::ZlibEncoder;
+use serde::{Deserialize, Serialize};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
-use serde::{Deserialize, Serialize};
 
 /// POI type identifier for nether portals
 pub const POI_TYPE_NETHER_PORTAL: &str = "minecraft:nether_portal";
@@ -225,7 +225,8 @@ impl PoiRegion {
                 if let verdantgolem_nbt::tag::NbtTag::Compound(sec_comp) = tag {
                     let valid = sec_comp.get_byte("Valid").unwrap_or(1);
                     let mut records = Vec::new();
-                    if let Some(verdantgolem_nbt::tag::NbtTag::List(rec_list)) = sec_comp.get("Records")
+                    if let Some(verdantgolem_nbt::tag::NbtTag::List(rec_list)) =
+                        sec_comp.get("Records")
                     {
                         for rec_t in rec_list {
                             if let verdantgolem_nbt::tag::NbtTag::Compound(rc) = rec_t {

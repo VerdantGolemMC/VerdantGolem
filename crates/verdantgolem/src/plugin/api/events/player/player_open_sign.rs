@@ -1,6 +1,6 @@
+use std::sync::Arc;
 use verdantgolem_macros::{Event, cancellable};
 use verdantgolem_util::math::position::BlockPos;
-use std::sync::Arc;
 
 use super::PlayerEvent;
 use crate::entity::player::Player;

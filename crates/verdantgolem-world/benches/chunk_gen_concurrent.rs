@@ -1,15 +1,15 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use criterion::{Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
+use std::sync::Arc;
+use std::time::Instant;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::dimension::Dimension;
 use verdantgolem_util::world_seed::Seed;
 use verdantgolem_world::chunk_system::{StagedChunkEnum, generate_single_chunk};
 use verdantgolem_world::generation::get_world_gen;
 use verdantgolem_world::world::WorldPortalExt;
-use std::hint::black_box;
-use std::sync::Arc;
-use std::time::Instant;
 
 const SEED: Seed = Seed(42);
 const THREAD_COUNT: usize = 4;

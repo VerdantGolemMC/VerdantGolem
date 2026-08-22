@@ -1,10 +1,10 @@
 use bytes::Bytes;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use verdantgolem_protocol::java::client::dialog::{
     ActionButton as ProtocolActionButton, Dialog as ProtocolDialog, DialogAction,
     DialogBody as ProtocolDialogBody, DialogInput as ProtocolDialogInput, DialogLink,
 };
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 use crate::plugin::api::events::dialog::{
     DialogClearEvent, DialogClickActionEvent, DialogShowEvent,
@@ -185,7 +185,10 @@ pub(crate) fn protocol_dialog_to_wasm(
             ProtocolDialogBody::Item { item: _ } => {
                 let item_res = state
                     .add_item_stack(Arc::new(Mutex::new(
-                        verdantgolem_data::item_stack::ItemStack::new(0, &verdantgolem_data::item::Item::AIR),
+                        verdantgolem_data::item_stack::ItemStack::new(
+                            0,
+                            &verdantgolem_data::item::Item::AIR,
+                        ),
                     )))
                     .expect("failed to add item stack resource");
                 DialogBody::Item(item_res)

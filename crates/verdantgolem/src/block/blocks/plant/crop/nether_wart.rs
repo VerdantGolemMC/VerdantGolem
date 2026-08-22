@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use rand::RngExt;
 use verdantgolem_data::{
     Block, BlockStateId,
     block_properties::{BlockProperties, NetherWartLikeProperties},
@@ -8,7 +9,6 @@ use verdantgolem_data::{
 use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
-use rand::RngExt;
 
 use crate::{
     block::{

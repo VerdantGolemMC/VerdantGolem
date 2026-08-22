@@ -5,6 +5,8 @@ use crate::block::{
     PlacedArgs,
 };
 
+use std::sync::Arc;
+use std::sync::Mutex;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::block_properties::{BlockProperties, WallTorchLikeProperties};
 use verdantgolem_data::translation;
@@ -16,8 +18,6 @@ use verdantgolem_inventory::screen_handler::{
 use verdantgolem_macros::pumpkin_block_from_tag;
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::inventory::SimpleInventory;
-use std::sync::Arc;
-use std::sync::Mutex;
 
 #[pumpkin_block_from_tag("minecraft:anvil")]
 pub struct AnvilBlock;

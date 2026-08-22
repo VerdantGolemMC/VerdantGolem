@@ -9,6 +9,7 @@ use crate::block::{
 use crate::entity::Entity;
 use crate::entity::item::ItemEntity;
 use crate::world::World;
+use rand::{RngExt, rng};
 use verdantgolem_data::data_component_impl::JukeboxPlayableImpl;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::jukebox_song::JukeboxSong;
@@ -21,7 +22,6 @@ use verdantgolem_macros::pumpkin_block;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
-use rand::{RngExt, rng};
 
 use tracing::error;
 

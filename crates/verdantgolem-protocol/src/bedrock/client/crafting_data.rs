@@ -3,9 +3,9 @@ use crate::{
     codec::{var_int::VarInt, var_uint::VarUInt},
     serial::PacketWrite,
 };
-use verdantgolem_macros::packet;
 use std::io::{Error, Write};
 use uuid::Uuid;
+use verdantgolem_macros::packet;
 
 #[derive(Clone, Debug)]
 pub struct ItemDescriptorCount {

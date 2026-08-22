@@ -20,6 +20,7 @@ use crate::{
 use arc_swap::ArcSwap;
 use connection_cache::{CachedBranding, CachedStatus};
 use key_store::KeyStore;
+use tracing::{debug, error, info, warn};
 use verdantgolem_config::{AdvancedConfiguration, BasicConfiguration};
 use verdantgolem_data::dimension::Dimension;
 use verdantgolem_data::entity::EntityType;
@@ -28,18 +29,8 @@ use verdantgolem_util::text::color::NamedColor;
 use verdantgolem_world::dimension::into_level;
 use verdantgolem_world::generation::generator::GeneratorInit;
 use verdantgolem_world::world::WorldPortalExt;
-use tracing::{debug, error, info, warn};
 
 use crate::command::CommandSender;
-use verdantgolem_protocol::java::client::login::CEncryptionRequest;
-use verdantgolem_protocol::java::client::play::{CChangeDifficulty, CTabList};
-use verdantgolem_protocol::{ClientPacket, java::client::config::CPluginMessage};
-use verdantgolem_util::Difficulty;
-use verdantgolem_util::text::TextComponent;
-use verdantgolem_world::world_info::anvil::{
-    AnvilLevelInfo, LEVEL_DAT_BACKUP_FILE_NAME, LEVEL_DAT_FILE_NAME,
-};
-use verdantgolem_world::world_info::{LevelData, WorldInfoError, WorldInfoReader, WorldInfoWriter};
 use rand::seq::{IndexedRandom, SliceRandom};
 use rayon::prelude::*;
 use rsa::RsaPublicKey;
@@ -52,6 +43,15 @@ use std::{future::Future, sync::atomic::Ordering, time::Duration};
 use tokio::sync::OnceCell;
 use tokio::task::JoinHandle;
 use tokio_util::task::TaskTracker;
+use verdantgolem_protocol::java::client::login::CEncryptionRequest;
+use verdantgolem_protocol::java::client::play::{CChangeDifficulty, CTabList};
+use verdantgolem_protocol::{ClientPacket, java::client::config::CPluginMessage};
+use verdantgolem_util::Difficulty;
+use verdantgolem_util::text::TextComponent;
+use verdantgolem_world::world_info::anvil::{
+    AnvilLevelInfo, LEVEL_DAT_BACKUP_FILE_NAME, LEVEL_DAT_FILE_NAME,
+};
+use verdantgolem_world::world_info::{LevelData, WorldInfoError, WorldInfoReader, WorldInfoWriter};
 
 mod connection_cache;
 pub(crate) mod debug_profiler;
@@ -190,10 +190,11 @@ impl Server {
                     world_path.display(),
                     basic_config.seed.0 as i64
                 );
-                let overworld_gen = verdantgolem_world::generation::generator::VanillaGenerator::new(
-                    basic_config.seed,
-                    Dimension::OVERWORLD,
-                );
+                let overworld_gen =
+                    verdantgolem_world::generation::generator::VanillaGenerator::new(
+                        basic_config.seed,
+                        Dimension::OVERWORLD,
+                    );
                 let default_data =
                     LevelData::from_world_generator(basic_config.seed, &overworld_gen);
                 if let Err(err) = AnvilLevelInfo.write_world_info(&default_data, &world_path) {
@@ -362,7 +363,10 @@ impl Server {
                     Ok(keys) => keys,
                     Err(error) => {
                         error!("Failed to fetch Bedrock OIDC keys: {error}");
-                        (String::new(), verdantgolem_util::jwt::Jwks { keys: Vec::new() })
+                        (
+                            String::new(),
+                            verdantgolem_util::jwt::Jwks { keys: Vec::new() },
+                        )
                     }
                 };
                 let _ = server_clone.bedrock_oidc_keys.set(keys);

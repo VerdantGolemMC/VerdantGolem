@@ -1,12 +1,12 @@
 use std::{collections::HashMap, hash::Hash};
 
+use tracing::warn;
 use verdantgolem_data::{
     BlockState, BlockStateId,
     block_properties::{has_random_ticks, is_air, is_liquid},
     fluid::Fluid,
 };
 use verdantgolem_util::encompassing_bits;
-use tracing::warn;
 
 use super::format::{ChunkSectionBiomes, ChunkSectionBlockStates};
 

@@ -711,8 +711,12 @@ impl pumpkin::plugin::server::HostOpManager for PluginHostState {
                 existing.name.clone_from(&name);
                 existing.bypasses_player_limit = bypasses_player_limit;
             } else {
-                let op_entry =
-                    verdantgolem_config::op::Op::new(uuid, name, internal_level, bypasses_player_limit);
+                let op_entry = verdantgolem_config::op::Op::new(
+                    uuid,
+                    name,
+                    internal_level,
+                    bypasses_player_limit,
+                );
                 config.ops.push(op_entry);
             }
             config.save();
@@ -1226,7 +1230,9 @@ impl pumpkin::plugin::server::HostWhitelistManager for PluginHostState {
         } else {
             config
                 .whitelist
-                .push(verdantgolem_config::whitelist::WhitelistEntry::new(uuid, name));
+                .push(verdantgolem_config::whitelist::WhitelistEntry::new(
+                    uuid, name,
+                ));
             config.save();
             Ok(true)
         }

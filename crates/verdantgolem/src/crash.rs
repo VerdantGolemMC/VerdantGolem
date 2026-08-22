@@ -7,15 +7,15 @@ use std::{
     thread::{self, Thread},
 };
 
+use rustc_hash::FxHashMap;
+use sysinfo::{Cpu, System};
+use time::OffsetDateTime;
+use tracing::error;
 use verdantgolem_util::text::{
     TextComponent,
     color::{Color, NamedColor},
 };
 use verdantgolem_world::CURRENT_MC_VERSION;
-use rustc_hash::FxHashMap;
-use sysinfo::{Cpu, System};
-use time::OffsetDateTime;
-use tracing::error;
 
 pub const BYTES_PER_MEBIBYTE: u64 = 1024 * 1024;
 

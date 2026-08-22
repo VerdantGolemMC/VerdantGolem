@@ -6,10 +6,10 @@ use crate::entity::living::LivingEntity;
 use crate::entity::mob::Mob;
 use crate::entity::{EntityBase, mob::MobEntity, player::Player};
 use crate::world::World;
-use verdantgolem_data::attributes::Attributes;
-use verdantgolem_data::entity::EntityType;
 use rand::RngExt;
 use std::sync::Arc;
+use verdantgolem_data::attributes::Attributes;
+use verdantgolem_data::entity::EntityType;
 
 const DEFAULT_RECIPROCAL_CHANCE: i32 = 10;
 

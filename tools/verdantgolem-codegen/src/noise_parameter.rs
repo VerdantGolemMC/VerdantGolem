@@ -1,8 +1,8 @@
 use std::{collections::BTreeMap, fs};
 
 use proc_macro2::TokenStream;
-use verdantgolem_util::DoublePerlinNoiseParametersCodec;
 use quote::{format_ident, quote};
+use verdantgolem_util::DoublePerlinNoiseParametersCodec;
 
 fn collect_noise_files(
     base: &std::path::Path,

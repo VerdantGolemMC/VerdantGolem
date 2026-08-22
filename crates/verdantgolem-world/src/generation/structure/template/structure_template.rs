@@ -5,10 +5,10 @@
 
 use std::io::Cursor;
 
+use thiserror::Error;
 use verdantgolem_data::{Mirror, Rotation};
 use verdantgolem_nbt::{compound::NbtCompound, nbt_compress::read_gzip_compound_tag, tag::NbtTag};
 use verdantgolem_util::math::{block_box::BlockBox, vector3::Vector3};
-use thiserror::Error;
 
 use super::processor::StructureProcessor;
 use crate::generation::structure::structures::jigsaw::JigsawJointType;

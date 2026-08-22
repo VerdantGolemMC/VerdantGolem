@@ -33,7 +33,10 @@ impl SplashPotionEntity {
 
         Self {
             thrown,
-            item_stack: RwLock::new(ItemStack::new(1, &verdantgolem_data::item::Item::SPLASH_POTION)),
+            item_stack: RwLock::new(ItemStack::new(
+                1,
+                &verdantgolem_data::item::Item::SPLASH_POTION,
+            )),
         }
     }
 
@@ -42,7 +45,10 @@ impl SplashPotionEntity {
         thrown.entity.set_velocity(Vector3::new(0.0, 0.1, 0.0));
         Self {
             thrown,
-            item_stack: RwLock::new(ItemStack::new(1, &verdantgolem_data::item::Item::SPLASH_POTION)),
+            item_stack: RwLock::new(ItemStack::new(
+                1,
+                &verdantgolem_data::item::Item::SPLASH_POTION,
+            )),
         }
     }
 

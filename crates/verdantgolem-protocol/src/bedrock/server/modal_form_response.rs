@@ -2,8 +2,8 @@
 
 use crate::codec::var_uint::VarUInt;
 use crate::serial::{PacketRead, PacketReadSlice};
-use verdantgolem_macros::packet;
 use std::borrow::Cow;
+use verdantgolem_macros::packet;
 
 #[derive(Debug, PacketRead, PacketReadSlice)]
 #[packet(101)]

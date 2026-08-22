@@ -1,9 +1,9 @@
 use super::{Controls, Goal};
 use crate::entity::mob::Mob;
+use rand::RngExt;
 use verdantgolem_data::Block;
 use verdantgolem_data::tag::{self, Taggable};
 use verdantgolem_world::world::BlockFlags;
-use rand::RngExt;
 
 const MAX_TIMER: i32 = 40;
 

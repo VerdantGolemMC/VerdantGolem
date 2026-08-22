@@ -1,5 +1,6 @@
 use std::borrow::Cow;
 
+use rustc_hash::FxHashSet;
 use verdantgolem_data::biome::Biome;
 use verdantgolem_data::structures::{StructureKeys, StructurePlacementType, StructureSet};
 use verdantgolem_data::tag::{self, RegistryKey};
@@ -14,7 +15,6 @@ use verdantgolem_world::generation::generator::biome_finder::find_closest_biome_
 use verdantgolem_world::generation::generator::structure_finder::{
     find_nearest_structure, find_nearest_structure_start,
 };
-use rustc_hash::FxHashSet;
 
 use crate::command::argument_builder::{ArgumentBuilder, argument, command, literal};
 use crate::command::argument_types::resource_key::BIOME_REGISTRY;

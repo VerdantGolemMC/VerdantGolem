@@ -1,6 +1,6 @@
 use crate::{codec::var_ulong::VarULong, serial::PacketWrite};
-use verdantgolem_macros::packet;
 use std::io::{Error, Write};
+use verdantgolem_macros::packet;
 
 pub const MOVE_ACTOR_DELTA_FLAG_HAS_X: u16 = 0x0001;
 pub const MOVE_ACTOR_DELTA_FLAG_HAS_Y: u16 = 0x0002;

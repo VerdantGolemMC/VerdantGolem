@@ -1,6 +1,6 @@
-use verdantgolem_data::BlockStateId;
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use verdantgolem_data::BlockStateId;
 
 use crate::plugin::{
     block::{

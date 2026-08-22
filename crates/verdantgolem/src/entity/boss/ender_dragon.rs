@@ -1,11 +1,11 @@
+use std::sync::atomic::Ordering;
+use std::sync::{Arc, Mutex};
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::{Block, BlockStateId};
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::{chunk::ChunkHeightmapType, world::BlockFlags};
-use std::sync::atomic::Ordering;
-use std::sync::{Arc, Mutex};
 
 use crate::entity::{
     Entity, EntityBase,

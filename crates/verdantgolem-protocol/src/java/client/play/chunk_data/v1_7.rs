@@ -1,10 +1,10 @@
 use super::util::get_light_bytes;
 use crate::WritingError;
 use crate::ser::NetworkWriteExt;
+use std::io::Write;
 use verdantgolem_data::block_state_remap::remap_block_state_for_version;
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::ChunkData;
-use std::io::Write;
 
 /// Serializes chunk data for Minecraft 1.7.2 / 1.7.6 / 1.7.10.
 #[expect(clippy::too_many_lines)]

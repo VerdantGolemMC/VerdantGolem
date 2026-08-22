@@ -5,12 +5,12 @@
     clippy::uninlined_format_args
 )]
 
+use std::time::{SystemTime, UNIX_EPOCH};
+use tempfile::tempdir;
 use verdantgolem_plugin_utils::{
     CheckLicenseResponse, CheckUpdateResponse, LicenseChecker, LicenseLease, LicenseStatus,
     PumpkinMetadata, get_metadata, init_with_metadata, metadata,
 };
-use std::time::{SystemTime, UNIX_EPOCH};
-use tempfile::tempdir;
 
 #[test]
 fn license_checker_offline_and_grace_period() {

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use tracing::warn;
 use verdantgolem_data::scoreboard::ScoreboardDisplaySlot;
 use verdantgolem_protocol::{
     BClientPacket, ClientPacket, NumberFormat,
@@ -15,7 +16,6 @@ use verdantgolem_protocol::{
     },
 };
 use verdantgolem_util::text::{TextComponent, color::NamedColor};
-use tracing::warn;
 
 use super::World;
 use crate::entity::player::Player;
@@ -1049,7 +1049,10 @@ impl BedrockScoreboard {
             entries: vec![],
         };
         player.try_enqueue_packet_editioned(
-            &verdantgolem_protocol::java::client::play::CResetScore::new(entity_name.to_string(), None),
+            &verdantgolem_protocol::java::client::play::CResetScore::new(
+                entity_name.to_string(),
+                None,
+            ),
             &be_score,
         );
         self.scores.retain(|(entity, _), _| entity != entity_name);

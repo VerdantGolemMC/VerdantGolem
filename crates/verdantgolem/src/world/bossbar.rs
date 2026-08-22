@@ -1,6 +1,7 @@
 use crate::entity::player::Player;
 use crate::net::ClientPlatform;
 use bitflags::bitflags;
+use uuid::Uuid;
 use verdantgolem_protocol::bedrock::client::boss_event::{
     BOSS_EVENT_COLOUR_BLUE, BOSS_EVENT_COLOUR_GREEN, BOSS_EVENT_COLOUR_PINK,
     BOSS_EVENT_COLOUR_PURPLE, BOSS_EVENT_COLOUR_RED, BOSS_EVENT_COLOUR_WHITE,
@@ -11,7 +12,6 @@ use verdantgolem_protocol::bedrock::client::boss_event::{
 use verdantgolem_protocol::codec::var_long::VarLong;
 use verdantgolem_protocol::java::client::play::{BosseventAction, CBossEvent};
 use verdantgolem_util::text::TextComponent;
-use uuid::Uuid;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BossbarColor {

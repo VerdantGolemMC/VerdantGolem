@@ -1,7 +1,7 @@
 use crate::WritingError;
+use std::io::Write;
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_world::chunk::format::LightContainer;
-use std::io::Write;
 
 /// Writes an NBT compound tag to the writer, formatted appropriately for the target Minecraft version.
 pub fn write_compound_nbt(

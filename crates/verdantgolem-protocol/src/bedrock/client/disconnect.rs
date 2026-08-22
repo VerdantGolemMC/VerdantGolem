@@ -1,7 +1,7 @@
 // Last verified for v2169
 
-use verdantgolem_macros::packet;
 use std::io::{Error, Write};
+use verdantgolem_macros::packet;
 
 use crate::{codec::var_int::VarInt, serial::PacketWrite};
 

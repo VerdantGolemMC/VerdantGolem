@@ -1,9 +1,9 @@
 use crate::block_properties::{Axis, Facing, HorizontalAxis, HorizontalFacing};
+use serde::Deserialize;
 use verdantgolem_util::{
     math::vector3::{Axis as MathAxis, Vector3},
     random::{RandomGenerator, RandomImpl},
 };
-use serde::Deserialize;
 
 #[repr(u8)]
 #[derive(PartialEq, Clone, Copy, Debug, Hash, Eq, Deserialize)]

@@ -22,7 +22,8 @@ impl ArgumentType for PlacedFeatureNameArgumentType {
         _context: &CommandContext,
         builder: SuggestionsBuilder,
     ) -> Suggestions {
-        let names = verdantgolem_world::generation::feature::placed_features::all_placed_feature_names();
+        let names =
+            verdantgolem_world::generation::feature::placed_features::all_placed_feature_names();
         builder
             .filter_and_suggest_iter(names.iter().copied())
             .build()

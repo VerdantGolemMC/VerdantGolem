@@ -8,10 +8,12 @@ use std::{
 };
 
 use bytes::Bytes;
+use rustc_hash::FxHashMap;
 use verdantgolem_data::{Block, BlockStateId, chunk::ChunkStatus, fluid::Fluid};
 use verdantgolem_nbt::compound::NbtCompound;
-use verdantgolem_util::resource_location::{FromResourceLocation, ResourceLocation, ToResourceLocation};
-use rustc_hash::FxHashMap;
+use verdantgolem_util::resource_location::{
+    FromResourceLocation, ResourceLocation, ToResourceLocation,
+};
 
 use crate::{
     chunk::{
@@ -120,8 +122,12 @@ fn extract_u16_array(tag: &verdantgolem_nbt::tag::NbtTag) -> Option<Box<[BlockSt
 
 fn extract_u8_array(tag: &verdantgolem_nbt::tag::NbtTag) -> Option<Box<[u8]>> {
     match tag {
-        verdantgolem_nbt::tag::NbtTag::ByteArray(arr) => Some(arr.iter().map(|&x| x as u8).collect()),
-        verdantgolem_nbt::tag::NbtTag::IntArray(arr) => Some(arr.iter().map(|&x| x as u8).collect()),
+        verdantgolem_nbt::tag::NbtTag::ByteArray(arr) => {
+            Some(arr.iter().map(|&x| x as u8).collect())
+        }
+        verdantgolem_nbt::tag::NbtTag::IntArray(arr) => {
+            Some(arr.iter().map(|&x| x as u8).collect())
+        }
         verdantgolem_nbt::tag::NbtTag::List(list) => {
             let bytes: Box<[u8]> = list
                 .iter()
@@ -142,7 +148,9 @@ fn extract_u8_array(tag: &verdantgolem_nbt::tag::NbtTag) -> Option<Box<[u8]>> {
     }
 }
 
-fn parse_scheduled_tick<T>(nbt: &verdantgolem_nbt::compound::NbtCompound) -> Option<ScheduledTick<T>>
+fn parse_scheduled_tick<T>(
+    nbt: &verdantgolem_nbt::compound::NbtCompound,
+) -> Option<ScheduledTick<T>>
 where
     T: FromResourceLocation,
 {
@@ -615,7 +623,12 @@ impl ChunkData {
         nbt.write()
     }
 
-    pub fn set_custom_data(&self, namespace: &str, key: &str, value: verdantgolem_nbt::tag::NbtTag) {
+    pub fn set_custom_data(
+        &self,
+        namespace: &str,
+        key: &str,
+        value: verdantgolem_nbt::tag::NbtTag,
+    ) {
         let mut custom_data = self
             .custom_data
             .lock()
@@ -638,7 +651,11 @@ impl ChunkData {
         self.dirty.store(true, Ordering::Relaxed);
     }
 
-    pub fn get_custom_data(&self, namespace: &str, key: &str) -> Option<verdantgolem_nbt::tag::NbtTag> {
+    pub fn get_custom_data(
+        &self,
+        namespace: &str,
+        key: &str,
+    ) -> Option<verdantgolem_nbt::tag::NbtTag> {
         let custom_data = self
             .custom_data
             .lock()
@@ -937,7 +954,9 @@ mod tests {
         assert_eq!(result.len(), 2);
         assert_eq!(
             result[0],
-            verdantgolem_data::biome::Biome::from_name("plains").unwrap().id
+            verdantgolem_data::biome::Biome::from_name("plains")
+                .unwrap()
+                .id
         );
         assert_eq!(
             result[1],
