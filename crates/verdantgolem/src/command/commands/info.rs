@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use crate::TextComponent;
 
 use crate::command::args::position_block::BlockPosArgumentConsumer;
@@ -42,7 +44,7 @@ impl CommandExecutor for InfoExecutor {
             if let Some(block_entity) = world.get_block_entity(&pos) {
                 let mut nbt = NbtCompound::new();
                 block_entity.write_nbt(&mut nbt).await;
-                message.push_str(&format!("\nBlock entity: {nbt:?}"));
+                let _ = writeln!(message, "Block entity: {nbt:?}");
             }
 
             sender.send_message(TextComponent::text(message)).await;
