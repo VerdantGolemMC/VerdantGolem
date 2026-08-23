@@ -283,7 +283,7 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         fakes
             .remove(name)
-            .map(|fake| fake.player)
+            .map(|fake| fake.player.clone())
             .ok_or_else(|| format!("no fake player named {name}"))?
     };
 
