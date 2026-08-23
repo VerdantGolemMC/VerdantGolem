@@ -16,7 +16,7 @@ use uuid::Uuid;
 use verdantgolem_data::attributes::Attributes;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::data_component_impl::EquipmentSlot;
-use verdantgolem_data::entity_type::MobCategory;
+use verdantgolem_data::entity::MobCategory;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::tag::{self, Taggable};

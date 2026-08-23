@@ -4,8 +4,8 @@ use crate::command::args::ConsumedArgs;
 use crate::command::tree::CommandTree;
 use crate::command::tree::builder::literal;
 use crate::command::{CommandExecutor, CommandResult, CommandSender};
-use verdantgolem_data::entity_type::MobCategory;
-use verdantgolem_world::dimension::Dimension;
+use verdantgolem_data::dimension::Dimension;
+use verdantgolem_data::entity::MobCategory;
 
 const NAMES: [&str; 1] = ["spawn"];
 
