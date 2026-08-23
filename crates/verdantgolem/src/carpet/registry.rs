@@ -579,6 +579,7 @@ impl CarpetRules {
 
     /// Loads persisted rule values from `path` (falling back to defaults for missing
     /// entries) and remembers the path for later [`CarpetRules::set`] writes.
+    #[expect(clippy::needless_pass_by_value)]
     pub fn init(&self, path: PathBuf) {
         if let Some(existing) = self.path.get()
             && existing != &path
@@ -917,9 +918,8 @@ mod tests {
         let first = rules.clone();
         let first_update =
             std::thread::spawn(move || first.set(Rule::FillLimit, RuleValue::Int(100_000)));
-        let second = rules.clone();
         let second_update =
-            std::thread::spawn(move || second.set(Rule::MobCapMultiplier, RuleValue::Float(2.0)));
+            std::thread::spawn(move || rules.set(Rule::MobCapMultiplier, RuleValue::Float(2.0)));
         first_update
             .join()
             .map_err(|_| std::io::Error::other("first update thread panicked"))?

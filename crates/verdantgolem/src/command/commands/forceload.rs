@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use crate::world::World;
+
 use crate::command::argument_builder::{ArgumentBuilder, argument, command, literal};
 use crate::command::argument_types::coordinates::Coordinates;
 use crate::command::argument_types::coordinates::column_pos::ColumnPosArgumentType;
@@ -108,17 +112,7 @@ impl CommandExecutor for ForceloadAddExecutor {
         if added.is_empty() {
             return Err(ERROR_FAILED_ADD.create_without_context());
         }
-        {
-            let mut loading = world
-                .level
-                .chunk_loading
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
-            for position in &added {
-                loading.add_force_ticket(*position);
-            }
-            loading.send_change();
-        }
+        add_force_tickets(world, &added);
 
         world.update_active_chunks();
         let changed_chunks = added.len() as u64;
@@ -213,17 +207,7 @@ impl CommandExecutor for ForceloadRemoveExecutor {
         if removed.is_empty() {
             return Err(ERROR_FAILED_REMOVE.create_without_context());
         }
-        {
-            let mut loading = world
-                .level
-                .chunk_loading
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
-            for position in &removed {
-                loading.remove_force_ticket(*position);
-            }
-            loading.send_change();
-        }
+        remove_force_tickets(world, &removed);
 
         world.update_active_chunks();
         let changed_chunks = removed.len() as u64;
@@ -275,17 +259,7 @@ impl CommandExecutor for ForceloadRemoveAllExecutor {
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
             forced.drain().collect::<Vec<_>>()
         };
-        {
-            let mut loading = world
-                .level
-                .chunk_loading
-                .lock()
-                .unwrap_or_else(std::sync::PoisonError::into_inner);
-            for position in &removed {
-                loading.remove_force_ticket(*position);
-            }
-            loading.send_change();
-        }
+        remove_force_tickets(world, &removed);
 
         world.update_active_chunks();
 
@@ -300,6 +274,30 @@ impl CommandExecutor for ForceloadRemoveAllExecutor {
 
         Ok(i32::try_from(removed.len()).unwrap_or(i32::MAX))
     }
+}
+
+fn add_force_tickets(world: &Arc<World>, positions: &[Vector2<i32>]) {
+    let mut loading = world
+        .level
+        .chunk_loading
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    for position in positions {
+        loading.add_force_ticket(*position);
+    }
+    loading.send_change();
+}
+
+fn remove_force_tickets(world: &Arc<World>, positions: &[Vector2<i32>]) {
+    let mut loading = world
+        .level
+        .chunk_loading
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    for position in positions {
+        loading.remove_force_ticket(*position);
+    }
+    loading.send_change();
 }
 
 #[cfg(test)]

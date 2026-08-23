@@ -530,13 +530,13 @@ mod tests {
     fn rotates_directional_and_axis_block_states() {
         let dispenser = Block::DISPENSER;
         let north = dispenser.from_properties(&[("facing", "north"), ("triggered", "false")]);
-        let rotated = dispenser.rotate(north.to_state_id(dispenser), Rotation::CounterClockwise90);
+        let rotated = dispenser.rotate(north.to_state_id(&dispenser), Rotation::CounterClockwise90);
         let rotated_props = dispenser.properties(rotated.id).unwrap().to_props();
         assert!(rotated_props.contains(&("facing", "west")));
 
         let oak_log = Block::OAK_LOG;
         let x_axis = oak_log.from_properties(&[("axis", "x")]);
-        let rotated = oak_log.rotate(x_axis.to_state_id(oak_log), Rotation::Clockwise90);
+        let rotated = oak_log.rotate(x_axis.to_state_id(&oak_log), Rotation::Clockwise90);
         let rotated_props = oak_log.properties(rotated.id).unwrap().to_props();
         assert!(rotated_props.contains(&("axis", "z")));
     }
@@ -550,14 +550,14 @@ mod tests {
             ("south", "false"),
             ("west", "false"),
         ]);
-        let rotated = fence.rotate(north.to_state_id(fence), Rotation::Clockwise90);
+        let rotated = fence.rotate(north.to_state_id(&fence), Rotation::Clockwise90);
         let rotated_props = fence.properties(rotated.id).unwrap().to_props();
         assert!(rotated_props.contains(&("east", "true")));
         assert!(rotated_props.contains(&("north", "false")));
 
         let jigsaw = Block::JIGSAW;
         let north_up = jigsaw.from_properties(&[("orientation", "north_up")]);
-        let rotated = jigsaw.rotate(north_up.to_state_id(jigsaw), Rotation::Clockwise90);
+        let rotated = jigsaw.rotate(north_up.to_state_id(&jigsaw), Rotation::Clockwise90);
         let rotated_props = jigsaw.properties(rotated.id).unwrap().to_props();
         assert!(rotated_props.contains(&("orientation", "east_up")));
     }

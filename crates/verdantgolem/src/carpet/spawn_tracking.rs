@@ -105,7 +105,7 @@ fn format_report(session: &Session, now: Instant) -> String {
     let total = session
         .dimensions
         .values()
-        .fold(0_u64, |sum, stats| sum.saturating_add(stats.total));
+        .fold(0u64, |sum, stats| sum.saturating_add(stats.total));
     let mut message = format!(
         "Spawn tracking: {total} spawns in {:.1}s ({:.1}/s)",
         elapsed.as_secs_f64(),

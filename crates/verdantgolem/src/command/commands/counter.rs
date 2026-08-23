@@ -22,7 +22,7 @@ fn command_count(value: u64) -> i32 {
 fn item_total(items: &[(String, u64)]) -> u64 {
     items
         .iter()
-        .fold(0_u64, |sum, (_, count)| sum.saturating_add(*count))
+        .fold(0u64, |sum, (_, count)| sum.saturating_add(*count))
 }
 
 struct AllChannelsExecutor;
@@ -82,23 +82,6 @@ impl CommandExecutor for ChannelExecutor {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{command_count, item_total};
-
-    #[test]
-    fn command_result_saturates_large_totals() {
-        assert_eq!(command_count(u64::MAX), i32::MAX);
-        assert_eq!(command_count(42), 42);
-    }
-
-    #[test]
-    fn displayed_total_saturates() {
-        let items = vec![("a".to_string(), u64::MAX), ("b".to_string(), 1)];
-        assert_eq!(item_total(&items), u64::MAX);
-    }
-}
-
 struct ResetExecutor(Option<usize>);
 
 impl CommandExecutor for ResetExecutor {
@@ -137,4 +120,21 @@ pub fn init_command_tree() -> CommandTree {
         );
     }
     command_tree
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{command_count, item_total};
+
+    #[test]
+    fn command_result_saturates_large_totals() {
+        assert_eq!(command_count(u64::MAX), i32::MAX);
+        assert_eq!(command_count(42), 42);
+    }
+
+    #[test]
+    fn displayed_total_saturates() {
+        let items = vec![("a".to_string(), u64::MAX), ("b".to_string(), 1)];
+        assert_eq!(item_total(&items), u64::MAX);
+    }
 }

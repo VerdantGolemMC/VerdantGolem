@@ -291,36 +291,6 @@ impl CommandExecutor for CloneExecutor {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{checked_volume, clone_flags, inclusive_length, offset_coordinate};
-    use verdantgolem_world::world::BlockFlags;
-
-    #[test]
-    fn region_math_is_checked_and_wide() {
-        assert_eq!(inclusive_length(-3, 3), Some(7));
-        assert_eq!(
-            inclusive_length(i32::MIN, i32::MAX),
-            Some(u64::from(u32::MAX) + 1)
-        );
-        assert_eq!(checked_volume(u64::MAX, 2, 1), None);
-        assert_eq!(offset_coordinate(i32::MAX, 1), None);
-        assert_eq!(
-            offset_coordinate(i32::MIN, u64::from(u32::MAX)),
-            Some(i32::MAX)
-        );
-    }
-
-    #[test]
-    fn fill_updates_controls_callbacks_and_notifications() {
-        assert_eq!(clone_flags(true), BlockFlags::NOTIFY_ALL);
-        let quiet = clone_flags(false);
-        assert!(quiet.contains(BlockFlags::FORCE_STATE));
-        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
-        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
-    }
-}
-
 pub fn register(dispatcher: &mut CommandDispatcher, registry: &PermissionRegistry) {
     registry.register_permission_or_panic(Permission::new(
         PERMISSION,
@@ -413,4 +383,34 @@ pub fn register(dispatcher: &mut CommandDispatcher, registry: &PermissionRegistr
             ),
         ),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{checked_volume, clone_flags, inclusive_length, offset_coordinate};
+    use verdantgolem_world::world::BlockFlags;
+
+    #[test]
+    fn region_math_is_checked_and_wide() {
+        assert_eq!(inclusive_length(-3, 3), Some(7));
+        assert_eq!(
+            inclusive_length(i32::MIN, i32::MAX),
+            Some(u64::from(u32::MAX) + 1)
+        );
+        assert_eq!(checked_volume(u64::MAX, 2, 1), None);
+        assert_eq!(offset_coordinate(i32::MAX, 1), None);
+        assert_eq!(
+            offset_coordinate(i32::MIN, u64::from(u32::MAX)),
+            Some(i32::MAX)
+        );
+    }
+
+    #[test]
+    fn fill_updates_controls_callbacks_and_notifications() {
+        assert_eq!(clone_flags(true), BlockFlags::NOTIFY_ALL);
+        let quiet = clone_flags(false);
+        assert!(quiet.contains(BlockFlags::FORCE_STATE));
+        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
+    }
 }

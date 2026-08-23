@@ -248,7 +248,7 @@ mod tests {
             velocity,
             on_ground: true,
             fuse,
-            power_bits: 4.0_f32.to_bits(),
+            power_bits: 4.0f32.to_bits(),
         }
     }
 

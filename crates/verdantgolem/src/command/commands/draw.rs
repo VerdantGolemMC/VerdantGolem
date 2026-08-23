@@ -37,6 +37,7 @@ fn draw_flags(fill_updates: bool) -> BlockFlags {
 }
 
 impl CommandExecutor for DrawExecutor {
+    #[expect(clippy::too_many_lines)]
     fn execute<'a>(
         &'a self,
         sender: &'a CommandSender,
@@ -172,21 +173,6 @@ impl CommandExecutor for DrawExecutor {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::draw_flags;
-    use verdantgolem_world::world::BlockFlags;
-
-    #[test]
-    fn fill_updates_controls_callbacks_and_notifications() {
-        assert_eq!(draw_flags(true), BlockFlags::NOTIFY_ALL);
-        let quiet = draw_flags(false);
-        assert!(quiet.contains(BlockFlags::FORCE_STATE));
-        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
-        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
-    }
-}
-
 fn invalid(arg: &str) -> crate::command::dispatcher::CommandError {
     failed(format!("Invalid value for {arg}"))
 }
@@ -206,4 +192,19 @@ pub fn init_command_tree() -> CommandTree {
     CommandTree::new(NAMES, DESCRIPTION)
         .then(literal("sphere").then(shape_args(DrawExecutor { filled: false })))
         .then(literal("ball").then(shape_args(DrawExecutor { filled: true })))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::draw_flags;
+    use verdantgolem_world::world::BlockFlags;
+
+    #[test]
+    fn fill_updates_controls_callbacks_and_notifications() {
+        assert_eq!(draw_flags(true), BlockFlags::NOTIFY_ALL);
+        let quiet = draw_flags(false);
+        assert!(quiet.contains(BlockFlags::FORCE_STATE));
+        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
+    }
 }

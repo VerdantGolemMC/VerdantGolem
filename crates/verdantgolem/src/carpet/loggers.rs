@@ -96,7 +96,7 @@ const fn logger_category_name(category: &MobCategory) -> &'static str {
     }
 }
 
-fn sanitize_tick_metrics(tps: f64, mspt: f64, configured_tps: f64) -> (f64, f64) {
+const fn sanitize_tick_metrics(tps: f64, mspt: f64, configured_tps: f64) -> (f64, f64) {
     let configured_tps = if configured_tps.is_finite() {
         configured_tps.clamp(1.0, MAX_DISPLAY_TPS)
     } else {
@@ -115,7 +115,7 @@ fn sanitize_tick_metrics(tps: f64, mspt: f64, configured_tps: f64) -> (f64, f64)
     (tps, mspt)
 }
 
-fn effective_tps(raw_tps: f64, frozen: bool, runs_normally: bool, sprinting: bool) -> f64 {
+const fn effective_tps(raw_tps: f64, frozen: bool, runs_normally: bool, sprinting: bool) -> f64 {
     if frozen && !runs_normally && !sprinting {
         0.0
     } else {
@@ -129,8 +129,8 @@ pub async fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
         return;
     }
 
-    let mut targets: HashMap<Uuid, (Arc<Player>, SelectedLoggers)> = HashMap::new();
-    {
+    let mut targets: HashMap<Uuid, (Arc<Player>, SelectedLoggers)> = {
+        let mut targets: HashMap<Uuid, (Arc<Player>, SelectedLoggers)> = HashMap::new();
         let mut subs = SUBSCRIPTIONS
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -156,7 +156,8 @@ pub async fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
                 .mobcaps = true;
             true
         });
-    }
+        targets
+    };
 
     let multiplier = crate::carpet::values().mob_cap_multiplier;
     let manager = &server.tick_rate_manager;

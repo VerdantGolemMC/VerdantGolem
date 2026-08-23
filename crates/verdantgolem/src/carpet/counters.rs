@@ -70,7 +70,7 @@ pub fn snapshot(channel: usize) -> Vec<(String, u64)> {
 pub fn total(channel: usize) -> u64 {
     snapshot(channel)
         .iter()
-        .fold(0_u64, |sum, (_, count)| sum.saturating_add(*count))
+        .fold(0u64, |sum, (_, count)| sum.saturating_add(*count))
 }
 
 /// Resets one channel, or every channel when `channel` is `None`.
