@@ -374,7 +374,7 @@ impl SpawnState {
     }
     #[inline]
     #[must_use]
-    pub fn spawnable_chunk_count(&self) -> i32 {
+    pub const fn spawnable_chunk_count(&self) -> i32 {
         self.spawnable_chunk_count
     }
 

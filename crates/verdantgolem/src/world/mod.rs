@@ -3825,8 +3825,10 @@ impl World {
         );
     }
 
-    /// Announces a headless carpet-style player to connected Java and Bedrock clients.
-    /// The local player itself is excluded because it has no network connection.
+    /// Broadcasts a carpet-style fake player ([`ClientPlatform::Local`]) to every
+    /// other client: tab-list entry, entity spawn, equipment and skin metadata.
+    /// The fake player itself has no connection, so nothing is sent to it.
+    #[expect(clippy::too_many_lines)]
     pub fn spawn_local_player(&self, player: &Arc<Player>) {
         let gameprofile = &player.gameprofile;
         let entity = player.get_entity();

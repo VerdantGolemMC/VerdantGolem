@@ -1,7 +1,9 @@
 //! Carpet-style fake players (`/player`), backed by a headless
-//! [`ClientPlatform::Local`] connection: they load chunks, appear in the tab
-//! list and to other players, keep farms running while nobody is online, but
-//! have no network connection and never receive packets.
+//! [`ClientPlatform::Local`] connection.
+//!
+//! They load chunks, appear in the tab list and to other players, keep farms
+//! running while nobody is online, but have no network connection and never
+//! receive packets.
 
 use std::{
     collections::BTreeMap,
@@ -72,11 +74,7 @@ pub async fn spawn(
     if !valid_name(name) {
         return Err(format!("invalid player name: {name}"));
     }
-    if FAKES
-        .lock()
-        .map(|fakes| fakes.contains_key(name))
-        .unwrap_or(false)
-    {
+    if FAKES.lock().is_ok_and(|fakes| fakes.contains_key(name)) {
         return Err(format!("fake player {name} already exists"));
     }
     // Refuse to shadow a real online player.
@@ -165,7 +163,7 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
 }
 
 /// Turns a fake player in place.
-pub async fn look_up(player: &Arc<Player>, yaw: f32, pitch: f32) {
+pub fn look_up(player: &Arc<Player>, yaw: f32, pitch: f32) {
     let entity = &player.living_entity.entity;
     entity.yaw.store(yaw);
     entity.head_yaw.store(yaw);

@@ -57,12 +57,8 @@ impl CommandExecutor for SpawnExecutor {
             };
             let executor = sender.as_player();
 
-            let (position, yaw, pitch) = match &executor {
-                Some(player) => {
-                    let entity = &player.living_entity.entity;
-                    (entity.pos.load(), entity.yaw.load(), entity.pitch.load())
-                }
-                None => {
+            let (position, yaw, pitch) = executor.as_ref().map_or_else(
+                || {
                     let info = world.level_info.load();
                     (
                         verdantgolem_util::math::vector3::Vector3::new(
@@ -73,8 +69,12 @@ impl CommandExecutor for SpawnExecutor {
                         info.spawn_yaw,
                         0.0,
                     )
-                }
-            };
+                },
+                |player| {
+                    let entity = &player.living_entity.entity;
+                    (entity.pos.load(), entity.yaw.load(), entity.pitch.load())
+                },
+            );
 
             match fake_player::spawn(&world, &name, position, yaw, pitch).await {
                 Ok(()) => {
@@ -138,7 +138,7 @@ impl CommandExecutor for LookExecutor {
             let Some(player) = fake_player::get(name) else {
                 return Err(unknown(name));
             };
-            fake_player::look_up(&player, yaw, pitch).await;
+            fake_player::look_up(&player, yaw, pitch);
             sender
                 .send_message(TextComponent::text(format!(
                     "Turned fake player {name} to yaw {yaw}, pitch {pitch}"
