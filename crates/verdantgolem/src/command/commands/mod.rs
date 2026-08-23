@@ -69,6 +69,7 @@ mod seed;
 mod setblock;
 mod setidletimeout;
 mod setworldspawn;
+mod spawn;
 mod spawnpoint;
 mod spectate;
 mod spreadplayers;
@@ -144,6 +145,7 @@ pub fn default_dispatcher(
     dispatcher.register(gamemode::init_command_tree(), "minecraft:command.gamemode");
     dispatcher.register(gamerule::init_command_tree(), "minecraft:command.gamerule");
     dispatcher.register(carpet::init_command_tree(), "pumpkin:command.carpet");
+    dispatcher.register(spawn::init_command_tree(), "pumpkin:command.spawn");
     dispatcher.register(counter::init_command_tree(), "pumpkin:command.counter");
     dispatcher.register(
         stopsound::init_command_tree(),
@@ -384,6 +386,13 @@ fn register_level_0_permissions(registry: &PermissionRegistry) {
 #[expect(clippy::too_many_lines)]
 fn register_level_2_permissions(registry: &PermissionRegistry) {
     // Register permissions for commands with PermissionLvl::Two
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.spawn",
+            "Spawn statistics for technical farms",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
     registry
         .register_permission(Permission::new(
             "pumpkin:command.carpet",

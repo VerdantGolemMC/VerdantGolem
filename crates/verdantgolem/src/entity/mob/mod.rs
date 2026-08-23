@@ -16,6 +16,7 @@ use uuid::Uuid;
 use verdantgolem_data::attributes::Attributes;
 use verdantgolem_data::damage::DamageType;
 use verdantgolem_data::data_component_impl::EquipmentSlot;
+use verdantgolem_data::entity_type::MobCategory;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::tag::{self, Taggable};
@@ -1014,6 +1015,48 @@ impl<T: Mob + Send + 'static> EntityBase for T {
         let mob_entity = self.get_mob_entity();
         mob_entity.living_entity.entity.tick_leash();
         mob_entity.tick_sun_burn();
+
+        // Vanilla-style despawn for non-persistent categories, staggered to
+        // once per second per mob: beyond despawn_distance the mob goes
+        // instantly; between 32 blocks and despawn_distance each check has a
+        // 20/800 chance (mean ~40s). Named and leashed mobs never despawn.
+        {
+            let entity = &mob_entity.living_entity.entity;
+            let category = entity.entity_type.category;
+            let is_leashed = entity
+                .leashed_to
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .is_some();
+            if !category.is_persistent && entity.custom_name.load().is_none() && !is_leashed {
+                let world = entity.world.load();
+                let world_age = world.get_world_age();
+                if world_age % 20 == i64::from(entity.entity_id % 20) {
+                    let pos = entity.pos.load();
+                    let nearest_sq = world
+                        .players
+                        .load()
+                        .iter()
+                        .map(|player| {
+                            player
+                                .living_entity
+                                .entity
+                                .pos
+                                .load()
+                                .squared_distance_to_vec(&pos)
+                        })
+                        .fold(f64::INFINITY, f64::min);
+                    let despawn_sq = f64::from(category.despawn_distance).powi(2);
+                    let soft_sq = f64::from(MobCategory::NO_DESPAWN_DISTANCE).powi(2);
+                    if nearest_sq > despawn_sq
+                        || (nearest_sq > soft_sq && rand::random::<f64>() < 0.025)
+                    {
+                        entity.remove();
+                        return;
+                    }
+                }
+            }
+        }
 
         if mob_entity.breeding_cooldown.load(Relaxed) > 0 {
             mob_entity.breeding_cooldown.fetch_sub(1, Relaxed);

@@ -373,6 +373,18 @@ impl SpawnState {
         }
     }
     #[inline]
+    #[must_use]
+    pub fn spawnable_chunk_count(&self) -> i32 {
+        self.spawnable_chunk_count
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn category_count(&self, category: &MobCategory) -> i32 {
+        self.mob_category_counts.0[category.id].load(Relaxed)
+    }
+
+    #[inline]
     pub fn can_spawn_for_category_global(&self, category: &'static MobCategory) -> bool {
         // carpet rule mobCapMultiplier scales the global cap formula
         let cap = (f64::from(category.max) * crate::carpet::values().mob_cap_multiplier) as i32;
