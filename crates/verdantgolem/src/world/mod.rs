@@ -448,7 +448,8 @@ impl World {
             configured_spawn_radius
         }
         .clamp(0, 32) as i32;
-        let spawn_ticket = if self.dimension == Dimension::OVERWORLD && spawn_radius > 0 {
+        let mut spawn_ticket = None;
+        if self.dimension == Dimension::OVERWORLD && spawn_radius > 0 {
             let level_info = self.level_info.load();
             let spawn_chunk = Vector2::new(level_info.spawn_x >> 4, level_info.spawn_z >> 4);
             for dx in -spawn_radius..=spawn_radius {
@@ -456,13 +457,11 @@ impl World {
                     active_chunks.insert(spawn_chunk.add_raw(dx, dy));
                 }
             }
-            Some((
+            spawn_ticket = Some((
                 spawn_chunk,
                 ChunkLoading::FULL_CHUNK_LEVEL - spawn_radius as i8,
-            ))
-        } else {
-            None
-        };
+            ));
+        }
         self.update_spawn_chunk_ticket(spawn_ticket);
 
         let mut spawnable_chunks = 0;

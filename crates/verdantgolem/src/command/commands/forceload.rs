@@ -300,29 +300,6 @@ fn remove_force_tickets(world: &Arc<World>, positions: &[Vector2<i32>]) {
     loading.send_change();
 }
 
-#[cfg(test)]
-mod tests {
-    use super::{command_count, inclusive_chunk_area};
-
-    #[test]
-    fn chunk_area_uses_checked_wide_arithmetic() {
-        assert_eq!(inclusive_chunk_area(-2, 2, -3, 3), Some(35));
-        assert_eq!(
-            inclusive_chunk_area(i32::MIN, i32::MAX, 0, 0),
-            Some(u64::from(u32::MAX) + 1)
-        );
-        assert_eq!(
-            inclusive_chunk_area(i32::MIN, i32::MAX, i32::MIN, i32::MAX),
-            None
-        );
-    }
-
-    #[test]
-    fn command_result_saturates() {
-        assert_eq!(command_count(u64::MAX), i32::MAX);
-    }
-}
-
 struct ForceloadQueryExecutor;
 
 impl CommandExecutor for ForceloadQueryExecutor {
@@ -454,4 +431,27 @@ pub fn register(dispatcher: &mut CommandDispatcher, registry: &PermissionRegistr
         );
 
     dispatcher.register(builder);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{command_count, inclusive_chunk_area};
+
+    #[test]
+    fn chunk_area_uses_checked_wide_arithmetic() {
+        assert_eq!(inclusive_chunk_area(-2, 2, -3, 3), Some(35));
+        assert_eq!(
+            inclusive_chunk_area(i32::MIN, i32::MAX, 0, 0),
+            Some(u64::from(u32::MAX) + 1)
+        );
+        assert_eq!(
+            inclusive_chunk_area(i32::MIN, i32::MAX, i32::MIN, i32::MAX),
+            None
+        );
+    }
+
+    #[test]
+    fn command_result_saturates() {
+        assert_eq!(command_count(u64::MAX), i32::MAX);
+    }
 }

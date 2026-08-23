@@ -129,7 +129,7 @@ pub async fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
         return;
     }
 
-    let mut targets: HashMap<Uuid, (Arc<Player>, SelectedLoggers)> = {
+    let targets: HashMap<Uuid, (Arc<Player>, SelectedLoggers)> = {
         let mut targets: HashMap<Uuid, (Arc<Player>, SelectedLoggers)> = HashMap::new();
         let mut subs = SUBSCRIPTIONS
             .lock()
