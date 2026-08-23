@@ -121,6 +121,9 @@ pub enum PacketHandlerResult {
 pub enum ClientPlatform {
     Java(JavaClient),
     Bedrock(Arc<BedrockClient>),
+    /// Headless client backing carpet-style fake players (`/player`). There is
+    /// no connection: sends are no-ops, closes succeed immediately.
+    Local,
 }
 
 impl ClientPlatform {
@@ -128,6 +131,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.address,
             Self::Bedrock(bedrock) => bedrock.address,
+            Self::Local => SocketAddr::new(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST), 0),
         }
     }
 
@@ -156,19 +160,20 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.is_closed(),
             Self::Bedrock(bedrock) => bedrock.is_closed(),
+            Self::Local => false,
         }
     }
 
     pub fn java_version(&self) -> JavaMinecraftVersion {
         match self {
             Self::Java(java) => java.version.load(),
-            Self::Bedrock(_) => JavaMinecraftVersion::Unknown,
+            Self::Bedrock(_) | Self::Local => JavaMinecraftVersion::Unknown,
         }
     }
 
     pub fn bedrock_version(&self) -> BedrockMinecraftVersion {
         match self {
-            Self::Java(_) => BedrockMinecraftVersion::Unknown,
+            Self::Java(_) | Self::Local => BedrockMinecraftVersion::Unknown,
             Self::Bedrock(bedrock) => bedrock.version.load(),
         }
     }
@@ -177,6 +182,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.try_enqueue_packet_data(packet_data),
             Self::Bedrock(bedrock) => bedrock.try_enqueue_packet_data(packet_data),
+            Self::Local => {}
         }
     }
 
@@ -184,6 +190,8 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.await_close_interrupt().await,
             Self::Bedrock(bedrock) => bedrock.await_close_interrupt().await,
+            // A Local client has no connection; closing never interrupts it.
+            Self::Local => std::future::pending().await,
         }
     }
 
@@ -195,6 +203,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.spawn_task(task),
             Self::Bedrock(bedrock) => bedrock.spawn_task(task),
+            Self::Local => None,
         }
     }
 
@@ -214,6 +223,7 @@ impl ClientPlatform {
                     bedrock.enqueue_packet(data).await;
                 }
             }
+            Self::Local => {}
         }
     }
 
@@ -233,6 +243,7 @@ impl ClientPlatform {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            Self::Local => {}
         }
     }
 
@@ -240,6 +251,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.enqueue_packet(packet_data).await,
             Self::Bedrock(bedrock) => bedrock.enqueue_packet(packet_data).await,
+            Self::Local => {}
         }
     }
 
@@ -247,6 +259,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.try_enqueue_packet(packet_data),
             Self::Bedrock(bedrock) => bedrock.try_enqueue_packet(packet_data),
+            Self::Local => {}
         }
     }
 
@@ -258,6 +271,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => entity.send_java_spawn_packet(java),
             Self::Bedrock(bedrock) => entity.send_bedrock_spawn_packet(bedrock),
+            Self::Local => {}
         }
     }
 
@@ -265,6 +279,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.send_chunks(chunks).await,
             Self::Bedrock(bedrock) => bedrock.send_chunks(chunks).await,
+            Self::Local => {}
         }
     }
 
@@ -272,6 +287,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.send_packet_now(packet_data).await,
             Self::Bedrock(bedrock) => bedrock.send_game_packet(packet_data).await,
+            Self::Local => {}
         }
     }
 
@@ -291,6 +307,7 @@ impl ClientPlatform {
                     bedrock.send_game_packet(data).await;
                 }
             }
+            Self::Local => {}
         }
     }
 
@@ -309,6 +326,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.kick(message).await,
             Self::Bedrock(bedrock) => bedrock.kick(reason, message.get_text()).await,
+            Self::Local => {}
         }
     }
 }

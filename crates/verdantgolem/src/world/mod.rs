@@ -867,7 +867,7 @@ impl World {
             be_packet,
             players.iter().filter_map(|p| match p.client.as_ref() {
                 ClientPlatform::Bedrock(be) => Some(be),
-                ClientPlatform::Java(_) => None,
+                ClientPlatform::Java(_) | ClientPlatform::Local => None,
             }),
         );
     }
@@ -986,6 +986,7 @@ impl World {
             match p.client.as_ref() {
                 ClientPlatform::Java(_) => java_recipients.push(p),
                 ClientPlatform::Bedrock(be_client) => bedrock_recipients.push(be_client),
+                ClientPlatform::Local => {}
             }
         }
 
@@ -1015,6 +1016,7 @@ impl World {
             match p.client.as_ref() {
                 ClientPlatform::Java(_) => java_recipients.push(p),
                 ClientPlatform::Bedrock(be_client) => bedrock_recipients.push(be_client),
+                ClientPlatform::Local => {}
             }
         }
 
@@ -1499,6 +1501,7 @@ impl World {
                         ClientPlatform::Bedrock(be_client) => {
                             bedrock_recipients.push(be_client);
                         }
+                        ClientPlatform::Local => {}
                     }
                 }
 
@@ -3819,6 +3822,130 @@ impl World {
             &[from.get_entity().entity_uuid],
             &je_packet,
             &be_mob_equipment,
+        );
+    }
+
+    /// Announces a headless carpet-style player to connected Java and Bedrock clients.
+    /// The local player itself is excluded because it has no network connection.
+    pub fn spawn_local_player(&self, player: &Arc<Player>) {
+        let gameprofile = &player.gameprofile;
+        let entity = player.get_entity();
+        let entity_id = player.entity_id();
+        let position = player.position();
+        let velocity = entity.velocity.load();
+        let yaw = entity.yaw.load();
+        let head_yaw = entity.head_yaw.load();
+        let pitch = entity.pitch.load();
+        let gamemode = player.gamemode.load();
+
+        let bedrock_player_list = CPlayerList {
+            action: CPlayerList::ACTION_ADD,
+            entries: vec![PlayerListEntry {
+                uuid: gameprofile.id,
+                entity_unique_id: VarLong(entity_id as i64),
+                username: gameprofile.name.clone(),
+                xuid: String::new(),
+                platform_chat_id: String::new(),
+                build_platform: BuildPlatform::Unknown,
+                skin: (**player.bedrock_skin.load()).clone(),
+                is_teacher: false,
+                is_host: false,
+                is_sub_client: false,
+                player_color: [0, 0, 0, 0],
+            }],
+        };
+        let player_actions = [
+            PlayerAction::AddPlayer {
+                name: &gameprofile.name,
+                properties: &gameprofile.properties.load(),
+            },
+            PlayerAction::UpdateGameMode(VarInt(gamemode as i32)),
+            PlayerAction::UpdateListed(true),
+            PlayerAction::UpdateLatency(VarInt(0)),
+            PlayerAction::UpdateListOrder(VarInt(0)),
+            PlayerAction::UpdateHat(true),
+        ];
+        let java_player = [verdantgolem_protocol::java::client::play::Player {
+            uuid: gameprofile.id,
+            actions: &player_actions,
+        }];
+        let player_info_update = CPlayerInfoUpdate::new(
+            (PlayerInfoFlags::ADD_PLAYER
+                | PlayerInfoFlags::UPDATE_GAME_MODE
+                | PlayerInfoFlags::UPDATE_LISTED
+                | PlayerInfoFlags::UPDATE_LATENCY
+                | PlayerInfoFlags::UPDATE_LIST_PRIORITY
+                | PlayerInfoFlags::UPDATE_HAT)
+                .bits(),
+            &java_player,
+        );
+        self.broadcast_editioned(&player_info_update, &bedrock_player_list);
+
+        let bedrock_add_player = CAddPlayer {
+            uuid: gameprofile.id,
+            player_name: gameprofile.name.clone(),
+            target_runtime_id: VarULong(entity_id as u64),
+            platform_chat_id: String::new(),
+            position: Vector3::new(position.x as f32, position.y as f32, position.z as f32),
+            velocity: Vector3::new(velocity.x as f32, velocity.y as f32, velocity.z as f32),
+            rotation: Vector2::new(pitch, yaw),
+            y_head_rotation: head_yaw,
+            carried_item: NetworkItemStackDescriptor::default(),
+            player_game_type: gamemode.into(),
+            entity_data: entity.bedrock_metadata(),
+            synced_properties: PropertySyncData::default(),
+            abilities_data: verdantgolem_protocol::bedrock::client::SerializedAbilitiesData {
+                target_player_raw_id: entity_id as i64,
+                player_permissions:
+                    verdantgolem_protocol::bedrock::client::PlayerPermissionLevel::Visitor,
+                command_permissions:
+                    verdantgolem_protocol::bedrock::client::CommandPermissionLevel::Any,
+                layers: vec![
+                    verdantgolem_protocol::bedrock::client::SerializedAbilitiesDataSerializedLayer {
+                        serialized_layer: 0,
+                        abilities_set: 0,
+                        ability_value: 0,
+                        fly_speed: 0.05,
+                        vertical_fly_speed: 0.05,
+                        walk_speed: 0.1,
+                    },
+                ],
+            },
+            actor_links: Vec::new(),
+            device_id: String::new(),
+            build_platform: BuildPlatform::Unknown,
+        };
+        let spawn_entity = CSpawnEntity::new(
+            entity_id.into(),
+            gameprofile.id,
+            i32::from(EntityType::PLAYER.id).into(),
+            position,
+            pitch,
+            yaw,
+            head_yaw,
+            0.into(),
+            velocity,
+        );
+        self.broadcast_packet_except_editioned(
+            &[gameprofile.id],
+            &spawn_entity,
+            &bedrock_add_player,
+        );
+
+        self.send_player_equipment(player);
+        self.broadcast_skin_parts(
+            &[gameprofile.id],
+            entity_id,
+            player.config.load().skin_parts,
+            &CSetActorData {
+                target_runtime_id: VarULong(entity_id as u64),
+                actor_data: entity.bedrock_metadata(),
+                synced_properties: PropertySyncData {
+                    int_entries_list: HashMap::new(),
+                    float_entries_list: HashMap::new(),
+                },
+                tick: VarULong(0),
+            },
         );
     }
 
@@ -6373,6 +6500,7 @@ impl World {
             match p.client.as_ref() {
                 ClientPlatform::Java(_) => java_recipients.push(p),
                 ClientPlatform::Bedrock(be_client) => bedrock_recipients.push(be_client),
+                ClientPlatform::Local => {}
             }
         }
 
@@ -6430,6 +6558,7 @@ impl World {
             match p.client.as_ref() {
                 ClientPlatform::Java(_) => java_recipients.push(p),
                 ClientPlatform::Bedrock(be_client) => bedrock_recipients.push(be_client),
+                ClientPlatform::Local => {}
             }
         }
 

@@ -18,8 +18,11 @@ pub fn get_view_distance(player: &Player) -> NonZero<u8> {
         return fallback;
     };
     let max_view_distance = match player.client.as_ref() {
-        ClientPlatform::Java(_) => server.advanced_config.networking.java.view_distance,
+        ClientPlatform::Java(_) | ClientPlatform::Local => {
+            server.advanced_config.networking.java.view_distance
+        }
         ClientPlatform::Bedrock(_) => server.advanced_config.networking.bedrock.view_distance,
+        ClientPlatform::Local => {}
     };
     player
         .config
@@ -72,6 +75,7 @@ pub fn update_position(player: &Arc<Player>) {
                 bedrock_client.try_enqueue_packet(data);
             }
         }
+        ClientPlatform::Local => {}
     }
     let (loading_iter, unloading_iter) =
         Cylindrical::changed_chunks(old_cylindrical, new_cylindrical);

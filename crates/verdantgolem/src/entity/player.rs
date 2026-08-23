@@ -1008,6 +1008,8 @@ impl Player {
         let supports_player_loaded = match client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
+            // Headless fake players have no client-side loaded acknowledgement.
+            ClientPlatform::Local => false,
         };
         let initially_loaded = !supports_player_loaded;
 
@@ -1694,6 +1696,7 @@ impl Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -2489,6 +2492,7 @@ impl Player {
                         tracing::error!("Failed to handle Bedrock play packet: {err}");
                     }
                 }
+                ClientPlatform::Local => {}
             }
 
             count += 1;
@@ -2807,6 +2811,7 @@ impl Player {
         match self.client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
+            ClientPlatform::Local => false,
         }
     }
 
@@ -3020,6 +3025,7 @@ impl Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -3695,6 +3701,7 @@ impl Player {
                         }
                         self.bedrock_spawned.store(false, Ordering::Relaxed);
                     }
+                    ClientPlatform::Local => {}
                 }
 
                 self.send_permission_lvl_update();
@@ -3787,6 +3794,7 @@ impl Player {
                     client.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7136,6 +7144,7 @@ impl InventoryPlayer for Player {
                     }
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7221,6 +7230,7 @@ impl InventoryPlayer for Player {
                     }
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7252,6 +7262,7 @@ impl InventoryPlayer for Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7294,6 +7305,7 @@ impl InventoryPlayer for Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 

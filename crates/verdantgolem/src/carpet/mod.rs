@@ -6,6 +6,7 @@
 //! the `hopperCounters` rule and the `/counter` command.
 
 pub mod counters;
+pub mod fake_player;
 pub mod registry;
 
 use std::sync::RwLockReadGuard;
