@@ -44,7 +44,7 @@ pub fn toggle(logger: Logger, player: &Arc<Player>) -> bool {
         Logger::Tps => &mut subs.tps,
         Logger::MobCaps => &mut subs.mobcaps,
     };
-    if let Some(_) = map.remove(&player.gameprofile.id) {
+    if map.remove(&player.gameprofile.id).is_some() {
         false
     } else {
         map.insert(player.gameprofile.id, Arc::downgrade(player));
