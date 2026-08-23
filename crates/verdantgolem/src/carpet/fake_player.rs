@@ -330,7 +330,7 @@ pub async fn mount(name: &str) -> Result<String, String> {
     let Some((_, vehicle)) = best else {
         return Err(format!("no mountable entity near {name}"));
     };
-    let vehicle_name = vehicle.get_entity().entity_type.registry_key;
+    let vehicle_name = vehicle.get_entity().entity_type.registry_key();
     let player_base: Arc<dyn crate::entity::EntityBase> = player.clone();
     vehicle
         .get_entity()
