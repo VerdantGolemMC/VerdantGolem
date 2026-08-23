@@ -1,7 +1,7 @@
 use crate::TextComponent;
 
-use crate::command::args::FindArg;
 use crate::command::args::position_block::BlockPosArgumentConsumer;
+use verdantgolem_data::tag::Taggable;
 
 use crate::command::args::ConsumedArgs;
 use crate::command::tree::CommandTree;
@@ -27,7 +27,7 @@ impl CommandExecutor for InfoExecutor {
     ) -> CommandResult<'a> {
         Box::pin(async move {
             let Some(world) = sender.world() else {
-                return Err(failed("info must be run with a world context"));
+                return Err(failed("info must be run with a world context".to_string()));
             };
             let pos: BlockPos = BlockPosArgumentConsumer::find_loaded_arg(args, ARG_POS, &world)?;
 
@@ -52,7 +52,7 @@ impl CommandExecutor for InfoExecutor {
     }
 }
 
-fn failed(message: &str) -> crate::command::dispatcher::CommandError {
+fn failed(message: String) -> crate::command::dispatcher::CommandError {
     crate::command::dispatcher::CommandError::CommandFailed(TextComponent::text(message))
 }
 
