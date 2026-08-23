@@ -22,7 +22,6 @@ pub fn get_view_distance(player: &Player) -> NonZero<u8> {
             server.advanced_config.networking.java.view_distance
         }
         ClientPlatform::Bedrock(_) => server.advanced_config.networking.bedrock.view_distance,
-        ClientPlatform::Local => {}
     };
     player
         .config

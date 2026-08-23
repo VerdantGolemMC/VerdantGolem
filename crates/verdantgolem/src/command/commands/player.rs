@@ -55,7 +55,7 @@ impl CommandExecutor for SpawnExecutor {
                     TextComponent::text("Fake players must be spawned by an in-game player."),
                 ));
             };
-            let executor = sender.as_player().cloned();
+            let executor = sender.as_player();
 
             let (position, yaw, pitch) = match &executor {
                 Some(player) => {

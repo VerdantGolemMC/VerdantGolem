@@ -49,7 +49,7 @@ impl ToFromWasmEvent for PacketReceivedEvent {
                 )
                 .map_or(ServerboundPacket::Unknown, ServerboundPacket::Bedrock)
             }
-            ClientPlatform::Local => {}
+            ClientPlatform::Local => ServerboundPacket::Unknown,
         };
 
         Event::PacketReceivedEvent(PacketReceivedEventData {
@@ -98,7 +98,7 @@ impl ToFromWasmEvent for PacketSentEvent {
                 generated_packets::clientbound_bedrock_any_to_wit(self.packet.as_ref())
                     .map_or(ClientboundPacket::Unknown, ClientboundPacket::Bedrock)
             }
-            ClientPlatform::Local => {}
+            ClientPlatform::Local => ClientboundPacket::Unknown,
         };
 
         Event::PacketSentEvent(PacketSentEventData {
