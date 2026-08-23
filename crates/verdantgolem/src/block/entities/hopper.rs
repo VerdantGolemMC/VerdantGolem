@@ -295,20 +295,28 @@ impl HopperBlockEntity {
         if crate::carpet::values().hopper_counters {
             let (target_block, _) = world.get_block_and_state(&target_pos);
             if let Some(channel) = crate::carpet::counters::wool_channel(target_block) {
-                let mut items = self.items.write().await;
-                for index in 0..items.len() {
-                    let item = &items[index];
-                    if !item.is_empty() {
-                        let key = item.item.registry_key.to_string();
-                        let count = u64::from(item.item_count);
-                        items[index] = ItemStack::EMPTY.clone();
-                        drop(items);
-                        crate::carpet::counters::add(channel, &key, count);
-                        self.mark_dirty();
-                        return true;
+                let counted = {
+                    let mut items = self.items.write().await;
+                    let mut counted = Vec::with_capacity(items.len());
+                    for item in items.iter_mut() {
+                        if !item.is_empty() {
+                            counted.push((
+                                item.item.registry_key.to_string(),
+                                u64::from(item.item_count),
+                            ));
+                            *item = ItemStack::EMPTY.clone();
+                        }
                     }
+                    counted
+                };
+                if counted.is_empty() {
+                    return false;
                 }
-                return false;
+                for (key, count) in counted {
+                    crate::carpet::counters::add(channel, &key, count);
+                }
+                self.mark_dirty();
+                return true;
             }
         }
 

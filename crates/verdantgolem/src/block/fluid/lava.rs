@@ -103,7 +103,10 @@ impl FlowingLava {
                 }
                 let block = if is_still {
                     Block::OBSIDIAN
-                } else if crate::carpet::values().renewable_deepslate && block_pos.0.y < 0 {
+                } else if crate::carpet::values().renewable_deepslate
+                    && world.dimension == Dimension::OVERWORLD
+                    && block_pos.0.y < 0
+                {
                     // carpet rule renewableDeepslate
                     Block::DEEPSLATE
                 } else {
@@ -121,7 +124,8 @@ impl FlowingLava {
             // soil forms blackstone (soul soil keeps the vanilla basalt).
             let blackstone_fallback =
                 crate::carpet::values().renewable_blackstone && !below_is_soul_soil;
-            if (below_is_soul_soil || blackstone_fallback)
+            if dir != BlockDirection::Down
+                && (below_is_soul_soil || blackstone_fallback)
                 && world.get_block(&neighbor_pos) == &Block::BLUE_ICE
             {
                 let formed = if below_is_soul_soil {

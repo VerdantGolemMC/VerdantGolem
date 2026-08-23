@@ -191,7 +191,7 @@ impl<'a> PistonHandler<'a> {
                 self.broken_blocks.push(block_pos2);
                 return true;
             }
-            if self.moved_blocks.len() >= MAX_MOVABLE_BLOCKS {
+            if self.moved_blocks.len() >= push_limit() {
                 return false;
             }
             self.moved_blocks.push(block_pos2);

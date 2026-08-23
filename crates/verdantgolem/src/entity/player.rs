@@ -511,6 +511,7 @@ impl ChunkManager {
         level: &Arc<Level>,
         loading_chunks: &[Vector2<i32>],
         unloading_chunks: &[Vector2<i32>],
+        loads_chunks: bool,
     ) {
         view_distance += 1; // Margin for loading
         let old_center = self.center;
@@ -520,20 +521,27 @@ impl ChunkManager {
                 .chunk_loading
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
-            let new_level = ChunkLoading::get_level_from_view_distance(view_distance);
-            lock.add_ticket(center, new_level);
+            if loads_chunks {
+                let new_level = ChunkLoading::get_level_from_view_distance(view_distance);
+                lock.add_ticket(center, new_level);
 
-            let sim_dist = self.world.server.upgrade().map_or(10, |s| {
-                s.advanced_config.networking.java.simulation_distance.get()
-            });
-            let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
-            lock.add_ticket(center, sim_level);
+                let sim_dist = self.world.server.upgrade().map_or(10, |s| {
+                    s.advanced_config.networking.java.simulation_distance.get()
+                });
+                let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
+                lock.add_ticket(center, sim_level);
 
-            // Drop exactly the pair we last added rather than recomputing it. The
-            // simulation level is derived from live config and the view level from the
-            // previous view distance, so recomputing them can release a ticket we never
-            // took and strand the one we did.
-            if let Some((held_view, held_sim)) = self.held_tickets.replace((new_level, sim_level)) {
+                // Drop exactly the pair we last added rather than recomputing it. The
+                // simulation level is derived from live config and the view level from the
+                // previous view distance, so recomputing them can release a ticket we never
+                // took and strand the one we did.
+                if let Some((held_view, held_sim)) =
+                    self.held_tickets.replace((new_level, sim_level))
+                {
+                    lock.remove_ticket(old_center, held_view);
+                    lock.remove_ticket(old_center, held_sim);
+                }
+            } else if let Some((held_view, held_sim)) = self.held_tickets.take() {
                 lock.remove_ticket(old_center, held_view);
                 lock.remove_ticket(old_center, held_sim);
             }
@@ -577,6 +585,41 @@ impl ChunkManager {
             }
         }
         self.chunk_queue = BinaryHeap::from(tasks);
+    }
+
+    /// Reconciles this player's view/simulation tickets with rules that make
+    /// the player spectator-like without changing which already-loaded chunks
+    /// may be sent to their client.
+    pub fn set_loading_tickets_enabled(&mut self, enabled: bool) {
+        if self.view_distance == 0 || enabled == self.held_tickets.is_some() {
+            return;
+        }
+
+        let mut loading = self
+            .world
+            .level
+            .chunk_loading
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if enabled {
+            let view_level = ChunkLoading::get_level_from_view_distance(self.view_distance);
+            let sim_dist = self.world.server.upgrade().map_or(10, |server| {
+                server
+                    .advanced_config
+                    .networking
+                    .java
+                    .simulation_distance
+                    .get()
+            });
+            let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
+            loading.add_ticket(self.center, view_level);
+            loading.add_ticket(self.center, sim_level);
+            self.held_tickets = Some((view_level, sim_level));
+        } else if let Some((view_level, sim_level)) = self.held_tickets.take() {
+            loading.remove_ticket(self.center, view_level);
+            loading.remove_ticket(self.center, sim_level);
+        }
+        loading.send_change();
     }
 
     pub fn clean_up(&mut self, level: &Arc<Level>) {
@@ -2503,8 +2546,9 @@ impl Player {
     }
 
     #[expect(clippy::too_many_lines)]
-    pub fn tick<'a>(&'a self, server: &'a Server) {
+    pub fn tick(self: &Arc<Self>, server: &Server) {
         self.process_inbound_packets();
+        crate::world::chunker::refresh_loading_tickets(self);
 
         if self.is_spectator() {
             self.living_entity
@@ -2689,6 +2733,14 @@ impl Player {
             adv.flush_dirty(self, true);
         }
 
+        if matches!(self.client.as_ref(), ClientPlatform::Local) {
+            self.living_entity.entity.send_pos_rot();
+            crate::world::chunker::update_position(self);
+            // A Local client has no input packet to release the jump key. Keep
+            // command-triggered jumps to a single physics tick.
+            self.living_entity.jumping.store(false, Ordering::Relaxed);
+        }
+
         // experience handling
         self.tick_experience();
         self.tick_health();
@@ -2785,6 +2837,19 @@ impl Player {
         } else {
             self.add_exhaustion(0.05);
         }
+    }
+
+    /// Queues one server-authoritative jump for a headless Local player.
+    /// Returns false when invoked for a network player or while airborne.
+    pub fn jump_local(&self) -> bool {
+        if !matches!(self.client.as_ref(), ClientPlatform::Local)
+            || !self.living_entity.entity.on_ground.load(Ordering::Relaxed)
+        {
+            return false;
+        }
+        self.living_entity.jumping.store(true, Ordering::Relaxed);
+        self.jump();
+        true
     }
 
     pub fn progress_motion(&self, delta_pos: Vector3<f64>) {
@@ -4689,6 +4754,17 @@ impl Player {
     pub fn send_system_message_raw(&self, text: &TextComponent, overlay: bool) {
         let je_packet = CSystemChatMessage::new(text, overlay);
         let locale = Locale::from_str(&self.config.load().locale).unwrap_or(Locale::EnUs);
+        if overlay {
+            let be_packet = verdantgolem_protocol::bedrock::client::set_title::CSetTitle::new(
+                4,
+                text.0.to_bedrock_legacy(locale),
+                0,
+                0,
+                0,
+            );
+            self.try_enqueue_packet_editioned(&je_packet, &be_packet);
+            return;
+        }
         let be_packet = match &*text.0.content {
             verdantgolem_util::text::TextContent::Translate {
                 translate,

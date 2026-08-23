@@ -74,6 +74,29 @@ struct ClonedBlock {
     block_entity_nbt: Option<NbtCompound>,
 }
 
+fn inclusive_length(min: i32, max: i32) -> Option<u64> {
+    let length = i64::from(max).checked_sub(i64::from(min))?.checked_add(1)?;
+    u64::try_from(length).ok()
+}
+
+fn checked_volume(size_x: u64, size_y: u64, size_z: u64) -> Option<u64> {
+    size_x.checked_mul(size_y)?.checked_mul(size_z)
+}
+
+fn offset_coordinate(origin: i32, offset: u64) -> Option<i32> {
+    let offset = i64::try_from(offset).ok()?;
+    let coordinate = i64::from(origin).checked_add(offset)?;
+    i32::try_from(coordinate).ok()
+}
+
+fn clone_flags(fill_updates: bool) -> BlockFlags {
+    if fill_updates {
+        BlockFlags::NOTIFY_ALL
+    } else {
+        BlockFlags::FORCE_STATE | BlockFlags::SKIP_BLOCK_ADDED_CALLBACK
+    }
+}
+
 impl CommandExecutor for CloneExecutor {
     #[expect(clippy::too_many_lines)]
     fn execute(&self, context: &CommandContext) -> CommandExecutorResult {
@@ -94,14 +117,15 @@ impl CommandExecutor for CloneExecutor {
         let min_z = begin.0.z.min(end.0.z);
         let max_z = begin.0.z.max(end.0.z);
 
-        let size_x = max_x - min_x + 1;
-        let size_y = max_y - min_y + 1;
-        let size_z = max_z - min_z + 1;
-
-        let volume = size_x * size_y * size_z;
+        let size_x = inclusive_length(min_x, max_x).unwrap_or(u64::MAX);
+        let size_y = inclusive_length(min_y, max_y).unwrap_or(u64::MAX);
+        let size_z = inclusive_length(min_z, max_z).unwrap_or(u64::MAX);
+        let volume = checked_volume(size_x, size_y, size_z).unwrap_or(u64::MAX);
 
         // carpet rule fillLimit caps the clone volume
-        let fill_limit = crate::carpet::values().fill_limit.clamp(1, i32::MAX as i64) as i32;
+        let fill_limit = crate::carpet::values()
+            .fill_limit
+            .clamp(1, i64::from(i32::MAX)) as u64;
         if volume > fill_limit {
             return Err(TOOBIG_ERROR.create_without_context_args_slice(&[
                 TextComponent::text(fill_limit.to_string()),
@@ -112,9 +136,12 @@ impl CommandExecutor for CloneExecutor {
         let dest_min_x = dest.0.x;
         let dest_min_y = dest.0.y;
         let dest_min_z = dest.0.z;
-        let dest_max_x = dest_min_x + size_x - 1;
-        let dest_max_y = dest_min_y + size_y - 1;
-        let dest_max_z = dest_min_z + size_z - 1;
+        let dest_max_x = offset_coordinate(dest_min_x, size_x.saturating_sub(1))
+            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?;
+        let dest_max_y = offset_coordinate(dest_min_y, size_y.saturating_sub(1))
+            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?;
+        let dest_max_z = offset_coordinate(dest_min_z, size_z.saturating_sub(1))
+            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?;
 
         let overlap = !(dest_max_x < min_x
             || dest_min_x > max_x
@@ -165,8 +192,22 @@ impl CommandExecutor for CloneExecutor {
         for x in 0..size_x {
             for y in 0..size_y {
                 for z in 0..size_z {
-                    let src_pos = BlockPos::new(min_x + x, min_y + y, min_z + z);
-                    let dest_pos = BlockPos::new(dest_min_x + x, dest_min_y + y, dest_min_z + z);
+                    let src_pos = BlockPos::new(
+                        offset_coordinate(min_x, x)
+                            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?,
+                        offset_coordinate(min_y, y)
+                            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?,
+                        offset_coordinate(min_z, z)
+                            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?,
+                    );
+                    let dest_pos = BlockPos::new(
+                        offset_coordinate(dest_min_x, x)
+                            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?,
+                        offset_coordinate(dest_min_y, y)
+                            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?,
+                        offset_coordinate(dest_min_z, z)
+                            .ok_or_else(|| OUT_OF_WORLD_ERROR.create_without_context())?,
+                    );
 
                     let state_id = world.get_block_state_id(&src_pos);
 
@@ -197,9 +238,10 @@ impl CommandExecutor for CloneExecutor {
             }
         }
 
+        let flags = clone_flags(crate::carpet::values().fill_updates);
         let mut count = 0;
         for block in &blocks_to_clone {
-            world.set_block_state(&block.dest_pos, block.state_id, BlockFlags::NOTIFY_ALL);
+            world.set_block_state(&block.dest_pos, block.state_id, flags);
 
             if let Some(nbt) = &block.block_entity_nbt {
                 let mut new_nbt = nbt.clone();
@@ -231,11 +273,7 @@ impl CommandExecutor for CloneExecutor {
         if self.clone_mode == CloneMode::Move {
             for block in &blocks_to_clone {
                 if !is_dest_pos(&block.src_pos) {
-                    world.set_block_state(
-                        &block.src_pos,
-                        BlockStateId::AIR,
-                        BlockFlags::NOTIFY_ALL,
-                    );
+                    world.set_block_state(&block.src_pos, BlockStateId::AIR, flags);
                 }
             }
         }
@@ -250,6 +288,36 @@ impl CommandExecutor for CloneExecutor {
         );
 
         Ok(count)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{checked_volume, clone_flags, inclusive_length, offset_coordinate};
+    use verdantgolem_world::world::BlockFlags;
+
+    #[test]
+    fn region_math_is_checked_and_wide() {
+        assert_eq!(inclusive_length(-3, 3), Some(7));
+        assert_eq!(
+            inclusive_length(i32::MIN, i32::MAX),
+            Some(u64::from(u32::MAX) + 1)
+        );
+        assert_eq!(checked_volume(u64::MAX, 2, 1), None);
+        assert_eq!(offset_coordinate(i32::MAX, 1), None);
+        assert_eq!(
+            offset_coordinate(i32::MIN, u64::from(u32::MAX)),
+            Some(i32::MAX)
+        );
+    }
+
+    #[test]
+    fn fill_updates_controls_callbacks_and_notifications() {
+        assert_eq!(clone_flags(true), BlockFlags::NOTIFY_ALL);
+        let quiet = clone_flags(false);
+        assert!(quiet.contains(BlockFlags::FORCE_STATE));
+        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
     }
 }
 

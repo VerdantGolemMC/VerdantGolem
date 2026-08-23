@@ -23,8 +23,6 @@ const CATEGORY_NAMES: [&str; 8] = [
     "misc",
 ];
 
-const MAGIC_NUMBER: i32 = 289;
-
 struct MobCapsExecutor;
 
 impl CommandExecutor for MobCapsExecutor {
@@ -50,9 +48,11 @@ impl CommandExecutor for MobCapsExecutor {
                 let line = if category.max < 0 {
                     format!("\n{}: {}", CATEGORY_NAMES[category.id], count)
                 } else {
-                    let cap = (f64::from(category.max) * multiplier) as i32
-                        * spawn_state.spawnable_chunk_count()
-                        / MAGIC_NUMBER;
+                    let cap = crate::world::natural_spawner::scaled_mob_cap(
+                        category.max,
+                        spawn_state.spawnable_chunk_count(),
+                        multiplier,
+                    );
                     format!("\n{}: {}/{}", CATEGORY_NAMES[category.id], count, cap)
                 };
                 message.push_str(&line);
@@ -75,17 +75,14 @@ impl CommandExecutor for TrackingExecutor {
         _args: &'a ConsumedArgs<'a>,
     ) -> CommandResult<'a> {
         Box::pin(async move {
-            if crate::carpet::spawn_tracking::toggle() {
-                sender
-                    .send_message(TextComponent::text(
-                        "Started spawn tracking. Run /spawn tracking again to stop and report.",
-                    ))
-                    .await;
-            } else {
-                sender
-                    .send_message(TextComponent::text(crate::carpet::spawn_tracking::report()))
-                    .await;
-            }
+            let message = match crate::carpet::spawn_tracking::toggle() {
+                crate::carpet::spawn_tracking::ToggleResult::Started => {
+                    "Started spawn tracking. Run /spawn tracking again to stop and report."
+                        .to_string()
+                }
+                crate::carpet::spawn_tracking::ToggleResult::Stopped(report) => report,
+            };
+            sender.send_message(TextComponent::text(message)).await;
             Ok(1)
         })
     }

@@ -26,7 +26,26 @@ use verdantgolem_util::random::{RandomImpl, get_seed};
 use verdantgolem_world::chunk::{ChunkData, ChunkHeightmapType};
 use verdantgolem_world::generation::proto_chunk::GenerationCache;
 
-const MAGIC_NUMBER: i32 = 17 * 17;
+const MAGIC_NUMBER: f64 = 17.0 * 17.0;
+
+/// Computes the global mob cap without truncating intermediate products.
+///
+/// Invalid/non-positive inputs disable the category, while a positive result
+/// that exceeds the command/count representation saturates at `i32::MAX`.
+#[must_use]
+pub fn scaled_mob_cap(category_max: i32, spawnable_chunk_count: i32, multiplier: f64) -> i32 {
+    if category_max <= 0 || spawnable_chunk_count <= 0 || multiplier.is_nan() || multiplier <= 0.0 {
+        return 0;
+    }
+
+    let cap =
+        f64::from(category_max) * f64::from(spawnable_chunk_count) * multiplier / MAGIC_NUMBER;
+    if !cap.is_finite() || cap >= f64::from(i32::MAX) {
+        i32::MAX
+    } else {
+        cap.floor() as i32
+    }
+}
 
 use dashmap::DashMap;
 use std::sync::atomic::{AtomicI32, Ordering::Relaxed};
@@ -386,10 +405,12 @@ impl SpawnState {
 
     #[inline]
     pub fn can_spawn_for_category_global(&self, category: &'static MobCategory) -> bool {
-        // carpet rule mobCapMultiplier scales the global cap formula
-        let cap = (f64::from(category.max) * crate::carpet::values().mob_cap_multiplier) as i32;
-        self.mob_category_counts.0[category.id].load(Relaxed)
-            < cap * self.spawnable_chunk_count / MAGIC_NUMBER
+        let cap = scaled_mob_cap(
+            category.max,
+            self.spawnable_chunk_count,
+            crate::carpet::values().mob_cap_multiplier,
+        );
+        self.mob_category_counts.0[category.id].load(Relaxed) < cap
     }
     pub fn can_spawn_for_category_local(
         &self,
@@ -595,7 +616,10 @@ pub fn spawn_mobs_for_chunk_generation(
                         .get_entity()
                         .set_rotation(rand::random::<f32>() * 360., 0.);
                     world.spawn_entity_non_save(entity);
-                    crate::carpet::spawn_tracking::record(entity_type);
+                    crate::carpet::spawn_tracking::record(
+                        world.dimension.minecraft_name,
+                        entity_type,
+                    );
                     success = true;
                 }
 
@@ -987,4 +1011,25 @@ pub fn is_valid_empty_spawn_block(state: &'static BlockState) -> bool {
     // TODO: !entityType.isBlockDangerous(blockState)
     // (e.g., preventing spawns inside Sweet Berry Bushes, Wither Roses, or Fire)
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use super::scaled_mob_cap;
+
+    #[test]
+    fn mob_cap_uses_the_complete_formula_before_truncating() {
+        // Truncating 70 * 0.51 first would incorrectly produce 34 here.
+        assert_eq!(scaled_mob_cap(70, 288, 0.51), 35);
+        assert_eq!(scaled_mob_cap(70, 289, 1.0), 70);
+    }
+
+    #[test]
+    fn mob_cap_handles_invalid_and_overflowing_inputs() {
+        assert_eq!(scaled_mob_cap(70, 289, f64::NAN), 0);
+        assert_eq!(scaled_mob_cap(70, 0, 1.0), 0);
+        assert_eq!(scaled_mob_cap(-1, 289, 1.0), 0);
+        assert_eq!(scaled_mob_cap(i32::MAX, i32::MAX, f64::INFINITY), i32::MAX);
+        assert_eq!(scaled_mob_cap(i32::MAX, i32::MAX, 1_000.0), i32::MAX);
+    }
 }

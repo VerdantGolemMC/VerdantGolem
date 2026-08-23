@@ -80,18 +80,17 @@ impl BlockBehaviour for TNTBlock {
     }
 
     fn placed(&self, args: PlacedArgs<'_>) {
+        // Carpet's tntDoNotUpdate only suppresses the placement-time power
+        // check. Later neighbour changes must still be able to prime the TNT.
+        if !crate::carpet::values().tnt_do_not_update
+            && block_receives_redstone_power(args.world, args.position)
         {
-            if block_receives_redstone_power(args.world, args.position) {
-                Self::prime(args.world, args.position);
-            }
+            Self::prime(args.world, args.position);
         }
     }
 
     fn on_neighbor_update(&self, args: OnNeighborUpdateArgs<'_>) {
-        // carpet rule tntDoNotUpdate: block updates never prime TNT
-        if !crate::carpet::values().tnt_do_not_update
-            && block_receives_redstone_power(args.world, args.position)
-        {
+        if block_receives_redstone_power(args.world, args.position) {
             Self::prime(args.world, args.position);
         }
     }

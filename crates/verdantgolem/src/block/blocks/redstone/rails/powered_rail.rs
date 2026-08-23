@@ -159,11 +159,11 @@ impl PoweredRailBlock {
         pos: &BlockPos,
         state: &RailProperties,
         direction: bool,
-        distance: u8,
+        distance: u32,
     ) -> bool {
         // carpet rule railPowerLimit (default 9 keeps vanilla propagation)
-        let limit =
-            (crate::carpet::values().rail_power_limit.saturating_sub(1)).clamp(0, 255) as u8;
+        let limit = u32::try_from(crate::carpet::values().rail_power_limit.saturating_sub(1))
+            .unwrap_or(u32::MAX);
         if distance >= limit {
             return false;
         }
@@ -257,7 +257,7 @@ impl PoweredRailBlock {
         world: &World,
         pos: &BlockPos,
         direction: bool,
-        distance: u8,
+        distance: u32,
         expected_shape: verdantgolem_data::block_properties::RailShape,
     ) -> bool {
         let block = world.get_block(pos);
@@ -350,9 +350,11 @@ impl PoweredRailBlock {
         pos: &BlockPos,
         state: &RailProperties,
         direction: bool,
-        distance: u8,
+        distance: u32,
     ) {
-        if distance >= 8 {
+        let limit = u32::try_from(crate::carpet::values().rail_power_limit.saturating_sub(1))
+            .unwrap_or(u32::MAX);
+        if distance >= limit {
             return;
         }
 
@@ -434,7 +436,7 @@ impl PoweredRailBlock {
         world: &Arc<World>,
         pos: &BlockPos,
         direction: bool,
-        distance: u8,
+        distance: u32,
         expected_shape: verdantgolem_data::block_properties::RailShape,
     ) {
         let block = world.get_block(pos);

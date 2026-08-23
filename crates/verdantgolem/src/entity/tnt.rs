@@ -3,9 +3,12 @@ use crate::server::Server;
 use core::f32;
 use std::{
     f64::consts::TAU,
-    sync::atomic::{
-        AtomicU32,
-        Ordering::{self, Relaxed},
+    sync::{
+        Arc,
+        atomic::{
+            AtomicU32,
+            Ordering::{self, AcqRel, Acquire, Relaxed},
+        },
     },
 };
 use verdantgolem_data::Block;
@@ -16,6 +19,30 @@ pub struct TNTEntity {
     entity: Entity,
     power: f32,
     fuse: AtomicU32,
+    merged_count: AtomicU32,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct MergeSnapshot {
+    position: Vector3<f64>,
+    velocity: Vector3<f64>,
+    on_ground: bool,
+    fuse: u32,
+    power_bits: u32,
+}
+
+impl MergeSnapshot {
+    fn is_stationary(self) -> bool {
+        self.on_ground && self.velocity.x == 0.0 && self.velocity.y == 0.0 && self.velocity.z == 0.0
+    }
+
+    fn compatible_with(self, other: Self) -> bool {
+        self.is_stationary()
+            && other.is_stationary()
+            && self.position == other.position
+            && self.fuse == other.fuse
+            && self.power_bits == other.power_bits
+    }
 }
 
 impl TNTEntity {
@@ -39,6 +66,75 @@ impl TNTEntity {
             entity,
             power,
             fuse: AtomicU32::new(fuse),
+            merged_count: AtomicU32::new(1),
+        }
+    }
+
+    fn merge_snapshot(&self) -> MergeSnapshot {
+        MergeSnapshot {
+            position: self.entity.pos.load(),
+            velocity: self.entity.velocity.load(),
+            on_ground: self.entity.on_ground.load(Relaxed),
+            fuse: self.fuse.load(Relaxed),
+            power_bits: self.power.to_bits(),
+        }
+    }
+
+    fn add_merged_count(&self, amount: u32) {
+        let mut current = self.merged_count.load(Acquire);
+        loop {
+            let next = current.saturating_add(amount);
+            match self
+                .merged_count
+                .compare_exchange_weak(current, next, AcqRel, Acquire)
+            {
+                Ok(_) => return,
+                Err(observed) => current = observed,
+            }
+        }
+    }
+
+    fn try_merge_stationary_tnt(&self) {
+        let own_snapshot = self.merge_snapshot();
+        if !own_snapshot.is_stationary() || self.merged_count.load(Acquire) == 0 {
+            return;
+        }
+
+        let self_id = self.entity.entity_id;
+        let candidates = {
+            let world = self.entity.world.load();
+            let entities = world.entities.load();
+            entities
+                .iter()
+                .filter_map(|candidate| candidate.clone().get_tnt_entity())
+                .filter(|candidate| {
+                    candidate.entity.entity_id != self_id
+                        && !candidate.entity.removed.load(Relaxed)
+                        && own_snapshot.compatible_with(candidate.merge_snapshot())
+                        && candidate.merged_count.load(Acquire) > 0
+                })
+                .collect::<Vec<_>>()
+        };
+
+        // Only the lowest entity id in an equivalent merge group may absorb peers.
+        // This prevents two concurrently ticking TNT entities from removing each other.
+        if candidates
+            .iter()
+            .any(|candidate| candidate.entity.entity_id < self_id)
+        {
+            return;
+        }
+
+        for candidate in candidates {
+            if self.entity.removed.load(Relaxed) {
+                return;
+            }
+            let absorbed = candidate.merged_count.swap(0, AcqRel);
+            if absorbed == 0 {
+                continue;
+            }
+            self.add_merged_count(absorbed);
+            candidate.entity.remove();
         }
     }
 }
@@ -47,20 +143,17 @@ impl EntityBase for TNTEntity {
     fn tick(&self, caller: &dyn EntityBase, _server: &Server) {
         let entity = &self.entity;
 
-        let mut velo = entity.velocity.load();
-        velo.y -= self.get_gravity();
-
-        entity.move_entity(caller, velo);
+        let mut velocity = entity.velocity.load();
+        velocity.y -= self.get_gravity();
+        entity.move_entity(caller, velocity);
         entity.tick_block_collisions(caller);
 
-        // Read back what actually happened instead of reusing the pre-move
-        // value: `move_entity` clamps on collision, and an explosion may have
-        // pushed us while we were moving above
-        let velo = entity.velocity.load();
+        // Read back the post-collision velocity before applying vanilla drag.
+        let velocity = entity.velocity.load();
         if entity.on_ground.load(Ordering::Relaxed) {
-            entity.velocity.store(velo.multiply(0.7, -0.5, 0.7));
+            entity.velocity.store(velocity.multiply(0.7, -0.5, 0.7));
         } else {
-            entity.velocity.store(velo.multiply(0.98, 0.98, 0.98));
+            entity.velocity.store(velocity.multiply(0.98, 0.98, 0.98));
         }
 
         if entity.velocity_dirty.swap(false, Ordering::SeqCst) {
@@ -68,56 +161,38 @@ impl EntityBase for TNTEntity {
             entity.send_velocity();
         }
 
-        // FIX: Prevent fuse underflow (vanilla parity)
-        let fuse = self.fuse.load(Relaxed);
+        // Carpet rule mergeTNT: only the lowest-id entity absorbs identical,
+        // stationary peers, preserving the number of eventual explosions.
+        if crate::carpet::values().merge_tnt
+            && entity.on_ground.load(Ordering::Relaxed)
+            && self.fuse.load(Relaxed).is_multiple_of(20)
+        {
+            self.try_merge_stationary_tnt();
+            if entity.removed.load(Relaxed) || self.merged_count.load(Acquire) == 0 {
+                return;
+            }
+        }
 
+        // Prevent fuse underflow while retaining every merged explosion.
+        let fuse = self.fuse.load(Relaxed);
         if fuse <= 1 {
-            // TNT explodes now
-            self.entity.remove();
-            let world = self.entity.world.load_full();
-            let pos = self.entity.pos.load();
-            let power = {
-                let rules = crate::carpet::values();
-                if rules.tnt_random_range >= 0.0 {
-                    rules.tnt_random_range as f32
-                } else {
-                    self.power
-                }
-            };
+            entity.remove();
+            let explosion_count = self.merged_count.swap(0, AcqRel);
+            if explosion_count == 0 {
+                return;
+            }
+            let world = entity.world.load_full();
             if world.level_info.load().game_rules.tnt_explodes {
-                world.explode(pos, power, crate::world::ExplosionInteraction::Tnt);
+                let random_factor = {
+                    let rules = crate::carpet::values();
+                    (rules.tnt_random_range >= 0.0).then_some(rules.tnt_random_range as f32)
+                };
+                let position = entity.pos.load();
+                for _ in 0..explosion_count {
+                    world.explode_tnt_with_random_factor(position, self.power, random_factor);
+                }
             }
         } else {
-            // carpet rule mergeTNT: fold stationary primed TNT into one entity.
-            if crate::carpet::values().merge_tnt
-                && entity.on_ground.load(Ordering::Relaxed)
-                && fuse.is_multiple_of(20)
-            {
-                let world = entity.world.load();
-                let entities = world.entities.load();
-                let bounding_box = entity.bounding_box.load();
-                for other in entities.iter() {
-                    if let Some(other_tnt) = other.clone().get_tnt_entity() {
-                        let other_id = other_tnt.entity.entity_id;
-                        if other_id != entity.entity_id
-                            && !other_tnt.entity.removed.load(Ordering::Relaxed)
-                            && other_tnt
-                                .entity
-                                .bounding_box
-                                .load()
-                                .intersects(&bounding_box)
-                        {
-                            let other_fuse = other_tnt.fuse.load(Relaxed);
-                            if other_fuse < self.fuse.load(Relaxed) {
-                                self.fuse.store(other_fuse, Relaxed);
-                            }
-                            other_tnt.entity.remove();
-                        }
-                    }
-                }
-            }
-
-            // Safe decrement
             self.fuse.store(fuse - 1, Relaxed);
             entity.update_fluid_state(caller);
         }
@@ -159,5 +234,37 @@ impl EntityBase for TNTEntity {
     }
     fn cast_any(&self) -> &dyn std::any::Any {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MergeSnapshot;
+    use verdantgolem_util::math::vector3::Vector3;
+
+    fn snapshot(position: Vector3<f64>, velocity: Vector3<f64>, fuse: u32) -> MergeSnapshot {
+        MergeSnapshot {
+            position,
+            velocity,
+            on_ground: true,
+            fuse,
+            power_bits: 4.0_f32.to_bits(),
+        }
+    }
+
+    #[test]
+    fn merge_requires_identical_stationary_state() {
+        let position = Vector3::new(1.0, 2.0, 3.0);
+        let stationary = Vector3::new(0.0, 0.0, 0.0);
+        let own = snapshot(position, stationary, 40);
+
+        assert!(own.compatible_with(snapshot(position, stationary, 40)));
+        assert!(!own.compatible_with(snapshot(Vector3::new(1.01, 2.0, 3.0), stationary, 40)));
+        assert!(!own.compatible_with(snapshot(position, Vector3::new(0.01, 0.0, 0.0), 40)));
+        assert!(!own.compatible_with(snapshot(position, stationary, 39)));
+
+        let mut airborne = own;
+        airborne.on_ground = false;
+        assert!(!own.compatible_with(airborne));
     }
 }

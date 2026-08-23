@@ -190,6 +190,7 @@ pub struct Explosion {
     block_interaction: BlockInteraction,
     damage_calculator: Option<Arc<dyn ExplosionDamageCalculator>>,
     preserve_rails: bool,
+    ray_random_factor: Option<f32>,
 }
 
 impl Explosion {
@@ -201,6 +202,7 @@ impl Explosion {
             block_interaction,
             damage_calculator: None,
             preserve_rails: false,
+            ray_random_factor: None,
         }
     }
 
@@ -217,6 +219,17 @@ impl Explosion {
     pub const fn preserving_rails(mut self) -> Self {
         self.preserve_rails = true;
         self
+    }
+
+    #[must_use]
+    pub(crate) const fn with_ray_random_factor(mut self, factor: f32) -> Self {
+        self.ray_random_factor = Some(factor);
+        self
+    }
+
+    fn initial_ray_energy(&self, random_factor: f32) -> f32 {
+        let factor = self.ray_random_factor.unwrap_or(random_factor);
+        self.power * factor.mul_add(0.6, 0.7)
     }
 
     fn protects_rail(&self, world: &World, pos: &BlockPos, block: &Block) -> bool {
@@ -268,8 +281,7 @@ impl Explosion {
                     let mut pos_y = self.pos.y;
                     let mut pos_z = self.pos.z;
 
-                    let random_val = rand::random::<f32>();
-                    let mut h = self.power * random_val.mul_add(0.6, 0.7);
+                    let mut h = self.initial_ray_energy(rand::random::<f32>());
 
                     while h > 0.0 {
                         let block_pos = BlockPos::floored(pos_x, pos_y, pos_z);
@@ -588,8 +600,9 @@ impl Explosion {
 
 #[cfg(test)]
 mod tests {
-    use super::Explosion;
+    use super::{BlockInteraction, Explosion};
     use verdantgolem_data::Block;
+    use verdantgolem_util::math::vector3::Vector3;
 
     #[test]
     fn tnt_minecart_rail_protection_covers_every_rail_type() {
@@ -602,5 +615,17 @@ mod tests {
             assert!(Explosion::is_rail(rail));
         }
         assert!(!Explosion::is_rail(&Block::STONE));
+    }
+
+    #[test]
+    fn fixed_ray_factor_does_not_replace_tnt_power() {
+        let position = Vector3::new(0.0, 0.0, 0.0);
+        let vanilla = Explosion::new(4.0, position, BlockInteraction::Destroy);
+        assert!((vanilla.initial_ray_energy(0.5) - 4.0).abs() < f32::EPSILON);
+
+        let fixed =
+            Explosion::new(4.0, position, BlockInteraction::Destroy).with_ray_random_factor(0.0);
+        assert!((fixed.initial_ray_energy(0.9) - 2.8).abs() < f32::EPSILON);
+        assert!((fixed.power - 4.0).abs() < f32::EPSILON);
     }
 }

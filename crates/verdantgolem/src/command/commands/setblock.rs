@@ -1,12 +1,13 @@
 use verdantgolem_util::text::TextComponent;
 use verdantgolem_world::world::BlockFlags;
 
-/// carpet rule fillUpdates: false makes /setblock skip neighbor updates.
-fn setblock_flags() -> BlockFlags {
-    if crate::carpet::values().fill_updates {
+/// Carpet rule `fillUpdates`: false also skips the new block's placement
+/// callback, matching Carpet's command-wide known-shape behavior.
+fn setblock_flags(fill_updates: bool) -> BlockFlags {
+    if fill_updates {
         BlockFlags::FORCE_STATE | BlockFlags::NOTIFY_NEIGHBORS
     } else {
-        BlockFlags::FORCE_STATE
+        BlockFlags::FORCE_STATE | BlockFlags::SKIP_BLOCK_ADDED_CALLBACK
     }
 }
 
@@ -51,6 +52,7 @@ impl CommandExecutor for Executor {
         let block = BlockArgumentConsumer::find_arg(args, ARG_BLOCK)?;
         let block_state_id = block.default_state.id;
         let mode = self.0;
+        let flags = setblock_flags(crate::carpet::values().fill_updates);
         let world = sender
             .world_or_first(server)
             .ok_or(CommandError::InvalidRequirement)?;
@@ -59,17 +61,17 @@ impl CommandExecutor for Executor {
         let success = match mode {
             Mode::Destroy => {
                 world.break_block(&pos, None, BlockFlags::SKIP_DROPS | BlockFlags::FORCE_STATE);
-                world.set_block_state(&pos, block_state_id, setblock_flags());
+                world.set_block_state(&pos, block_state_id, flags);
                 true
             }
             Mode::Replace => {
-                world.set_block_state(&pos, block_state_id, setblock_flags());
+                world.set_block_state(&pos, block_state_id, flags);
                 true
             }
             Mode::Keep => {
                 let old_state = world.get_block_state(&pos);
                 if old_state.is_air() {
-                    world.set_block_state(&pos, block_state_id, setblock_flags());
+                    world.set_block_state(&pos, block_state_id, flags);
                     true
                 } else {
                     false
@@ -113,4 +115,22 @@ pub fn init_command_tree() -> CommandTree {
                 .execute(Executor(Mode::Replace)),
         ),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::setblock_flags;
+    use verdantgolem_world::world::BlockFlags;
+
+    #[test]
+    fn disabled_updates_skip_added_callbacks() {
+        let normal = setblock_flags(true);
+        assert!(normal.contains(BlockFlags::NOTIFY_NEIGHBORS));
+        assert!(!normal.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+
+        let quiet = setblock_flags(false);
+        assert!(quiet.contains(BlockFlags::FORCE_STATE));
+        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
+    }
 }

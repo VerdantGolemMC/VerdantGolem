@@ -215,10 +215,11 @@ impl CommandExecutor for JumpExecutor {
         Box::pin(async move {
             let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
             let player = fake_player::get(name).ok_or_else(|| unknown(name))?;
-            let entity = &player.living_entity.entity;
-            let mut velocity = entity.velocity.load();
-            velocity.y = 0.42;
-            entity.velocity.store(velocity);
+            if !player.jump_local().await {
+                return Err(text_error(format!(
+                    "Fake player {name} cannot jump while airborne"
+                )));
+            }
             sender
                 .send_message(TextComponent::text(format!("{name} jumped")))
                 .await;
@@ -356,6 +357,8 @@ mod tests {
         assert!(fake_player::valid_name("Steve"));
         assert!(fake_player::valid_name("farm_bot_1"));
         assert!(!fake_player::valid_name("a"));
+        assert!(!fake_player::valid_name("ab"));
+        assert!(!fake_player::valid_name("fake-player"));
         assert!(!fake_player::valid_name("this_name_is_way_too_long"));
         assert!(!fake_player::valid_name("bad name!"));
     }

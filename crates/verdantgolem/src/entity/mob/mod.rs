@@ -1245,6 +1245,10 @@ impl<T: Mob + Send + 'static> EntityBase for T {
         Some(&self.get_mob_entity().living_entity)
     }
 
+    fn is_pushable(&self) -> bool {
+        self.get_mob_entity().living_entity.is_pushable()
+    }
+
     fn cast_any(&self) -> &dyn std::any::Any {
         self
     }

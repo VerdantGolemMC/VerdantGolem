@@ -5,9 +5,15 @@
 //! 每条规则都必须在真实游戏逻辑中接线；没有接线的规则不允许出现在目录里。
 
 use std::{
+    collections::BTreeMap,
     fmt,
+    io::Write as _,
+    path::Path,
     path::PathBuf,
-    sync::{LazyLock, OnceLock, RwLock, RwLockReadGuard},
+    sync::{
+        LazyLock, Mutex, OnceLock, RwLock, RwLockReadGuard,
+        atomic::{AtomicU64, Ordering},
+    },
 };
 
 use serde::{Deserialize, Serialize};
@@ -163,6 +169,26 @@ impl RuleDef {
                 "rule {} expects a {} value",
                 self.name,
                 self.kind.name()
+            ));
+        }
+        if let RuleValue::Float(number) = value
+            && !number.is_finite()
+        {
+            return Err(format!("rule {} requires a finite number", self.name));
+        }
+        if matches!(self.name, "tntRandomRange" | "hardcodeTNTangle") {
+            let number = value.as_float();
+            if number != -1.0 && number < 0.0 {
+                return Err(format!(
+                    "rule {} must be -1 or a non-negative number",
+                    self.name
+                ));
+            }
+        }
+        if self.name == "hardcodeTNTangle" && value.as_float() >= std::f64::consts::TAU {
+            return Err(format!(
+                "rule {} must be -1 or in the range [0, 2pi)",
+                self.name
             ));
         }
         if let Some(min) = self.min
@@ -326,7 +352,7 @@ carpet_rules! {
         kind: Bool,
         default: RuleValue::Bool(false),
         field: tnt_do_not_update,
-        desc: "TNT ignited by block updates stays sleeping instead of priming.",
+        desc: "TNT placed next to an existing power source does not prime during placement.",
     };
     TntRandomRange => {
         name: "tntRandomRange",
@@ -335,7 +361,7 @@ carpet_rules! {
         default: RuleValue::Float(-1.0),
         min: -1.0,
         field: tnt_random_range,
-        desc: "Fixed TNT explosion radius (-1 keeps vanilla randomness).",
+        desc: "Fixed TNT explosion ray random factor (-1 keeps vanilla randomness).",
     };
     HardcodeTntAngle => {
         name: "hardcodeTNTangle",
@@ -452,6 +478,7 @@ carpet_rules! {
         kind: Float,
         default: RuleValue::Float(0.003),
         min: 0.0,
+        max: 1.0,
         field: momentum_clamp_threshold,
         desc: "Momentum below this is zeroed; 0 disables the vanilla clamp.",
     };
@@ -469,6 +496,7 @@ carpet_rules! {
         kind: Float,
         default: RuleValue::Float(1.0),
         min: 0.0,
+        max: 1_000.0,
         field: mob_cap_multiplier,
         desc: "Multiplier applied to the global mob cap formula.",
     };
@@ -534,6 +562,7 @@ carpet_rules! {
 pub struct CarpetRules {
     values: RwLock<RuleValues>,
     path: OnceLock<PathBuf>,
+    persist_lock: Mutex<()>,
 }
 
 impl CarpetRules {
@@ -543,6 +572,7 @@ impl CarpetRules {
         static GLOBAL: LazyLock<CarpetRules> = LazyLock::new(|| CarpetRules {
             values: RwLock::new(RuleValues::default()),
             path: OnceLock::new(),
+            persist_lock: Mutex::new(()),
         });
         &GLOBAL
     }
@@ -550,27 +580,63 @@ impl CarpetRules {
     /// Loads persisted rule values from `path` (falling back to defaults for missing
     /// entries) and remembers the path for later [`CarpetRules::set`] writes.
     pub fn init(&self, path: PathBuf) {
-        let mut values = RuleValues::default();
-        if let Ok(raw) = std::fs::read_to_string(&path)
-            && let Ok(saved) =
-                serde_json::from_str::<std::collections::BTreeMap<String, serde_json::Value>>(&raw)
+        if let Some(existing) = self.path.get()
+            && existing != &path
         {
-            for (name, raw_value) in saved {
-                // Entries that fail to parse as a rule value are dropped, not fatal.
-                if let (Some(rule), Ok(value)) = (
-                    Rule::from_name(&name),
-                    serde_json::from_value::<RuleValue>(raw_value),
-                ) && rule.def().validate(value).is_ok()
-                {
-                    values.write(rule, value);
+            tracing::error!(
+                "Refusing to reinitialize carpet rules from {} because {} is already active",
+                path.display(),
+                existing.display()
+            );
+            return;
+        }
+        let _ = self.path.set(path.clone());
+
+        let mut values = RuleValues::default();
+        let should_persist = match std::fs::read_to_string(&path) {
+            Ok(raw) => match serde_json::from_str::<BTreeMap<String, serde_json::Value>>(&raw) {
+                Ok(saved) => {
+                    for (name, raw_value) in saved {
+                        // Entries that fail validation are dropped without affecting other rules.
+                        if let Some(rule) = Rule::from_name(&name)
+                            && let Ok(value) = Self::value_from_json(rule, &raw_value)
+                            && rule.def().validate(value).is_ok()
+                        {
+                            values.write(rule, value);
+                        }
+                    }
+                    true
                 }
+                Err(error) => {
+                    tracing::error!(
+                        "Failed to parse {}: {error}; preserving the damaged file and using defaults",
+                        path.display()
+                    );
+                    false
+                }
+            },
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => true,
+            Err(error) => {
+                tracing::error!(
+                    "Failed to read {}: {error}; preserving the file and using defaults",
+                    path.display()
+                );
+                false
             }
+        };
+
+        let _persist_guard = self
+            .persist_lock
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut current = self
+            .values
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        *current = values;
+        if should_persist && let Err(error) = self.persist_values(&current) {
+            tracing::error!("Failed to persist carpet rules: {error}");
         }
-        if let Ok(mut current) = self.values.write() {
-            *current = values;
-        }
-        _ = self.path.set(path);
-        self.persist();
     }
 
     /// Current values snapshot guard.
@@ -587,41 +653,107 @@ impl CarpetRules {
     /// Validates `value` against the rule metadata, applies it and persists the store.
     pub fn set(&self, rule: Rule, value: RuleValue) -> Result<(), String> {
         rule.def().validate(value)?;
+        let _persist_guard = self
+            .persist_lock
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut values = self
             .values
             .write()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let previous = values.read(rule);
         values.write(rule, value);
-        drop(values);
-        self.persist();
+        if let Err(error) = self.persist_values(&values) {
+            values.write(rule, previous);
+            return Err(error);
+        }
         Ok(())
     }
 
     /// Resets one rule to its default value.
-    pub fn reset(&self, rule: Rule) {
-        _ = self.set(rule, rule.def().default);
+    pub fn reset(&self, rule: Rule) -> Result<(), String> {
+        self.set(rule, rule.def().default)
     }
 
-    fn persist(&self) {
-        let Some(path) = self.path.get() else {
-            return;
+    fn value_from_json(rule: Rule, raw: &serde_json::Value) -> Result<RuleValue, String> {
+        let value = match rule.def().kind {
+            ValueKind::Bool => raw.as_bool().map(RuleValue::Bool),
+            ValueKind::Int => raw.as_i64().map(RuleValue::Int),
+            // `as_f64` intentionally accepts both integer and floating-point JSON numbers.
+            ValueKind::Float => raw.as_f64().map(RuleValue::Float),
         };
-        let saved: std::collections::BTreeMap<String, RuleValue> = Rule::ALL
+        value.ok_or_else(|| {
+            format!(
+                "rule {} expects a {} value",
+                rule.def().name,
+                rule.def().kind.name()
+            )
+        })
+    }
+
+    fn persist_values(&self, values: &RuleValues) -> Result<(), String> {
+        let Some(path) = self.path.get() else {
+            return Ok(());
+        };
+        let saved: BTreeMap<String, RuleValue> = Rule::ALL
             .iter()
             .copied()
-            .map(|rule| (rule.def().name.to_string(), self.get(rule)))
+            .map(|rule| (rule.def().name.to_string(), values.read(rule)))
             .collect();
-        if let Ok(json) = serde_json::to_string_pretty(&saved)
-            && let Err(error) = std::fs::write(path, json)
-        {
-            _ = error; // rule application must not fail because the disk hiccups
+        let mut json = serde_json::to_vec_pretty(&saved)
+            .map_err(|error| format!("failed to serialize carpet rules: {error}"))?;
+        json.push(b'\n');
+        Self::atomic_write(path, &json)
+    }
+
+    fn atomic_write(path: &Path, contents: &[u8]) -> Result<(), String> {
+        static NEXT_TEMP_ID: AtomicU64 = AtomicU64::new(0);
+
+        let parent = path.parent().unwrap_or_else(|| Path::new("."));
+        let file_name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .ok_or_else(|| format!("invalid carpet rule path: {}", path.display()))?;
+        let temp_id = NEXT_TEMP_ID.fetch_add(1, Ordering::Relaxed);
+        let temp_path = parent.join(format!(
+            ".{file_name}.{}.{}.tmp",
+            std::process::id(),
+            temp_id
+        ));
+
+        let result = (|| -> std::io::Result<()> {
+            let mut file = std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&temp_path)?;
+            file.write_all(contents)?;
+            file.sync_all()?;
+            drop(file);
+            std::fs::rename(&temp_path, path)
+        })();
+
+        if let Err(error) = result {
+            let _ = std::fs::remove_file(&temp_path);
+            return Err(format!(
+                "failed to atomically write {}: {error}",
+                path.display()
+            ));
         }
+        Ok(())
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn rules_without_path() -> CarpetRules {
+        CarpetRules {
+            values: RwLock::new(RuleValues::default()),
+            path: OnceLock::new(),
+            persist_lock: Mutex::new(()),
+        }
+    }
 
     #[test]
     fn catalog_is_unique_and_complete() {
@@ -642,10 +774,7 @@ mod tests {
 
     #[test]
     fn set_validates_kind_and_bounds() {
-        let rules = CarpetRules {
-            values: RwLock::new(RuleValues::default()),
-            path: OnceLock::new(),
-        };
+        let rules = rules_without_path();
 
         let rule = Rule::FillLimit;
         assert!(rules.set(rule, RuleValue::Int(100)).is_ok());
@@ -660,8 +789,53 @@ mod tests {
         assert!(rules.set(rule, RuleValue::Float(1.5)).is_ok());
         assert!(rules.set(rule, RuleValue::Float(7.0)).is_err(), "above max");
 
-        rules.reset(rule);
+        assert!(rules.reset(rule).is_ok());
         assert_eq!(rules.get(rule), rule.def().default);
+    }
+
+    #[test]
+    fn rejects_non_finite_and_invalid_tnt_float_values() {
+        let rules = rules_without_path();
+
+        for value in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+            assert!(
+                rules
+                    .set(Rule::MobCapMultiplier, RuleValue::Float(value))
+                    .is_err()
+            );
+        }
+        assert!(
+            rules
+                .set(Rule::MomentumClampThreshold, RuleValue::Float(1.01))
+                .is_err()
+        );
+        assert!(
+            rules
+                .set(Rule::MobCapMultiplier, RuleValue::Float(1_001.0))
+                .is_err()
+        );
+        assert!(
+            rules
+                .set(Rule::TntRandomRange, RuleValue::Float(-0.5))
+                .is_err()
+        );
+        for value in [-0.5, std::f64::consts::TAU] {
+            assert!(
+                rules
+                    .set(Rule::HardcodeTntAngle, RuleValue::Float(value))
+                    .is_err()
+            );
+        }
+        assert!(
+            rules
+                .set(Rule::TntRandomRange, RuleValue::Float(1.5))
+                .is_ok()
+        );
+        assert!(
+            rules
+                .set(Rule::HardcodeTntAngle, RuleValue::Float(0.0))
+                .is_ok()
+        );
     }
 
     #[test]
@@ -674,10 +848,7 @@ mod tests {
             "{\"fillLimit\": 512, \"unknownRule\": true, \"xpNoCooldown\": \"yes\"}",
         );
 
-        let rules = CarpetRules {
-            values: RwLock::new(RuleValues::default()),
-            path: OnceLock::new(),
-        };
+        let rules = rules_without_path();
         rules.init(path.clone());
 
         assert_eq!(rules.get(Rule::FillLimit), RuleValue::Int(512));
@@ -689,5 +860,79 @@ mod tests {
         assert!(raw.contains("\"fillLimit\": 512"));
         assert!(!raw.contains("unknownRule"));
         _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn init_accepts_integer_json_for_float_rules() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("carpet_rules.json");
+        std::fs::write(&path, r#"{"mobCapMultiplier": 2}"#)?;
+
+        let rules = rules_without_path();
+        rules.init(path.clone());
+
+        assert_eq!(rules.get(Rule::MobCapMultiplier), RuleValue::Float(2.0));
+        let saved = std::fs::read_to_string(path)?;
+        assert!(saved.contains(r#""mobCapMultiplier": 2.0"#));
+        Ok(())
+    }
+
+    #[test]
+    fn malformed_rule_file_is_preserved() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("carpet_rules.json");
+        let malformed = "{ definitely not json";
+        std::fs::write(&path, malformed)?;
+
+        let rules = rules_without_path();
+        rules.init(path.clone());
+
+        assert_eq!(rules.get(Rule::MobCapMultiplier), RuleValue::Float(1.0));
+        assert_eq!(std::fs::read_to_string(path)?, malformed);
+        Ok(())
+    }
+
+    #[test]
+    fn failed_persistence_rolls_back_runtime_value() -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let missing_parent = dir.path().join("missing");
+        let path = missing_parent.join("carpet_rules.json");
+        let rules = rules_without_path();
+        rules.init(path);
+
+        let result = rules.set(Rule::FillLimit, RuleValue::Int(100));
+        assert!(result.is_err());
+        assert_eq!(rules.get(Rule::FillLimit), RuleValue::Int(32_768));
+        Ok(())
+    }
+
+    #[test]
+    fn concurrent_rule_updates_share_one_persisted_snapshot()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let dir = tempfile::tempdir()?;
+        let path = dir.path().join("carpet_rules.json");
+        let rules = std::sync::Arc::new(rules_without_path());
+        rules.init(path.clone());
+
+        let first = rules.clone();
+        let first_update =
+            std::thread::spawn(move || first.set(Rule::FillLimit, RuleValue::Int(100_000)));
+        let second = rules.clone();
+        let second_update =
+            std::thread::spawn(move || second.set(Rule::MobCapMultiplier, RuleValue::Float(2.0)));
+        first_update
+            .join()
+            .map_err(|_| std::io::Error::other("first update thread panicked"))?
+            .map_err(std::io::Error::other)?;
+        second_update
+            .join()
+            .map_err(|_| std::io::Error::other("second update thread panicked"))?
+            .map_err(std::io::Error::other)?;
+
+        let saved: BTreeMap<String, serde_json::Value> =
+            serde_json::from_str(&std::fs::read_to_string(path)?)?;
+        assert_eq!(saved.get("fillLimit"), Some(&serde_json::json!(100_000)));
+        assert_eq!(saved.get("mobCapMultiplier"), Some(&serde_json::json!(2.0)));
+        Ok(())
     }
 }

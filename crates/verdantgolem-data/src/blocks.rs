@@ -217,13 +217,139 @@ impl Block {
     }
 
     #[must_use]
-    pub const fn rotate(
+    pub fn rotate(
         &self,
         id: BlockStateId,
-        _rotation: crate::block_rotation::Rotation,
+        rotation: crate::block_rotation::Rotation,
     ) -> &'static BlockState {
-        BlockState::from_id(id)
+        use crate::block_rotation::Rotation;
+
+        if rotation == Rotation::None {
+            return BlockState::from_id(id);
+        }
+
+        let Some(properties) = self.properties(id) else {
+            return BlockState::from_id(id);
+        };
+        let mut changed = false;
+        let mut props = properties
+            .to_props()
+            .into_iter()
+            .map(|(key, value)| (key.to_owned(), value.to_owned()))
+            .collect::<Vec<_>>();
+
+        for (key, value) in &mut props {
+            let rotated = match key.as_str() {
+                "facing" if matches!(value.as_str(), "north" | "south" | "east" | "west") => {
+                    Some(rotation.rotate_facing(value).to_owned())
+                }
+                "axis" if matches!(value.as_str(), "x" | "z") => {
+                    Some(rotation.rotate_axis(value).to_owned())
+                }
+                "rotation" => value
+                    .parse::<i32>()
+                    .ok()
+                    .map(|value| rotation.rotate_block_rotation(value).to_string()),
+                "shape" => rotate_rail_shape(value, rotation).map(str::to_owned),
+                "orientation" => rotate_orientation(value, rotation),
+                _ => None,
+            };
+            if let Some(rotated) = rotated
+                && rotated != *value
+            {
+                *value = rotated;
+                changed = true;
+            }
+        }
+
+        // Connection-like blocks encode directions in property names rather
+        // than values (for example `north=true` on fences and `west=low` on
+        // walls), so rotate the four keys as one permutation as well.
+        for (key, _) in &mut props {
+            if matches!(key.as_str(), "north" | "south" | "east" | "west") {
+                let rotated = rotation.rotate_facing(key).to_owned();
+                if rotated != *key {
+                    *key = rotated;
+                    changed = true;
+                }
+            }
+        }
+
+        if !changed {
+            return BlockState::from_id(id);
+        }
+        let borrowed = props
+            .iter()
+            .map(|(key, value)| (key.as_str(), value.as_str()))
+            .collect::<Vec<_>>();
+        BlockState::from_id(self.from_properties(&borrowed).to_state_id(self))
     }
+}
+
+fn rotate_orientation(
+    orientation: &str,
+    rotation: crate::block_rotation::Rotation,
+) -> Option<String> {
+    fn rotate_component(
+        component: &str,
+        rotation: crate::block_rotation::Rotation,
+    ) -> Option<&str> {
+        match component {
+            "north" | "south" | "east" | "west" => Some(rotation.rotate_facing(component)),
+            "up" | "down" => Some(component),
+            _ => None,
+        }
+    }
+
+    let (first, second) = orientation.split_once('_')?;
+    Some(format!(
+        "{}_{}",
+        rotate_component(first, rotation)?,
+        rotate_component(second, rotation)?
+    ))
+}
+
+fn rotate_rail_shape(
+    shape: &str,
+    rotation: crate::block_rotation::Rotation,
+) -> Option<&'static str> {
+    use crate::block_rotation::Rotation;
+
+    let steps = match rotation {
+        Rotation::None => 0,
+        Rotation::Clockwise90 => 1,
+        Rotation::Rotate180 => 2,
+        Rotation::CounterClockwise90 => 3,
+    };
+    let mut shape = match shape {
+        "north_south" => "north_south",
+        "east_west" => "east_west",
+        "ascending_east" => "ascending_east",
+        "ascending_west" => "ascending_west",
+        "ascending_north" => "ascending_north",
+        "ascending_south" => "ascending_south",
+        "south_east" => "south_east",
+        "south_west" => "south_west",
+        "north_west" => "north_west",
+        "north_east" => "north_east",
+        _ => return None,
+    };
+    for _ in 0..steps {
+        shape = match shape {
+            "north_south" => "east_west",
+            "east_west" => "north_south",
+            "ascending_east" => "ascending_south",
+            "ascending_south" => "ascending_west",
+            "ascending_west" => "ascending_north",
+            "ascending_north" => "ascending_east",
+            "south_east" => "south_west",
+            "south_west" => "north_west",
+            "north_west" => "north_east",
+            "north_east" => "south_east",
+            _ => return None,
+        };
+    }
+    Some(shape)
 }
 
 #[derive(Clone, Copy)]
@@ -328,6 +454,7 @@ pub struct Flammable {
 #[cfg(test)]
 mod tests {
     use super::{Block, BlockId, ShapeOffsetType};
+    use crate::block_rotation::Rotation;
     use verdantgolem_util::math::position::BlockPos;
 
     fn assert_close(actual: f64, expected: f64) {
@@ -397,5 +524,41 @@ mod tests {
         assert_eq!(xyz_delta.z, 0.5);
 
         assert_eq!(Block::STONE.shape_offset_delta(&positive_extreme).x, 0.0);
+    }
+
+    #[test]
+    fn rotates_directional_and_axis_block_states() {
+        let dispenser = Block::DISPENSER;
+        let north = dispenser.from_properties(&[("facing", "north"), ("triggered", "false")]);
+        let rotated = dispenser.rotate(north.to_state_id(dispenser), Rotation::CounterClockwise90);
+        let rotated_props = dispenser.properties(rotated.id).unwrap().to_props();
+        assert!(rotated_props.contains(&("facing", "west")));
+
+        let oak_log = Block::OAK_LOG;
+        let x_axis = oak_log.from_properties(&[("axis", "x")]);
+        let rotated = oak_log.rotate(x_axis.to_state_id(oak_log), Rotation::Clockwise90);
+        let rotated_props = oak_log.properties(rotated.id).unwrap().to_props();
+        assert!(rotated_props.contains(&("axis", "z")));
+    }
+
+    #[test]
+    fn rotates_connection_keys_and_orientation_values() {
+        let fence = Block::OAK_FENCE;
+        let north = fence.from_properties(&[
+            ("north", "true"),
+            ("east", "false"),
+            ("south", "false"),
+            ("west", "false"),
+        ]);
+        let rotated = fence.rotate(north.to_state_id(fence), Rotation::Clockwise90);
+        let rotated_props = fence.properties(rotated.id).unwrap().to_props();
+        assert!(rotated_props.contains(&("east", "true")));
+        assert!(rotated_props.contains(&("north", "false")));
+
+        let jigsaw = Block::JIGSAW;
+        let north_up = jigsaw.from_properties(&[("orientation", "north_up")]);
+        let rotated = jigsaw.rotate(north_up.to_state_id(jigsaw), Rotation::Clockwise90);
+        let rotated_props = jigsaw.properties(rotated.id).unwrap().to_props();
+        assert!(rotated_props.contains(&("orientation", "east_up")));
     }
 }

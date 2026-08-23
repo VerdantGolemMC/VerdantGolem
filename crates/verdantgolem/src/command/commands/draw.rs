@@ -10,6 +10,7 @@ use crate::command::tree::CommandTree;
 use crate::command::tree::builder::{argument, literal};
 use crate::command::{CommandExecutor, CommandResult, CommandSender};
 use verdantgolem_util::math::position::BlockPos;
+use verdantgolem_util::math::vector2::Vector2;
 use verdantgolem_world::world::BlockFlags;
 
 const NAMES: [&str; 1] = ["draw"];
@@ -27,11 +28,19 @@ struct DrawExecutor {
     filled: bool,
 }
 
+fn draw_flags(fill_updates: bool) -> BlockFlags {
+    if fill_updates {
+        BlockFlags::NOTIFY_ALL
+    } else {
+        BlockFlags::FORCE_STATE | BlockFlags::SKIP_BLOCK_ADDED_CALLBACK
+    }
+}
+
 impl CommandExecutor for DrawExecutor {
     fn execute<'a>(
         &'a self,
         sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
+        server: &'a crate::server::Server,
         args: &'a ConsumedArgs<'a>,
     ) -> CommandResult<'a> {
         Box::pin(async move {
@@ -48,16 +57,9 @@ impl CommandExecutor for DrawExecutor {
             }
             let block = BlockArgumentConsumer::find_arg(args, ARG_BLOCK)?;
 
-            // carpet rule fillUpdates also applies to /draw
-            let flags = if crate::carpet::values().fill_updates {
-                BlockFlags::FORCE_STATE | BlockFlags::NOTIFY_NEIGHBORS
-            } else {
-                BlockFlags::FORCE_STATE
-            };
-
             let radius_sq = f64::from(radius).powi(2);
             let shell_inner = (f64::from(radius) - 1.5).powi(2);
-            let mut placed = 0u32;
+            let mut targets = Vec::new();
             for dx in -radius..=radius {
                 for dy in -radius..=radius {
                     for dz in -radius..=radius {
@@ -70,15 +72,91 @@ impl CommandExecutor for DrawExecutor {
                         if !in_shape {
                             continue;
                         }
-                        let pos = BlockPos(center.0.add_raw(dx, dy, dz));
-                        let old = world.get_block_state(&pos);
-                        if old.is_air() {
-                            world
-                                .set_block_state(&pos, block.default_state.id, flags)
-                                .await;
-                            placed += 1;
-                        }
+                        let x = center
+                            .0
+                            .x
+                            .checked_add(dx)
+                            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+                        let y = center
+                            .0
+                            .y
+                            .checked_add(dy)
+                            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+                        let z = center
+                            .0
+                            .z
+                            .checked_add(dz)
+                            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+                        targets.push(BlockPos::new(x, y, z));
                     }
+                }
+            }
+
+            if targets.iter().any(|pos| !world.is_in_build_limit(*pos)) {
+                return Err(failed("shape is outside the world".to_string()));
+            }
+            let min_x = center
+                .0
+                .x
+                .checked_sub(radius)
+                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+            let max_x = center
+                .0
+                .x
+                .checked_add(radius)
+                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+            let min_z = center
+                .0
+                .z
+                .checked_sub(radius)
+                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+            let max_z = center
+                .0
+                .z
+                .checked_add(radius)
+                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+            for chunk_x in (min_x >> 4)..=(max_x >> 4) {
+                for chunk_z in (min_z >> 4)..=(max_z >> 4) {
+                    if world
+                        .level
+                        .read_chunk_sync(&Vector2::new(chunk_x, chunk_z), |_| ())
+                        .is_none()
+                    {
+                        return Err(failed(format!(
+                            "shape contains unloaded chunk [{chunk_x}, {chunk_z}]"
+                        )));
+                    }
+                }
+            }
+
+            let target_count = i64::try_from(targets.len()).unwrap_or(i64::MAX);
+            let fill_limit = crate::carpet::values().fill_limit.max(1);
+            if target_count > fill_limit {
+                return Err(failed(format!(
+                    "shape contains {target_count} blocks, exceeding fillLimit {fill_limit}"
+                )));
+            }
+            let vanilla_limit = server.level_info.load().game_rules.max_block_modifications;
+            if target_count > vanilla_limit {
+                return Err(failed(format!(
+                    "shape contains {target_count} blocks, exceeding max block modifications {vanilla_limit}"
+                )));
+            }
+
+            // Preserve the command's air-only placement semantics, but determine
+            // every real state change before the first write.
+            let target_state = block.default_state.id;
+            targets.retain(|pos| {
+                let old = world.get_block_state(pos);
+                old.is_air() && old.id != target_state
+            });
+
+            let flags = draw_flags(crate::carpet::values().fill_updates);
+            let mut placed = 0usize;
+            for pos in targets {
+                let replaced = world.set_block_state(&pos, target_state, flags).await;
+                if replaced != target_state {
+                    placed += 1;
                 }
             }
 
@@ -89,8 +167,23 @@ impl CommandExecutor for DrawExecutor {
                 )))
                 .await;
 
-            Ok(placed as i32)
+            Ok(i32::try_from(placed).unwrap_or(i32::MAX))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::draw_flags;
+    use verdantgolem_world::world::BlockFlags;
+
+    #[test]
+    fn fill_updates_controls_callbacks_and_notifications() {
+        assert_eq!(draw_flags(true), BlockFlags::NOTIFY_ALL);
+        let quiet = draw_flags(false);
+        assert!(quiet.contains(BlockFlags::FORCE_STATE));
+        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
     }
 }
 

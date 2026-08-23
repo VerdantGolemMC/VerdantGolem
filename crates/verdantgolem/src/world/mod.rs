@@ -155,7 +155,7 @@ use verdantgolem_world::{
     inventory::Inventory,
 };
 use verdantgolem_world::{chunk::ChunkData, world::BlockAccessor};
-use verdantgolem_world::{level::Level, tick::TickPriority};
+use verdantgolem_world::{chunk_system::ChunkLoading, level::Level, tick::TickPriority};
 pub use verdantgolem_world::{world::BlockFlags, world_info::LevelData};
 
 pub mod block_placer;
@@ -277,6 +277,8 @@ pub struct World {
     pub spawn_state: ArcSwap<SpawnState>,
     pub active_chunks: ArcSwap<FxHashSet<Vector2<i32>>>,
     pub forced_chunks: std::sync::Mutex<FxHashSet<Vector2<i32>>>,
+    /// The spawn ticket currently installed in the level chunk loader.
+    spawn_chunk_ticket: std::sync::Mutex<Option<(Vector2<i32>, i8)>>,
     /// Block entities indexed by chunk, so ticking only visits the currently
     /// active chunks instead of scanning every loaded block entity each tick.
     pub block_entities: DashMap<Vector2<i32>, FxHashMap<BlockPos, Arc<dyn BlockEntity>>>,
@@ -403,6 +405,7 @@ impl World {
             spawn_state: ArcSwap::new(Arc::new(SpawnState::empty())),
             active_chunks: ArcSwap::new(Arc::new(FxHashSet::default())),
             forced_chunks: std::sync::Mutex::new(FxHashSet::default()),
+            spawn_chunk_ticket: std::sync::Mutex::new(None),
             server,
             block_entities: DashMap::new(),
             custom_data: std::sync::Mutex::new(custom_data),
@@ -410,7 +413,8 @@ impl World {
         }
     }
 
-    pub fn update_active_chunks(&self) {
+    pub fn update_active_chunks(self: &Arc<Self>) {
+        const VANILLA_SPAWN_CHUNK_RADIUS: i64 = 2;
         let mut active_chunks = FxHashSet::default();
         let sim_dist = self.server.upgrade().map_or(10, |s| {
             s.advanced_config.networking.java.simulation_distance.get()
@@ -434,18 +438,32 @@ impl World {
             active_chunks.extend(forced.iter().copied());
         }
 
-        // carpet rule spawnChunkRadius keeps spawn chunks active without players
-        let spawn_radius = crate::carpet::values().spawn_chunk_radius;
-        if spawn_radius > 0 {
+        // Carpet's value 0 delegates to the vanilla spawn-chunk radius. A real
+        // loading ticket is required in addition to adding chunks to the ticking
+        // set; otherwise unloaded spawn chunks never become active.
+        let configured_spawn_radius = crate::carpet::values().spawn_chunk_radius;
+        let spawn_radius = if configured_spawn_radius == 0 {
+            VANILLA_SPAWN_CHUNK_RADIUS
+        } else {
+            configured_spawn_radius
+        }
+        .clamp(0, 32) as i32;
+        let spawn_ticket = if self.dimension == Dimension::OVERWORLD && spawn_radius > 0 {
             let level_info = self.level_info.load();
             let spawn_chunk = Vector2::new(level_info.spawn_x >> 4, level_info.spawn_z >> 4);
-            let spawn_radius = (spawn_radius.min(32)) as i32;
             for dx in -spawn_radius..=spawn_radius {
                 for dy in -spawn_radius..=spawn_radius {
                     active_chunks.insert(spawn_chunk.add_raw(dx, dy));
                 }
             }
-        }
+            Some((
+                spawn_chunk,
+                ChunkLoading::FULL_CHUNK_LEVEL - spawn_radius as i8,
+            ))
+        } else {
+            None
+        };
+        self.update_spawn_chunk_ticket(spawn_ticket);
 
         let mut spawnable_chunks = 0;
         for pos in &active_chunks {
@@ -462,6 +480,30 @@ impl World {
             &self.entities,
             self,
         )));
+    }
+
+    fn update_spawn_chunk_ticket(&self, desired: Option<(Vector2<i32>, i8)>) {
+        let mut current = self
+            .spawn_chunk_ticket
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if *current == desired {
+            return;
+        }
+
+        let mut loading = self
+            .level
+            .chunk_loading
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if let Some((position, level)) = current.take() {
+            loading.remove_ticket(position, level);
+        }
+        if let Some((position, level)) = desired {
+            loading.add_ticket(position, level);
+            *current = Some((position, level));
+        }
+        loading.send_change();
     }
 
     pub fn get_lighting_config(&self) -> LightingEngineConfig {
@@ -2165,7 +2207,10 @@ impl World {
             is_thundering,
         );
         for entity in entities {
-            self.spawn_entity_non_save(entity);
+            let entity_type = entity.get_entity().entity_type;
+            if self.spawn_entity(entity) {
+                crate::carpet::spawn_tracking::record(self.dimension.minecraft_name, entity_type);
+            }
         }
     }
 
@@ -4025,6 +4070,21 @@ impl World {
         self.run_explosion(&explosion, position, power);
     }
 
+    /// Runs a TNT explosion while optionally replacing only its per-ray random factor.
+    pub(crate) fn explode_tnt_with_random_factor(
+        self: &Arc<Self>,
+        position: Vector3<f64>,
+        power: f32,
+        random_factor: Option<f32>,
+    ) {
+        let block_interaction = self.get_block_interaction(ExplosionInteraction::Tnt);
+        let mut explosion = Explosion::new(power, position, block_interaction);
+        if let Some(factor) = random_factor {
+            explosion = explosion.with_ray_random_factor(factor);
+        }
+        self.run_explosion(&explosion, position, power);
+    }
+
     pub fn explode_tnt_minecart(self: &Arc<Self>, position: Vector3<f64>, power: f32) {
         let block_interaction = self.get_block_interaction(ExplosionInteraction::Tnt);
         let explosion = Explosion::new(power, position, block_interaction).preserving_rails();
@@ -4971,7 +5031,9 @@ impl World {
         });
     }
 
-    pub fn spawn_entity(self: &Arc<Self>, entity: Arc<dyn EntityBase>) {
+    /// Runs the entity-spawn event and inserts the entity when it is accepted.
+    /// Returns whether the entity reached the world's live entity collection.
+    pub fn spawn_entity(self: &Arc<Self>, entity: Arc<dyn EntityBase>) -> bool {
         let mut event = crate::plugin::api::events::entity::entity_spawn::EntitySpawnEvent::new(
             entity.get_entity().entity_id,
             entity.get_entity().entity_type.id.to_string(),
@@ -4982,12 +5044,13 @@ impl World {
             server.plugin_manager.fire_blocking(&server, &mut event);
         }
         if event.cancelled {
-            return;
+            return false;
         }
 
         self.broadcast_entity_spawn(&entity);
         entity.init_data_tracker();
         self.add_entity_silent(entity);
+        true
     }
 
     pub fn broadcast_entity_spawn(&self, entity: &Arc<dyn EntityBase>) {

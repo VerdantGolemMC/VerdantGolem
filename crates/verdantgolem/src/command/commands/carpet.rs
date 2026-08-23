@@ -76,9 +76,15 @@ impl CommandExecutor for ListExecutor {
         args: &'a ConsumedArgs<'a>,
     ) -> CommandResult<'a> {
         Box::pin(async move {
-            let category = SimpleArgConsumer::find_arg(args, ARG_CATEGORY)
-                .ok()
-                .and_then(RuleCategory::from_name);
+            let category = if args.contains_key(ARG_CATEGORY) {
+                let name = SimpleArgConsumer::find_arg(args, ARG_CATEGORY)?;
+                Some(
+                    parse_category(name)
+                        .map_err(|error| CommandError::CommandFailed(TextComponent::text(error)))?,
+                )
+            } else {
+                None
+            };
             let heading = category.map_or_else(
                 || "All carpet rules".to_string(),
                 |category| format!("Carpet rules in category {category}"),
@@ -176,7 +182,12 @@ impl CommandExecutor for ResetExecutor {
             };
 
             let rules = CarpetRules::global();
-            rules.reset(rule);
+            if let Err(error) = rules.reset(rule) {
+                return Err(CommandError::CommandFailed(TextComponent::text(format!(
+                    "Failed to reset {}: {error}",
+                    rule.def().name
+                ))));
+            }
             sender
                 .send_message(TextComponent::text(format!(
                     "Reset rule {} to default {}",
@@ -202,11 +213,20 @@ pub fn parse_value(kind: ValueKind, raw: &str) -> Result<RuleValue, String> {
             .parse::<i64>()
             .map(RuleValue::Int)
             .map_err(|_| format!("expected an integer, got {raw}")),
-        ValueKind::Float => raw
-            .parse::<f64>()
-            .map(RuleValue::Float)
-            .map_err(|_| format!("expected a number, got {raw}")),
+        ValueKind::Float => {
+            let value = raw
+                .parse::<f64>()
+                .map_err(|_| format!("expected a number, got {raw}"))?;
+            if !value.is_finite() {
+                return Err(format!("expected a finite number, got {raw}"));
+            }
+            Ok(RuleValue::Float(value))
+        }
     }
+}
+
+fn parse_category(raw: &str) -> Result<RuleCategory, String> {
+    RuleCategory::from_name(raw).ok_or_else(|| format!("Unknown carpet rule category: {raw}"))
 }
 
 pub fn init_command_tree() -> CommandTree {
@@ -251,5 +271,14 @@ mod tests {
             parse_value(ValueKind::Float, "1.5"),
             Ok(RuleValue::Float(1.5))
         );
+        for value in ["NaN", "inf", "-inf", "1e400"] {
+            assert!(parse_value(ValueKind::Float, value).is_err());
+        }
+    }
+
+    #[test]
+    fn categories_reject_unknown_names() {
+        assert_eq!(parse_category("feature"), Ok(RuleCategory::Feature));
+        assert!(parse_category("features").is_err());
     }
 }

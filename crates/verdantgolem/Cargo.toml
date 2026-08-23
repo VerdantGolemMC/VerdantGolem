@@ -34,6 +34,7 @@ verdantgolem-codecs.workspace = true
 dashmap.workspace = true
 crossbeam.workspace = true
 uuid.workspace = true
+md5.workspace = true
 tokio = { workspace = true, features = [
     "macros",
     "net",

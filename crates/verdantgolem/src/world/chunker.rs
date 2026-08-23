@@ -53,6 +53,8 @@ pub fn update_position(player: &Arc<Player>) {
     // }
 
     let view_distance = get_view_distance(player);
+    let loads_chunks = player.gamemode.load() != verdantgolem_util::GameMode::Creative
+        || crate::carpet::values().creative_players_load_chunks;
     let new_cylindrical = Cylindrical::new(new_chunk_center, view_distance);
 
     if old_cylindrical == new_cylindrical {
@@ -95,6 +97,7 @@ pub fn update_position(player: &Arc<Player>) {
             &world.level,
             &loading_chunks,
             &unloading_chunks,
+            loads_chunks,
         );
         world
     };
@@ -136,4 +139,15 @@ pub fn update_position(player: &Arc<Player>) {
     if !loading_chunks.is_empty() {
         world.spawn_world_entity_chunks(player.clone(), loading_chunks, new_chunk_center);
     }
+}
+
+/// Applies live chunk-loading rule changes even while a player is stationary.
+pub fn refresh_loading_tickets(player: &Player) {
+    let enabled = player.gamemode.load() != verdantgolem_util::GameMode::Creative
+        || crate::carpet::values().creative_players_load_chunks;
+    player
+        .chunk_manager
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .set_loading_tickets_enabled(enabled);
 }

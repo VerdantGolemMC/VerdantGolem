@@ -46,7 +46,8 @@ pub fn add(channel: usize, item_key: &str, count: u64) {
     if let Ok(mut counters) = COUNTERS.lock()
         && let Some(items) = counters.get_mut(channel)
     {
-        *items.entry(item_key.to_string()).or_insert(0) += count;
+        let total = items.entry(item_key.to_string()).or_insert(0);
+        *total = total.saturating_add(count);
     }
 }
 
@@ -67,7 +68,9 @@ pub fn snapshot(channel: usize) -> Vec<(String, u64)> {
 /// Total items counted on one channel.
 #[must_use]
 pub fn total(channel: usize) -> u64 {
-    snapshot(channel).iter().map(|(_, count)| count).sum()
+    snapshot(channel)
+        .iter()
+        .fold(0_u64, |sum, (_, count)| sum.saturating_add(*count))
 }
 
 /// Resets one channel, or every channel when `channel` is `None`.
@@ -110,7 +113,11 @@ pub fn channel_from_name(name: &str) -> Option<usize> {
     CHANNEL_NAMES
         .iter()
         .position(|candidate| *candidate == name)
-        .or_else(|| name.strip_prefix('#').and_then(|i| i.parse::<usize>().ok()))
+        .or_else(|| {
+            name.strip_prefix('#')
+                .and_then(|i| i.parse::<usize>().ok())
+                .filter(|index| *index < CHANNEL_NAMES.len())
+        })
 }
 
 #[cfg(test)]
@@ -123,6 +130,8 @@ mod tests {
             assert_eq!(channel_from_name(name), Some(index));
         }
         assert_eq!(channel_from_name("#3"), Some(3));
+        assert_eq!(channel_from_name("#15"), Some(15));
+        assert_eq!(channel_from_name("#16"), None);
         assert_eq!(channel_from_name("diamond"), None);
     }
 
@@ -170,5 +179,18 @@ mod tests {
         reset(Some(channel));
         assert_eq!(total(channel), 0);
         assert!(snapshot(channel).is_empty());
+    }
+
+    #[test]
+    fn counter_arithmetic_saturates() {
+        let channel = channel_from_name("black").unwrap_or(15);
+        reset(Some(channel));
+        add(channel, "minecraft:stone", u64::MAX);
+        add(channel, "minecraft:stone", 1);
+        add(channel, "minecraft:dirt", 1);
+
+        assert_eq!(snapshot(channel)[0].1, u64::MAX);
+        assert_eq!(total(channel), u64::MAX);
+        reset(Some(channel));
     }
 }

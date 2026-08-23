@@ -15,6 +15,16 @@ const DESCRIPTION: &str = "Reads or resets the wool hopper counters.";
 /// How many items to show per channel before truncating.
 const MAX_ITEMS_SHOWN: usize = 10;
 
+fn command_count(value: u64) -> i32 {
+    i32::try_from(value).unwrap_or(i32::MAX)
+}
+
+fn item_total(items: &[(String, u64)]) -> u64 {
+    items
+        .iter()
+        .fold(0_u64, |sum, (_, count)| sum.saturating_add(*count))
+}
+
 struct AllChannelsExecutor;
 
 impl CommandExecutor for AllChannelsExecutor {
@@ -27,9 +37,9 @@ impl CommandExecutor for AllChannelsExecutor {
         Box::pin(async move {
             let mut summary = String::from("Hopper counters:");
             for (index, name) in counters::CHANNEL_NAMES.iter().enumerate() {
-                let total = counters::total(index);
+                let total = item_total(&counters::snapshot(index));
                 if total > 0 {
-                    let _ = writeln!(summary, "{name}: {total} items");
+                    let _ = write!(summary, "\n{name}: {total} items");
                 }
             }
             sender.send_message(TextComponent::text(summary)).await;
@@ -50,25 +60,42 @@ impl CommandExecutor for ChannelExecutor {
     ) -> CommandResult<'a> {
         Box::pin(async move {
             let items = counters::snapshot(self.0);
-            let total: u64 = items.iter().map(|(_, count)| count).sum();
+            let total = item_total(&items);
             let name = counters::CHANNEL_NAMES[self.0];
 
             let mut message = format!("{name}: {total} items total");
             for (item, count) in items.iter().take(MAX_ITEMS_SHOWN) {
-                let _ = writeln!(message, "{item}: {count}");
+                let _ = write!(message, "\n{item}: {count}");
             }
             if items.len() > MAX_ITEMS_SHOWN {
-                let _ = writeln!(
+                let _ = write!(
                     message,
-                    "... and {} more item types",
+                    "\n... and {} more item types",
                     items.len() - MAX_ITEMS_SHOWN
                 );
             }
 
             sender.send_message(TextComponent::text(message)).await;
 
-            Ok(total as i32)
+            Ok(command_count(total))
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{command_count, item_total};
+
+    #[test]
+    fn command_result_saturates_large_totals() {
+        assert_eq!(command_count(u64::MAX), i32::MAX);
+        assert_eq!(command_count(42), 42);
+    }
+
+    #[test]
+    fn displayed_total_saturates() {
+        let items = vec![("a".to_string(), u64::MAX), ("b".to_string(), 1)];
+        assert_eq!(item_total(&items), u64::MAX);
     }
 }
 

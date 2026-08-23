@@ -32,6 +32,22 @@ static ERROR_TOO_MANY: CommandErrorType<2> = CommandErrorType::new(
     "Too many chunks",
 );
 
+fn inclusive_chunk_area(min_x: i32, max_x: i32, min_z: i32, max_z: i32) -> Option<u64> {
+    let count_x = i64::from(max_x)
+        .checked_sub(i64::from(min_x))?
+        .checked_add(1)?;
+    let count_z = i64::from(max_z)
+        .checked_sub(i64::from(min_z))?
+        .checked_add(1)?;
+    let count_x = u64::try_from(count_x).ok()?;
+    let count_z = u64::try_from(count_z).ok()?;
+    count_x.checked_mul(count_z)
+}
+
+fn command_count(value: u64) -> i32 {
+    i32::try_from(value).unwrap_or(i32::MAX)
+}
+
 struct ForceloadAddExecutor;
 
 impl CommandExecutor for ForceloadAddExecutor {
@@ -61,13 +77,11 @@ impl CommandExecutor for ForceloadAddExecutor {
         let min_z = chunk_z_start.min(chunk_z_end);
         let max_z = chunk_z_start.max(chunk_z_end);
 
-        let count_x = max_x - min_x + 1;
-        let count_z = max_z - min_z + 1;
-        let total_chunks = count_x * count_z;
+        let total_chunks = inclusive_chunk_area(min_x, max_x, min_z, max_z).unwrap_or(u64::MAX);
 
         let forceload_limit = crate::carpet::values()
             .forceload_limit
-            .clamp(1, i32::MAX as i64) as i32;
+            .clamp(1, i64::from(i32::MAX)) as u64;
         if total_chunks > forceload_limit {
             return Err(ERROR_TOO_MANY.create_without_context(
                 TextComponent::text(forceload_limit.to_string()),
@@ -75,21 +89,41 @@ impl CommandExecutor for ForceloadAddExecutor {
             ));
         }
 
-        {
+        let added = {
             let mut forced = world
                 .forced_chunks
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
+            let mut added = Vec::new();
             for x in min_x..=max_x {
                 for z in min_z..=max_z {
-                    forced.insert(Vector2::new(x, z));
+                    let position = Vector2::new(x, z);
+                    if forced.insert(position) {
+                        added.push(position);
+                    }
                 }
             }
+            added
+        };
+        if added.is_empty() {
+            return Err(ERROR_FAILED_ADD.create_without_context());
+        }
+        {
+            let mut loading = world
+                .level
+                .chunk_loading
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            for position in &added {
+                loading.add_force_ticket(*position);
+            }
+            loading.send_change();
         }
 
         world.update_active_chunks();
+        let changed_chunks = added.len() as u64;
 
-        let text = if total_chunks == 1 {
+        let text = if changed_chunks == 1 {
             TextComponent::translate_cross(
                 translation::java::COMMANDS_FORCELOAD_ADDED_SINGLE,
                 translation::java::COMMANDS_FORCELOAD_ADDED_SINGLE,
@@ -103,7 +137,7 @@ impl CommandExecutor for ForceloadAddExecutor {
                 translation::java::COMMANDS_FORCELOAD_ADDED_MULTIPLE,
                 translation::java::COMMANDS_FORCELOAD_ADDED_MULTIPLE,
                 [
-                    TextComponent::text(total_chunks.to_string()),
+                    TextComponent::text(changed_chunks.to_string()),
                     TextComponent::text(min_x.to_string()),
                     TextComponent::text(min_z.to_string()),
                     TextComponent::text(max_x.to_string()),
@@ -115,7 +149,7 @@ impl CommandExecutor for ForceloadAddExecutor {
             .source
             .send_feedback(text.color(Color::Named(NamedColor::Green)), false);
 
-        Ok(total_chunks)
+        Ok(command_count(changed_chunks))
     }
 }
 
@@ -148,13 +182,11 @@ impl CommandExecutor for ForceloadRemoveExecutor {
         let min_z = chunk_z_start.min(chunk_z_end);
         let max_z = chunk_z_start.max(chunk_z_end);
 
-        let count_x = max_x - min_x + 1;
-        let count_z = max_z - min_z + 1;
-        let total_chunks = count_x * count_z;
+        let total_chunks = inclusive_chunk_area(min_x, max_x, min_z, max_z).unwrap_or(u64::MAX);
 
         let forceload_limit = crate::carpet::values()
             .forceload_limit
-            .clamp(1, i32::MAX as i64) as i32;
+            .clamp(1, i64::from(i32::MAX)) as u64;
         if total_chunks > forceload_limit {
             return Err(ERROR_TOO_MANY.create_without_context(
                 TextComponent::text(forceload_limit.to_string()),
@@ -162,21 +194,41 @@ impl CommandExecutor for ForceloadRemoveExecutor {
             ));
         }
 
-        {
+        let removed = {
             let mut forced = world
                 .forced_chunks
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
+            let mut removed = Vec::new();
             for x in min_x..=max_x {
                 for z in min_z..=max_z {
-                    forced.remove(&Vector2::new(x, z));
+                    let position = Vector2::new(x, z);
+                    if forced.remove(&position) {
+                        removed.push(position);
+                    }
                 }
             }
+            removed
+        };
+        if removed.is_empty() {
+            return Err(ERROR_FAILED_REMOVE.create_without_context());
+        }
+        {
+            let mut loading = world
+                .level
+                .chunk_loading
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            for position in &removed {
+                loading.remove_force_ticket(*position);
+            }
+            loading.send_change();
         }
 
         world.update_active_chunks();
+        let changed_chunks = removed.len() as u64;
 
-        let text = if total_chunks == 1 {
+        let text = if changed_chunks == 1 {
             TextComponent::translate_cross(
                 translation::java::COMMANDS_FORCELOAD_REMOVED_SINGLE,
                 translation::java::COMMANDS_FORCELOAD_REMOVED_SINGLE,
@@ -190,7 +242,7 @@ impl CommandExecutor for ForceloadRemoveExecutor {
                 translation::java::COMMANDS_FORCELOAD_REMOVED_MULTIPLE,
                 translation::java::COMMANDS_FORCELOAD_REMOVED_MULTIPLE,
                 [
-                    TextComponent::text(total_chunks.to_string()),
+                    TextComponent::text(changed_chunks.to_string()),
                     TextComponent::text(min_x.to_string()),
                     TextComponent::text(min_z.to_string()),
                     TextComponent::text(max_x.to_string()),
@@ -202,7 +254,7 @@ impl CommandExecutor for ForceloadRemoveExecutor {
             .source
             .send_feedback(text.color(Color::Named(NamedColor::Green)), false);
 
-        Ok(total_chunks)
+        Ok(command_count(changed_chunks))
     }
 }
 
@@ -216,15 +268,24 @@ impl CommandExecutor for ForceloadRemoveAllExecutor {
             .as_ref()
             .ok_or_else(|| ERROR_FAILED_REMOVE.create_without_context())?;
 
-        let removed_count = {
+        let removed = {
             let mut forced = world
                 .forced_chunks
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
-            let count = forced.len();
-            forced.clear();
-            count
+            forced.drain().collect::<Vec<_>>()
         };
+        {
+            let mut loading = world
+                .level
+                .chunk_loading
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            for position in &removed {
+                loading.remove_force_ticket(*position);
+            }
+            loading.send_change();
+        }
 
         world.update_active_chunks();
 
@@ -237,7 +298,30 @@ impl CommandExecutor for ForceloadRemoveAllExecutor {
             .source
             .send_feedback(text.color(Color::Named(NamedColor::Green)), false);
 
-        Ok(removed_count as i32)
+        Ok(i32::try_from(removed.len()).unwrap_or(i32::MAX))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{command_count, inclusive_chunk_area};
+
+    #[test]
+    fn chunk_area_uses_checked_wide_arithmetic() {
+        assert_eq!(inclusive_chunk_area(-2, 2, -3, 3), Some(35));
+        assert_eq!(
+            inclusive_chunk_area(i32::MIN, i32::MAX, 0, 0),
+            Some(u64::from(u32::MAX) + 1)
+        );
+        assert_eq!(
+            inclusive_chunk_area(i32::MIN, i32::MAX, i32::MIN, i32::MAX),
+            None
+        );
+    }
+
+    #[test]
+    fn command_result_saturates() {
+        assert_eq!(command_count(u64::MAX), i32::MAX);
     }
 }
 

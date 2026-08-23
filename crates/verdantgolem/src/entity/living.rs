@@ -2649,6 +2649,9 @@ impl EntityBase for LivingEntity {
             self.tick_movement(caller);
             // Vanilla-like order: freeze logic runs after movement/collisions.
             self.entity.tick_frozen(caller);
+            // Living entities perform their push pass after movement. This is
+            // also where Carpet's maxEntityCollisions limit is applied.
+            caller.push_entities(caller);
         }
 
         // TODO

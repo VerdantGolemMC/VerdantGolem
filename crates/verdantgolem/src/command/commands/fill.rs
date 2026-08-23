@@ -45,6 +45,25 @@ enum Mode {
 
 struct Executor(Mode);
 
+fn fill_flags(fill_updates: bool) -> BlockFlags {
+    if fill_updates {
+        BlockFlags::FORCE_STATE
+    } else {
+        BlockFlags::FORCE_STATE | BlockFlags::SKIP_BLOCK_ADDED_CALLBACK
+    }
+}
+
+fn inclusive_span(min: i32, max: i32) -> Option<u64> {
+    let span = i64::from(max).checked_sub(i64::from(min))?.checked_add(1)?;
+    u64::try_from(span).ok()
+}
+
+fn checked_region_volume(min: Vector3<i32>, max: Vector3<i32>) -> Option<u64> {
+    inclusive_span(min.x, max.x)?
+        .checked_mul(inclusive_span(min.y, max.y)?)?
+        .checked_mul(inclusive_span(min.z, max.z)?)
+}
+
 fn not_in_filter(filter: &BlockPredicate, old_block: &Block) -> bool {
     match filter {
         BlockPredicate::Tag(tag) => !tag.contains(&old_block.id.as_u16()),
@@ -62,6 +81,7 @@ struct Context {
     block_state_id: BlockStateId,
     option_filter: Option<BlockPredicate>,
     world: Arc<World>,
+    block_flags: BlockFlags,
     placed_blocks: i32,
     to_update: Vec<BlockPos>,
 
@@ -123,13 +143,11 @@ impl Filler for DestroyFiller {
         context.world.break_block(
             &block_position,
             None,
-            BlockFlags::SKIP_DROPS | BlockFlags::FORCE_STATE,
+            BlockFlags::SKIP_DROPS | context.block_flags,
         );
-        context.world.set_block_state(
-            &block_position,
-            context.block_state_id,
-            BlockFlags::FORCE_STATE,
-        );
+        context
+            .world
+            .set_block_state(&block_position, context.block_state_id, context.block_flags);
         FillerResult::PlacedBlock
     }
 }
@@ -146,14 +164,12 @@ impl Filler for HollowFiller {
             context.world.set_block_state(
                 &block_position,
                 context.block_state_id,
-                BlockFlags::FORCE_STATE,
+                context.block_flags,
             );
         } else {
-            context.world.set_block_state(
-                &block_position,
-                BlockStateId::AIR,
-                BlockFlags::FORCE_STATE,
-            );
+            context
+                .world
+                .set_block_state(&block_position, BlockStateId::AIR, context.block_flags);
         }
         FillerResult::PlacedBlock
     }
@@ -172,7 +188,7 @@ impl Filler for KeepFiller {
             context.world.set_block_state(
                 &block_position,
                 context.block_state_id,
-                BlockFlags::FORCE_STATE,
+                context.block_flags,
             );
             FillerResult::PlacedBlock
         } else {
@@ -192,11 +208,9 @@ impl Filler for OutlineFiller {
         {
             return FillerResult::DidNotPlaceBlock;
         }
-        context.world.set_block_state(
-            &block_position,
-            context.block_state_id,
-            BlockFlags::FORCE_STATE,
-        );
+        context
+            .world
+            .set_block_state(&block_position, context.block_state_id, context.block_flags);
         FillerResult::PlacedBlock
     }
 }
@@ -209,11 +223,9 @@ impl Filler for ReplaceFiller {
         {
             return FillerResult::DidNotPlaceBlock;
         }
-        context.world.set_block_state(
-            &block_position,
-            context.block_state_id,
-            BlockFlags::FORCE_STATE,
-        );
+        context
+            .world
+            .set_block_state(&block_position, context.block_state_id, context.block_flags);
         FillerResult::PlacedBlock
     }
 }
@@ -247,6 +259,7 @@ impl CommandExecutor for Executor {
         let from = BlockPosArgumentConsumer::find_arg(args, ARG_FROM)?;
         let to = BlockPosArgumentConsumer::find_arg(args, ARG_TO)?;
         let mode = self.0;
+        let fill_updates = crate::carpet::values().fill_updates;
 
         let mut context = Context {
             block_state_id,
@@ -254,6 +267,7 @@ impl CommandExecutor for Executor {
             world: sender
                 .world_or_first(server)
                 .ok_or(CommandError::InvalidRequirement)?,
+            block_flags: fill_flags(fill_updates),
             placed_blocks: 0,
             to_update: Vec::new(),
 
@@ -279,11 +293,13 @@ impl CommandExecutor for Executor {
             level_info.game_rules.max_block_modifications
         };
 
-        let total_blocks = (context.end_x - context.start_x + 1) as i64
-            * (context.end_y - context.start_y + 1) as i64
-            * (context.end_z - context.start_z + 1) as i64;
+        let total_blocks = checked_region_volume(
+            Vector3::new(context.start_x, context.start_y, context.start_z),
+            Vector3::new(context.end_x, context.end_y, context.end_z),
+        )
+        .unwrap_or(u64::MAX);
 
-        if total_blocks > max_block_modifications {
+        if total_blocks > u64::try_from(max_block_modifications).unwrap_or(0) {
             return Err(CommandError::CommandFailed(TextComponent::translate_cross(
                 translation::java::COMMANDS_FILL_TOOBIG,
                 translation::java::COMMANDS_FILL_TOOBIG,
@@ -296,7 +312,7 @@ impl CommandExecutor for Executor {
 
         // carpet rule fillLimit caps the fill volume in addition to the gamerule.
         let fill_limit = crate::carpet::values().fill_limit;
-        if total_blocks > fill_limit {
+        if total_blocks > u64::try_from(fill_limit).unwrap_or(0) {
             return Err(CommandError::CommandFailed(TextComponent::text(format!(
                 "Too many blocks to fill: {total_blocks} is larger than fillLimit {fill_limit}"
             ))));
@@ -312,7 +328,7 @@ impl CommandExecutor for Executor {
         }
 
         // carpet rule fillUpdates: false suppresses neighbor updates from /fill.
-        if crate::carpet::values().fill_updates {
+        if fill_updates {
             for i in context.to_update {
                 context.world.update_neighbors(&i, None);
             }
@@ -363,4 +379,35 @@ pub fn init_command_tree() -> CommandTree {
             ),
         ),
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{checked_region_volume, fill_flags};
+    use verdantgolem_util::math::vector3::Vector3;
+    use verdantgolem_world::world::BlockFlags;
+
+    #[test]
+    fn volume_math_is_checked_and_wide() {
+        assert_eq!(
+            checked_region_volume(Vector3::new(-1, 0, -2), Vector3::new(1, 3, 2)),
+            Some(60)
+        );
+        assert_eq!(
+            checked_region_volume(
+                Vector3::new(i32::MIN, i32::MIN, i32::MIN),
+                Vector3::new(i32::MAX, i32::MAX, i32::MAX)
+            ),
+            None
+        );
+    }
+
+    #[test]
+    fn disabled_updates_skip_added_callbacks() {
+        assert_eq!(fill_flags(true), BlockFlags::FORCE_STATE);
+        let quiet = fill_flags(false);
+        assert!(quiet.contains(BlockFlags::FORCE_STATE));
+        assert!(quiet.contains(BlockFlags::SKIP_BLOCK_ADDED_CALLBACK));
+        assert!(!quiet.contains(BlockFlags::NOTIFY_NEIGHBORS));
+    }
 }

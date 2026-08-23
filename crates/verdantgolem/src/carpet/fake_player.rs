@@ -16,14 +16,17 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
-    entity::player::Player,
+    entity::{EntityBase, player::Player},
     net::{ClientPlatform, GameProfile},
     server::Server,
 };
 use arc_swap::ArcSwap;
 use verdantgolem_data::tag::Taggable;
-use verdantgolem_util::Hand;
-use verdantgolem_util::math::vector3::Vector3;
+use verdantgolem_data::{attributes::Attributes, entity::EntityType};
+use verdantgolem_util::{
+    GameMode, Hand,
+    math::{boundingbox::BoundingBox, vector3::Vector3},
+};
 
 /// A fake player plus its repeating-action state.
 pub struct FakePlayer {
@@ -33,9 +36,57 @@ pub struct FakePlayer {
     attack_cooldown: AtomicU32,
 }
 
-/// Online fake players by name.
-static FAKES: LazyLock<Mutex<BTreeMap<String, Arc<FakePlayer>>>> =
+enum FakeEntry {
+    Spawning,
+    Online(Arc<FakePlayer>),
+}
+
+/// Fake-player names are reserved before the first await so concurrent spawn
+/// commands cannot create duplicates. Keys use vanilla's case-insensitive
+/// player-name semantics.
+static FAKES: LazyLock<Mutex<BTreeMap<String, FakeEntry>>> =
     LazyLock::new(|| Mutex::new(BTreeMap::new()));
+
+struct SpawnReservation {
+    key: String,
+    active: bool,
+}
+
+impl SpawnReservation {
+    fn reserve(name: &str) -> Result<Self, String> {
+        let key = normalize_name(name);
+        let mut fakes = FAKES
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if fakes.contains_key(&key) {
+            return Err(format!("fake player {name} already exists"));
+        }
+        fakes.insert(key.clone(), FakeEntry::Spawning);
+        Ok(Self { key, active: true })
+    }
+
+    fn commit(mut self, fake: Arc<FakePlayer>) {
+        FAKES
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(self.key.clone(), FakeEntry::Online(fake));
+        self.active = false;
+    }
+}
+
+impl Drop for SpawnReservation {
+    fn drop(&mut self) {
+        if !self.active {
+            return;
+        }
+        let mut fakes = FAKES
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if matches!(fakes.get(&self.key), Some(FakeEntry::Spawning)) {
+            fakes.remove(&self.key);
+        }
+    }
+}
 
 /// Ticks between fake-player attacks (~ vanilla sword cooldown).
 const ATTACK_INTERVAL: u32 = 12;
@@ -43,16 +94,20 @@ const ATTACK_INTERVAL: u32 = 12;
 /// Vanilla-compatible offline UUID for a fake player name (stable across restarts).
 #[must_use]
 pub fn offline_uuid(name: &str) -> Uuid {
-    Uuid::new_v3(&Uuid::nil(), format!("OfflinePlayer:{name}").as_bytes())
+    let mut bytes = *md5::compute(format!("OfflinePlayer:{name}").as_bytes());
+    bytes[6] = (bytes[6] & 0x0f) | 0x30;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    Uuid::from_bytes(bytes)
 }
 
 /// Whether `name` is a legal Minecraft player name.
 #[must_use]
 pub fn valid_name(name: &str) -> bool {
-    (2..=16).contains(&name.len())
-        && name
-            .chars()
-            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-')
+    (3..=16).contains(&name.len()) && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+fn normalize_name(name: &str) -> String {
+    name.to_ascii_lowercase()
 }
 
 fn profile(name: &str) -> GameProfile {
@@ -69,8 +124,12 @@ fn profile(name: &str) -> GameProfile {
 pub fn get(name: &str) -> Option<Arc<Player>> {
     FAKES
         .lock()
-        .ok()
-        .and_then(|fakes| fakes.get(name).map(|fake| fake.player.clone()))
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .get(&normalize_name(name))
+        .and_then(|entry| match entry {
+            FakeEntry::Online(fake) => Some(fake.player.clone()),
+            FakeEntry::Spawning => None,
+        })
 }
 
 /// Whether a fake player is continuously attacking.
@@ -78,11 +137,11 @@ pub fn get(name: &str) -> Option<Arc<Player>> {
 pub fn is_attacking(name: &str) -> bool {
     FAKES
         .lock()
-        .ok()
-        .and_then(|fakes| {
-            fakes
-                .get(name)
-                .map(|fake| fake.attacking.load(Ordering::Relaxed))
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .get(&normalize_name(name))
+        .and_then(|entry| match entry {
+            FakeEntry::Online(fake) => Some(fake.attacking.load(Ordering::Relaxed)),
+            FakeEntry::Spawning => None,
         })
         .unwrap_or(false)
 }
@@ -93,7 +152,11 @@ pub fn set_attacking(name: &str, on: bool) -> Result<(), String> {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let fake = fakes
-        .get(name)
+        .get(&normalize_name(name))
+        .and_then(|entry| match entry {
+            FakeEntry::Online(fake) => Some(fake),
+            FakeEntry::Spawning => None,
+        })
         .ok_or_else(|| format!("no fake player named {name}"))?;
     fake.attacking.store(on, Ordering::Relaxed);
     fake.attack_cooldown.store(0, Ordering::Relaxed);
@@ -110,15 +173,15 @@ pub fn stop_actions(name: &str) -> Result<(), String> {
 pub fn tick_fakes(world: &Arc<crate::world::World>) {
     let fakes: Vec<Arc<FakePlayer>> = FAKES
         .lock()
-        .ok()
-        .map(|guard| {
-            guard
-                .values()
-                .filter(|fake| Arc::ptr_eq(&fake.player.world(), world))
-                .cloned()
-                .collect()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .values()
+        .filter_map(|entry| match entry {
+            FakeEntry::Online(fake) if Arc::ptr_eq(&fake.player.world(), world) => {
+                Some(fake.clone())
+            }
+            FakeEntry::Spawning | FakeEntry::Online(_) => None,
         })
-        .unwrap_or_default();
+        .collect();
     for fake in fakes {
         if !fake.attacking.load(Ordering::Relaxed) {
             continue;
@@ -134,49 +197,106 @@ pub fn tick_fakes(world: &Arc<crate::world::World>) {
     }
 }
 
-/// Attacks the closest living entity inside a cone in front of the fake
-/// player, like a crosshair attack.
+/// Returns the normalized distance along `delta` where a segment first enters
+/// `bounding_box`.
+fn ray_aabb_t(
+    start: &Vector3<f64>,
+    delta: &Vector3<f64>,
+    bounding_box: &BoundingBox,
+) -> Option<f64> {
+    let mut t_min = 0.0f64;
+    let mut t_max = 1.0f64;
+    let minimum = [bounding_box.min.x, bounding_box.min.y, bounding_box.min.z];
+    let maximum = [bounding_box.max.x, bounding_box.max.y, bounding_box.max.z];
+    let origin = [start.x, start.y, start.z];
+    let direction = [delta.x, delta.y, delta.z];
+
+    for axis in 0..3 {
+        if direction[axis].abs() < 1.0e-9 {
+            if origin[axis] < minimum[axis] || origin[axis] > maximum[axis] {
+                return None;
+            }
+        } else {
+            let first = (minimum[axis] - origin[axis]) / direction[axis];
+            let second = (maximum[axis] - origin[axis]) / direction[axis];
+            t_min = t_min.max(first.min(second));
+            t_max = t_max.min(first.max(second));
+            if t_max < t_min {
+                return None;
+            }
+        }
+    }
+
+    (0.0..=1.0).contains(&t_min).then_some(t_min)
+}
+
+fn hit_is_before_block(entity_t: f64, block_t: Option<f64>) -> bool {
+    block_t.is_none_or(|block_t| entity_t < block_t)
+}
+
+/// Attacks the first living entity under the fake player's crosshair, subject
+/// to the player's interaction range and solid-block occlusion.
 fn try_attack(player: &Arc<Player>) {
     let entity = &player.living_entity.entity;
-    let pos = entity.pos.load();
-    let yaw = f64::from(entity.yaw.load()).to_radians();
-    let pitch = f64::from(entity.pitch.load()).to_radians();
-    let dir = Vector3::new(
-        -yaw.sin() * pitch.cos(),
-        -pitch.sin(),
-        yaw.cos() * pitch.cos(),
-    );
+    let gamemode = player.gamemode.load();
+    if gamemode == GameMode::Spectator {
+        return;
+    }
 
-    let center = pos + dir.multiply(2.0, 2.0, 2.0);
-    let search_box = verdantgolem_util::math::boundingbox::BoundingBox::new(
-        center.sub_raw(1.5, 1.5, 1.5),
-        center.add_raw(1.5, 1.5, 1.5),
-    );
+    let mut reach = player
+        .living_entity
+        .get_attribute_value(&Attributes::ENTITY_INTERACTION_RANGE);
+    if gamemode == GameMode::Creative {
+        // The generated player type has no attribute table yet, so apply the
+        // vanilla creative modifier explicitly.
+        reach += 2.0;
+    }
+
+    let start = entity.get_eye_pos();
+    let direction =
+        Vector3::rotation_vector(f64::from(entity.pitch.load()), f64::from(entity.yaw.load()));
+    let delta = direction * reach;
+    let end = start + delta;
+    let search_box = BoundingBox::new(
+        Vector3::new(start.x.min(end.x), start.y.min(end.y), start.z.min(end.z)),
+        Vector3::new(start.x.max(end.x), start.y.max(end.y), start.z.max(end.z)),
+    )
+    .expand_all(1.0);
     let world = entity.world.load();
 
+    let block_t = if let Some((block_pos, _)) = world.raycast(start, end, |pos, world| {
+        let state = world.get_block_state(pos);
+        !state.is_air() && !state.outline_shapes.is_empty()
+    }) {
+        let offset = block_pos.0.to_f64();
+        world
+            .get_block_state(&block_pos)
+            .get_block_outline_shapes_at(&block_pos)
+            .filter_map(|shape| {
+                let world_shape = BoundingBox::new(shape.min + offset, shape.max + offset);
+                ray_aabb_t(&start, &delta, &world_shape)
+            })
+            .min_by(f64::total_cmp)
+    } else {
+        None
+    };
+
     let mut best: Option<(f64, Arc<dyn crate::entity::EntityBase>)> = None;
-    for other in world.get_entities_at_box(&search_box) {
+    for other in world.get_all_at_box(&search_box) {
         let other_entity = other.get_entity();
-        if other_entity.entity_id == entity.entity_id
-            || other_entity.entity_type.id == verdantgolem_data::entity::EntityType::PLAYER.id
-        {
+        if other_entity.entity_id == entity.entity_id || !other_entity.is_alive() {
             continue;
         }
         if other.get_living_entity().is_none() {
             continue;
         }
-        let to = other_entity.pos.load() - pos;
-        let dist_sq = to.length_squared();
-        if dist_sq > 16.0 || dist_sq < 1.0e-6 {
+        let Some(hit_t) = ray_aabb_t(&start, &delta, &other_entity.bounding_box.load()) else {
             continue;
-        }
-        // Keep targets roughly in front of the fake player.
-        let dot = dir.x * to.x + dir.y * to.y + dir.z * to.z;
-        if dot / dist_sq.sqrt() < 0.5 {
-            continue;
-        }
-        if best.as_ref().is_none_or(|(best_sq, _)| dist_sq < *best_sq) {
-            best = Some((dist_sq, other));
+        };
+        if hit_is_before_block(hit_t, block_t)
+            && best.as_ref().is_none_or(|(best_t, _)| hit_t < *best_t)
+        {
+            best = Some((hit_t, other));
         }
     }
 
@@ -189,8 +309,13 @@ fn try_attack(player: &Arc<Player>) {
 pub fn list() -> Vec<String> {
     FAKES
         .lock()
-        .map(|fakes| fakes.keys().cloned().collect())
-        .unwrap_or_default()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .values()
+        .filter_map(|entry| match entry {
+            FakeEntry::Online(fake) => Some(fake.player.gameprofile.name.clone()),
+            FakeEntry::Spawning => None,
+        })
+        .collect()
 }
 
 /// Spawns a fake player named `name` at `position` (with `yaw`/`pitch`) in `world`.
@@ -204,9 +329,7 @@ pub async fn spawn(
     if !valid_name(name) {
         return Err(format!("invalid player name: {name}"));
     }
-    if FAKES.lock().is_ok_and(|fakes| fakes.contains_key(name)) {
-        return Err(format!("fake player {name} already exists"));
-    }
+    let reservation = SpawnReservation::reserve(name)?;
     // Refuse to shadow a real online player.
     if let Some(server) = world.server.upgrade()
         && server.worlds.load().iter().any(|online| {
@@ -221,17 +344,11 @@ pub async fn spawn(
     }
 
     let player = spawn_untracked(world, name, position, yaw, pitch).await?;
-    FAKES
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .insert(
-            name.to_string(),
-            Arc::new(FakePlayer {
-                player,
-                attacking: AtomicBool::new(false),
-                attack_cooldown: AtomicU32::new(0),
-            }),
-        );
+    reservation.commit(Arc::new(FakePlayer {
+        player,
+        attacking: AtomicBool::new(false),
+        attack_cooldown: AtomicU32::new(0),
+    }));
     Ok(())
 }
 
@@ -245,33 +362,44 @@ async fn spawn_untracked(
     let Some(server) = world.server.upgrade() else {
         return Err("server is inactive".to_string());
     };
-    let Some((player, spawn_world)) = server
-        .add_player(Arc::new(ClientPlatform::Local), profile(name), None)
-        .await
+    let Some((player, spawn_world)) =
+        server.add_player(Arc::new(ClientPlatform::Local), profile(name), None)
     else {
         return Err(format!("failed to create fake player {name}"));
     };
 
-    // Position and rotation before broadcasting the spawn.
     let entity = &player.living_entity.entity;
-    entity.pos.store(position);
-    entity.yaw.store(yaw);
-    entity.head_yaw.store(yaw);
-    entity.body_yaw.store(yaw);
-    entity.pitch.store(pitch);
 
     // add_player defaults to the first world; move the fake into the
-    // sender's world when they differ. All client packets are no-ops for a
-    // Local client, so only the world registries need to move.
+    // sender's world when they differ, including chunk-manager ownership.
     if !Arc::ptr_eq(&spawn_world, world) {
-        let removed = spawn_world.remove_player(&player, false).await;
-        if removed.is_some() {
-            _ = world.add_player(&player);
-            entity.world.store(world.clone());
-        }
+        let Some(removed) = spawn_world.remove_player(&player, false).await else {
+            server.remove_player(&player);
+            return Err(format!("failed to move fake player {name} between worlds"));
+        };
+        world.add_player(&removed)?;
+        player.unload_watched_chunks(&spawn_world).await;
+        player
+            .chunk_manager
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .change_world(&spawn_world.level, world.clone());
+        entity.set_world(world.clone());
     }
 
-    world.spawn_local_player(&player).await;
+    // Set every spatial cache before chunk tracking and the spawn broadcast.
+    entity.set_pos(position);
+    entity.set_rotation(yaw, pitch);
+    entity.head_yaw.store(yaw);
+    entity.body_yaw.store(yaw);
+    entity.last_pos.store(position);
+    entity.last_sent_pos.store(position);
+    crate::world::chunker::update_position(&player);
+    world
+        .level
+        .get_or_fetch_chunk(entity.chunk_pos.load(), |_| ())
+        .await;
+    world.spawn_local_player(&player);
 
     Ok(player)
 }
@@ -282,22 +410,60 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
         let mut fakes = FAKES
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
-        fakes
-            .remove(name)
-            .map(|fake| fake.player.clone())
-            .ok_or_else(|| format!("no fake player named {name}"))?
+        let key = normalize_name(name);
+        if matches!(fakes.get(&key), Some(FakeEntry::Spawning)) {
+            return Err(format!("fake player {name} is still spawning"));
+        }
+        match fakes.remove(&key) {
+            Some(FakeEntry::Online(fake)) => fake.player.clone(),
+            Some(FakeEntry::Spawning) => {
+                fakes.insert(key, FakeEntry::Spawning);
+                return Err(format!("fake player {name} is still spawning"));
+            }
+            None => return Err(format!("no fake player named {name}")),
+        }
     };
 
     player.remove().await;
-    server.remove_player(&player).await;
-    if let Err(e) = server
+    server.remove_player(&player);
+    let player_data_error = server
         .player_data_storage
         .handle_player_leave(&player)
-        .await
-    {
-        return Err(format!("failed to save fake player data: {e}"));
+        .err();
+    let advancement_error = server.advancement_manager.save_player(&player).await.err();
+    match (player_data_error, advancement_error) {
+        (None, None) => Ok(()),
+        (Some(data), None) => Err(format!("failed to save fake player data: {data}")),
+        (None, Some(advancement)) => Err(format!(
+            "failed to save fake player advancements: {advancement}"
+        )),
+        (Some(data), Some(advancement)) => Err(format!(
+            "failed to save fake player data: {data}; failed to save advancements: {advancement}"
+        )),
     }
-    Ok(())
+}
+
+fn mount_capacity(entity: &Arc<dyn EntityBase>) -> Option<usize> {
+    let entity_type = entity.get_entity().entity_type;
+    if entity_type == &EntityType::PLAYER {
+        return None;
+    }
+    if entity.get_living_entity().is_some() {
+        return Some(if entity_type == &EntityType::HAPPY_GHAST {
+            4
+        } else if entity_type == &EntityType::CAMEL || entity_type == &EntityType::CAMEL_HUSK {
+            2
+        } else {
+            1
+        });
+    }
+    if entity
+        .cast_any()
+        .is::<crate::entity::vehicle::boat::BoatEntity>()
+    {
+        return Some(2);
+    }
+    (entity_type == &EntityType::MINECART).then_some(1)
 }
 
 /// Mounts a fake player onto the nearest mountable entity (boats, minecarts,
@@ -305,19 +471,31 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
 pub async fn mount(name: &str) -> Result<String, String> {
     let player = get(name).ok_or_else(|| format!("no fake player named {name}"))?;
     let entity = &player.living_entity.entity;
+    if entity.has_vehicle() {
+        return Err(format!("{name} is already riding an entity"));
+    }
+    if entity.riding_cooldown.load(Ordering::Relaxed) > 0 {
+        return Err(format!("{name} cannot mount during its riding cooldown"));
+    }
     let pos = entity.pos.load();
-    let search_box = verdantgolem_util::math::boundingbox::BoundingBox::new(
-        pos.sub_raw(3.0, 3.0, 3.0),
-        pos.add_raw(3.0, 3.0, 3.0),
-    );
+    let search_box = BoundingBox::new(pos.sub_raw(3.0, 3.0, 3.0), pos.add_raw(3.0, 3.0, 3.0));
     let world = entity.world.load();
 
     let mut best: Option<(f64, Arc<dyn crate::entity::EntityBase>)> = None;
     for other in world.get_entities_at_box(&search_box) {
         let other_entity = other.get_entity();
-        if other_entity.entity_id == entity.entity_id
-            || other_entity.entity_type.id == verdantgolem_data::entity::EntityType::PLAYER.id
-            || other.clone().get_item_entity().is_some()
+        if other_entity.entity_id == entity.entity_id || !other_entity.is_alive() {
+            continue;
+        }
+        let Some(capacity) = mount_capacity(&other) else {
+            continue;
+        };
+        if other_entity
+            .passengers
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .len()
+            >= capacity
         {
             continue;
         }
@@ -330,12 +508,40 @@ pub async fn mount(name: &str) -> Result<String, String> {
     let Some((_, vehicle)) = best else {
         return Err(format!("no mountable entity near {name}"));
     };
+    let capacity = mount_capacity(&vehicle).ok_or_else(|| {
+        format!(
+            "{} is no longer mountable",
+            vehicle.get_entity().entity_type.registry_key()
+        )
+    })?;
+    if vehicle
+        .get_entity()
+        .passengers
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .len()
+        >= capacity
+    {
+        return Err(format!(
+            "{} has no free passenger seat",
+            vehicle.get_entity().entity_type.registry_key()
+        ));
+    }
     let vehicle_name = vehicle.get_entity().entity_type.registry_key();
     let player_base: Arc<dyn crate::entity::EntityBase> = player.clone();
     vehicle
         .get_entity()
-        .add_passenger(vehicle.clone(), player_base)
-        .await;
+        .add_passenger(vehicle.clone(), player_base);
+
+    let mounted = entity
+        .vehicle
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .as_ref()
+        .is_some_and(|mounted| mounted.get_entity().entity_id == vehicle.get_entity().entity_id);
+    if !mounted {
+        return Err(format!("mounting {vehicle_name} was cancelled"));
+    }
 
     Ok(vehicle_name.to_string())
 }
@@ -344,14 +550,23 @@ pub async fn mount(name: &str) -> Result<String, String> {
 pub async fn dismount(name: &str) -> Result<(), String> {
     let player = get(name).ok_or_else(|| format!("no fake player named {name}"))?;
     let entity = &player.living_entity.entity;
-    let vehicle = entity.vehicle.lock().await.clone();
+    let vehicle = entity
+        .vehicle
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone();
     let Some(vehicle) = vehicle else {
         return Err(format!("{name} is not riding anything"));
     };
-    vehicle
-        .get_entity()
-        .remove_passenger(entity.entity_id)
-        .await;
+    vehicle.get_entity().remove_passenger(entity.entity_id);
+    if entity
+        .vehicle
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .is_some()
+    {
+        return Err(format!("dismounting {name} was cancelled"));
+    }
     Ok(())
 }
 
@@ -363,4 +578,54 @@ pub fn look_up(player: &Arc<Player>, yaw: f32, pitch: f32) {
     entity.body_yaw.store(yaw);
     entity.pitch.store(pitch);
     entity.send_pos_rot();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn offline_uuid_matches_vanilla_known_vector() {
+        assert_eq!(
+            offline_uuid("Steve"),
+            Uuid::parse_str("5627dd98-e6be-3c21-b8a8-e92344183641").unwrap()
+        );
+    }
+
+    #[test]
+    fn name_validation_matches_vanilla_boundaries() {
+        assert!(valid_name("abc"));
+        assert!(valid_name("abcdefghijklmnop"));
+        assert!(valid_name("farm_bot_1"));
+        assert!(!valid_name("ab"));
+        assert!(!valid_name("abcdefghijklmnopq"));
+        assert!(!valid_name("fake-player"));
+        assert!(!valid_name("bad name"));
+        assert!(!valid_name("玩家abc"));
+    }
+
+    #[test]
+    fn reservation_is_case_insensitive_and_released_on_drop() {
+        let first = SpawnReservation::reserve("ReserveBot").unwrap();
+        assert!(SpawnReservation::reserve("reservebot").is_err());
+        drop(first);
+
+        let second = SpawnReservation::reserve("RESERVEBOT").unwrap();
+        drop(second);
+    }
+
+    #[test]
+    fn ray_aabb_and_occlusion_ordering() {
+        let start = Vector3::new(0.0, 0.5, 0.5);
+        let delta = Vector3::new(4.0, 0.0, 0.0);
+        let hit_box = BoundingBox::new(Vector3::new(2.0, 0.0, 0.0), Vector3::new(3.0, 1.0, 1.0));
+        let miss_box = BoundingBox::new(Vector3::new(2.0, 2.0, 0.0), Vector3::new(3.0, 3.0, 1.0));
+
+        assert_eq!(ray_aabb_t(&start, &delta, &hit_box), Some(0.5));
+        assert_eq!(ray_aabb_t(&start, &delta, &miss_box), None);
+        assert!(hit_is_before_block(0.4, Some(0.5)));
+        assert!(!hit_is_before_block(0.5, Some(0.5)));
+        assert!(!hit_is_before_block(0.6, Some(0.5)));
+        assert!(hit_is_before_block(0.9, None));
+    }
 }

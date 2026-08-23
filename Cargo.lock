@@ -4933,6 +4933,7 @@ dependencies = [
  "image",
  "indexmap",
  "libloading",
+ "md5",
  "notify",
  "num-bigint 0.5.1",
  "ordered-float",

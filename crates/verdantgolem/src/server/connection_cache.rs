@@ -13,7 +13,6 @@ use verdantgolem_protocol::{
 use verdantgolem_util::text::TextComponent;
 
 const DEFAULT_ICON: &[u8] = include_bytes!("../../../../assets/default_icon.png");
-const MAX_SAMPLE_PLAYERS: usize = 12;
 
 fn load_icon_from_file<P: AsRef<Path>>(path: P) -> Result<String, Box<dyn error::Error>> {
     let buf = fs::read(path)?;
@@ -94,6 +93,12 @@ impl CachedStatus {
     pub fn get_status_response(&self, client_protocol: i32) -> StatusResponse {
         let mut response = self.status_response.clone();
 
+        // Rebuild on every ping so a live pingPlayerListLimit change is visible
+        // immediately, even when no player has joined or left since the change.
+        if let Some(players) = &mut response.players {
+            players.sample = self.build_sample_list();
+        }
+
         let supported_min = LOWEST_SUPPORTED_MC_VERSION.protocol_version();
         let supported_max = CURRENT_MC_VERSION.protocol_version();
 
@@ -116,10 +121,10 @@ impl CachedStatus {
     fn build_sample_list(&self) -> Vec<Sample> {
         // carpet rule pingPlayerListLimit caps the sample list
         let limit = crate::carpet::values().ping_player_list_limit;
-        let limit = usize::try_from(limit).unwrap_or(MAX_SAMPLE_PLAYERS);
+        let limit = usize::try_from(limit).unwrap_or(usize::MAX);
         self.player_samples
             .iter()
-            .take(limit.min(MAX_SAMPLE_PLAYERS))
+            .take(limit)
             .map(|(id, name)| Sample {
                 name: name.clone(),
                 id: id.to_string(),
