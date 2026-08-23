@@ -44,14 +44,14 @@ impl CommandExecutor for PerimeterInfoExecutor {
                         "console must pass a position: /perimeterinfo <pos>".to_string(),
                     ));
                 };
-                player.get_entity().block_pos.load()
+                player.living_entity.entity.block_pos.load()
             };
             let cx = center.0.x;
             let cz = center.0.z;
 
             // OnGround monster representative (zombie) for spawnability.
             let entity_type = &EntityType::ZOMBIE;
-            let min_y = world.level_info.load().min_y;
+            let min_y = world.min_y;
             let mut spawnable = 0u32;
             let mut per_y: Vec<(i32, u32)> = Vec::new();
             for dx in -SCAN_RADIUS..=SCAN_RADIUS {

@@ -317,7 +317,7 @@ pub async fn mount(name: &str) -> Result<String, String> {
         let other_entity = other.get_entity();
         if other_entity.entity_id == entity.entity_id
             || other_entity.entity_type.id == verdantgolem_data::entity::EntityType::PLAYER.id
-            || other.get_item_entity().is_some()
+            || other.clone().get_item_entity().is_some()
         {
             continue;
         }
