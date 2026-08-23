@@ -1,9 +1,9 @@
 schema: comet.native.v4
 name: rename-to-verdantgolem
 language: zh-CN
-phase: verify
-status: await-user
-state_version: 8
+phase: archive
+status: done
+state_version: 10
 brief: brief.md
 spec_changes:
   - capability: project-identity
@@ -15,7 +15,7 @@ workspace:
   target_branch: master
   finish: null
 loop:
-  stage: await-user
+  stage: done
   goal_cycle: 1
   iteration: 2
   attempt: 1
@@ -24,7 +24,7 @@ loop:
   no_progress_count: 0
   execution_failure_count: 0
   previous_unresolved_ids: []
-  next_action: confirm-skill-coordinated-pass
+  next_action: null
 acceptance:
   - id: A1
     source: brief.md
@@ -447,14 +447,7 @@ builder_handoff:
       truncated: false
   known_limits_truncated: false
   submitted_at: 2026-08-22T11:41:49.108Z
-blockers:
-  - owner: user
-    reason:
-      text: The generic Skill bridge cannot prove an independent Verifier execution;
-        user confirmation is required before Archive.
-      truncated: false
-    acceptance_ids: []
-    resolution_action: await-user
+blockers: []
 verification:
   candidate_id: d3bb6557-230a-4090-9db0-8be2836697c1
   identity_provider: skill-coordinated
@@ -509,5 +502,5 @@ history_overflow:
     recovery: 0
 verification_result: pass
 verification_report: verification.md
-archived: false
+archived: true
 created_at: 2026-08-22T06:47:18.699Z
