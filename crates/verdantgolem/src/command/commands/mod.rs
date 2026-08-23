@@ -46,6 +46,7 @@ mod kick;
 mod kill;
 mod list;
 mod locate;
+mod log;
 mod loot;
 mod me;
 mod msg;
@@ -155,6 +156,7 @@ pub fn default_dispatcher(
     dispatcher.register(info::init_command_tree(), "pumpkin:command.info");
     dispatcher.register(distance::init_command_tree(), "pumpkin:command.distance");
     dispatcher.register(draw::init_command_tree(), "pumpkin:command.draw");
+    dispatcher.register(log::init_command_tree(), "pumpkin:command.log");
     dispatcher.register(
         perimeterinfo::init_command_tree(),
         "pumpkin:command.perimeterinfo",
@@ -399,6 +401,13 @@ fn register_level_0_permissions(registry: &PermissionRegistry) {
 #[expect(clippy::too_many_lines)]
 fn register_level_2_permissions(registry: &PermissionRegistry) {
     // Register permissions for commands with PermissionLvl::Two
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.log",
+            "Subscribes to repeating action-bar readouts",
+            PermissionDefault::Allow,
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
     registry
         .register_permission(Permission::new(
             "pumpkin:command.draw",

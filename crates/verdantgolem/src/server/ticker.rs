@@ -52,6 +52,12 @@ impl Ticker {
 
             server.update_tick_times(tick_duration_nanos);
 
+            crate::carpet::loggers::tick_loggers(
+                server,
+                u64::try_from(tick_number).unwrap_or_default(),
+            )
+            .await;
+
             let tick_interval = if manager.is_sprinting() {
                 Duration::ZERO
             } else {

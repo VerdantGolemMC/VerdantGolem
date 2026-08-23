@@ -7,6 +7,7 @@
 
 pub mod counters;
 pub mod fake_player;
+pub mod loggers;
 pub mod registry;
 
 use std::sync::RwLockReadGuard;
