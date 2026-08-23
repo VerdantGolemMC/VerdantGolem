@@ -58,6 +58,12 @@ impl PistonBlock {
         {
             return false;
         }
+        // carpet rule movableAmethyst: amethyst can be pushed instead of broken
+        if crate::carpet::values().movable_amethyst
+            && (block == &Block::AMETHYST_BLOCK || block == &Block::BUDDING_AMETHYST)
+        {
+            return true;
+        }
         if block == &Block::PISTON || block == &Block::STICKY_PISTON {
             let props = PistonProps::from_state_id(state.id, block);
             // Extended pistons are immovable. Non-extended pistons are movable

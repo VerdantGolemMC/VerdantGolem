@@ -248,6 +248,50 @@ impl CommandExecutor for DropExecutor {
     }
 }
 
+struct MountExecutor;
+
+impl CommandExecutor for MountExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            match fake_player::mount(name).await {
+                Ok(vehicle) => {
+                    sender
+                        .send_message(TextComponent::text(format!("{name} mounted {vehicle}")))
+                        .await;
+                    Ok(1)
+                }
+                Err(error) => Err(text_error(error)),
+            }
+        })
+    }
+}
+
+struct DismountExecutor;
+
+impl CommandExecutor for DismountExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            fake_player::dismount(name).await.map_err(text_error)?;
+            sender
+                .send_message(TextComponent::text(format!("{name} dismounted")))
+                .await;
+            Ok(1)
+        })
+    }
+}
+
 struct StopExecutor;
 
 impl CommandExecutor for StopExecutor {
@@ -291,6 +335,8 @@ pub fn init_command_tree() -> CommandTree {
                 .then(literal("sneak").execute(SneakExecutor))
                 .then(literal("jump").execute(JumpExecutor))
                 .then(literal("drop").execute(DropExecutor))
+                .then(literal("mount").execute(MountExecutor))
+                .then(literal("dismount").execute(DismountExecutor))
                 .then(literal("stop").execute(StopExecutor))
                 .then(
                     literal("look").then(

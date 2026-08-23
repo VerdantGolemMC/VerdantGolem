@@ -21,6 +21,7 @@ use crate::{
     server::Server,
 };
 use arc_swap::ArcSwap;
+use verdantgolem_data::tag::Taggable;
 use verdantgolem_util::Hand;
 use verdantgolem_util::math::vector3::Vector3;
 
@@ -296,6 +297,61 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
     {
         return Err(format!("failed to save fake player data: {e}"));
     }
+    Ok(())
+}
+
+/// Mounts a fake player onto the nearest mountable entity (boats, minecarts,
+/// mobs...). Returns a description of the vehicle.
+pub async fn mount(name: &str) -> Result<String, String> {
+    let player = get(name).ok_or_else(|| format!("no fake player named {name}"))?;
+    let entity = &player.living_entity.entity;
+    let pos = entity.pos.load();
+    let search_box = verdantgolem_util::math::boundingbox::BoundingBox::new(
+        pos.sub_raw(3.0, 3.0, 3.0),
+        pos.add_raw(3.0, 3.0, 3.0),
+    );
+    let world = entity.world.load();
+
+    let mut best: Option<(f64, Arc<dyn crate::entity::EntityBase>)> = None;
+    for other in world.get_entities_at_box(&search_box) {
+        let other_entity = other.get_entity();
+        if other_entity.entity_id == entity.entity_id
+            || other_entity.entity_type.id == verdantgolem_data::entity::EntityType::PLAYER.id
+            || other.get_item_entity().is_some()
+        {
+            continue;
+        }
+        let dist_sq = other_entity.pos.load().sub(&pos).length_squared();
+        if best.as_ref().is_none_or(|(best_sq, _)| dist_sq < *best_sq) {
+            best = Some((dist_sq, other));
+        }
+    }
+
+    let Some((_, vehicle)) = best else {
+        return Err(format!("no mountable entity near {name}"));
+    };
+    let vehicle_name = vehicle.get_entity().entity_type.registry_key;
+    let player_base: Arc<dyn crate::entity::EntityBase> = player.clone();
+    vehicle
+        .get_entity()
+        .add_passenger(vehicle.clone(), player_base)
+        .await;
+
+    Ok(vehicle_name.to_string())
+}
+
+/// Dismounts a fake player from its vehicle.
+pub async fn dismount(name: &str) -> Result<(), String> {
+    let player = get(name).ok_or_else(|| format!("no fake player named {name}"))?;
+    let entity = &player.living_entity.entity;
+    let vehicle = entity.vehicle.lock().await.clone();
+    let Some(vehicle) = vehicle else {
+        return Err(format!("{name} is not riding anything"));
+    };
+    vehicle
+        .get_entity()
+        .remove_passenger(entity.entity_id)
+        .await;
     Ok(())
 }
 

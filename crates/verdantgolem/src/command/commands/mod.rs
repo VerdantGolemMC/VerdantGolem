@@ -26,6 +26,7 @@ mod deop;
 mod dialog;
 mod difficulty;
 mod distance;
+mod draw;
 mod effect;
 mod enchant;
 mod execute;
@@ -52,6 +53,7 @@ mod op;
 mod pardon;
 mod pardonip;
 mod particle;
+mod perimeterinfo;
 mod place;
 mod player;
 mod playsound;
@@ -152,6 +154,11 @@ pub fn default_dispatcher(
     dispatcher.register(player::init_command_tree(), "pumpkin:command.player");
     dispatcher.register(info::init_command_tree(), "pumpkin:command.info");
     dispatcher.register(distance::init_command_tree(), "pumpkin:command.distance");
+    dispatcher.register(draw::init_command_tree(), "pumpkin:command.draw");
+    dispatcher.register(
+        perimeterinfo::init_command_tree(),
+        "pumpkin:command.perimeterinfo",
+    );
     dispatcher.register(counter::init_command_tree(), "pumpkin:command.counter");
     dispatcher.register(
         stopsound::init_command_tree(),
@@ -392,6 +399,20 @@ fn register_level_0_permissions(registry: &PermissionRegistry) {
 #[expect(clippy::too_many_lines)]
 fn register_level_2_permissions(registry: &PermissionRegistry) {
     // Register permissions for commands with PermissionLvl::Two
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.draw",
+            "Draws geometric shapes of blocks",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.perimeterinfo",
+            "Scans surroundings for spawnable spots",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
     registry
         .register_permission(Permission::new(
             "pumpkin:command.info",

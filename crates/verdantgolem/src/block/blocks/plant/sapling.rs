@@ -77,6 +77,33 @@ impl BlockBehaviour for SaplingBlock {
     }
 
     fn random_tick(&self, args: RandomTickArgs<'_>) {
+        // Carpet rule desertShrubs: saplings wither in hot, dry biomes
+        // unless water is nearby.
+        if crate::carpet::values().desert_shrubs {
+            let biome = args.world.level.get_rough_biome(args.position);
+            if biome.weather.base_temperature() >= 2.0 {
+                let near_water = (args.position.0.x - 4..=args.position.0.x + 4).any(|dx| {
+                    (args.position.0.z - 4..=args.position.0.z + 4).any(|dz| {
+                        (args.position.0.y - 4..=args.position.0.y + 1).any(|dy| {
+                            let fluid = args.world.get_fluid(&BlockPos(
+                                verdantgolem_util::math::vector3::Vector3::new(dx, dy, dz),
+                            ));
+                            fluid == &verdantgolem_data::fluid::Fluid::WATER
+                                || fluid == &verdantgolem_data::fluid::Fluid::FLOWING_WATER
+                        })
+                    })
+                });
+                if !near_water {
+                    args.world.set_block_state(
+                        args.position,
+                        verdantgolem_data::Block::DEAD_BUSH.default_state.id,
+                        BlockFlags::NOTIFY_ALL,
+                    );
+                    return;
+                }
+            }
+        }
+
         if rand::random::<u8>().is_multiple_of(7) {
             let state_id = args.world.get_block_state_id(args.position);
             Self::advance_tree(args.world, args.position, args.block, state_id, false);
@@ -92,9 +119,7 @@ impl BlockBehaviour for SaplingBlock {
     }
 
     fn perform_bonemeal(&self, args: BonemealArgs<'_>) {
-        {
-            Self::advance_tree(args.world, args.position, args.block, args.state_id, true);
-        }
+        Self::advance_tree(args.world, args.position, args.block, args.state_id, true);
     }
 }
 

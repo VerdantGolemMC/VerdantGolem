@@ -103,6 +103,9 @@ impl FlowingLava {
                 }
                 let block = if is_still {
                     Block::OBSIDIAN
+                } else if crate::carpet::values().renewable_deepslate && block_pos.0.y < 0 {
+                    // carpet rule renewableDeepslate
+                    Block::DEEPSLATE
                 } else {
                     Block::COBBLESTONE
                 };
@@ -114,12 +117,22 @@ impl FlowingLava {
                 world.sync_world_event(WorldEvent::LavaFizz, *block_pos, 0);
                 return false;
             }
-            if below_is_soul_soil && world.get_block(&neighbor_pos) == &Block::BLUE_ICE {
+            // carpet rule renewableBlackstone: lava over blue ice without soul
+            // soil forms blackstone (soul soil keeps the vanilla basalt).
+            let blackstone_fallback =
+                crate::carpet::values().renewable_blackstone && !below_is_soul_soil;
+            if (below_is_soul_soil || blackstone_fallback)
+                && world.get_block(&neighbor_pos) == &Block::BLUE_ICE
+            {
+                let formed = if below_is_soul_soil {
+                    &Block::BASALT
+                } else {
+                    &Block::BLACKSTONE
+                };
                 if let Some(server) = world.server.upgrade() {
                     let mut event =
                         crate::plugin::api::events::block::block_form::BlockFormEvent::new(
-                            *block_pos,
-                            &Block::BASALT,
+                            *block_pos, formed,
                         );
                     server.plugin_manager.fire_blocking(&server, &mut event);
                     if event.cancelled {
@@ -128,7 +141,7 @@ impl FlowingLava {
                 }
                 world.set_block_state(
                     block_pos,
-                    Block::BASALT.default_state.id,
+                    formed.default_state.id,
                     BlockFlags::NOTIFY_NEIGHBORS,
                 );
                 world.sync_world_event(WorldEvent::LavaFizz, *block_pos, 0);

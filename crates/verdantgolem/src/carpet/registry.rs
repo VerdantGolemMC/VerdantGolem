@@ -371,6 +371,46 @@ carpet_rules! {
         field: renewable_sponges,
         desc: "Lightning striking a guardian turns it into an elder guardian.",
     };
+    MovableAmethyst => {
+        name: "movableAmethyst",
+        category: Feature,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: movable_amethyst,
+        desc: "Amethyst blocks (including budding) can be moved by pistons.",
+    };
+    RenewableDeepslate => {
+        name: "renewableDeepslate",
+        category: Feature,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: renewable_deepslate,
+        desc: "Lava meeting water below y=0 produces deepslate instead of cobblestone.",
+    };
+    RenewableBlackstone => {
+        name: "renewableBlackstone",
+        category: Feature,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: renewable_blackstone,
+        desc: "Lava flowing over blue ice without soul soil forms blackstone instead of nothing.",
+    };
+    MissingTools => {
+        name: "missingTools",
+        category: Survival,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: missing_tools,
+        desc: "Pickaxes also break glass at pickaxe speed.",
+    };
+    DesertShrubs => {
+        name: "desertShrubs",
+        category: Feature,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: desert_shrubs,
+        desc: "Saplings in hot, dry biomes wither into dead bushes (unless water is near).",
+    };
     FillUpdates => {
         name: "fillUpdates",
         category: Creative,
@@ -589,7 +629,7 @@ mod tests {
             // Every rule resolves back from its name.
             assert_eq!(Rule::from_name(def.name), Some(*rule));
         }
-        assert_eq!(Rule::ALL.len(), 21);
+        assert_eq!(Rule::ALL.len(), 26);
     }
 
     #[test]

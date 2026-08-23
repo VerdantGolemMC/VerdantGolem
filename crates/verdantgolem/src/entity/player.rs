@@ -4515,7 +4515,20 @@ impl Player {
     }
 
     pub fn get_mining_speed(&self, block: &'static Block) -> f32 {
-        let mut speed = self.inventory().held_item().get_speed(block);
+        let held = self.inventory().held_item();
+        let mut speed = if crate::carpet::values().missing_tools
+            && block.has_tag(&verdantgolem_data::tag::Block::C_GLASS_BLOCKS)
+        {
+            // Carpet rule missingTools: pickaxes also break glass at pickaxe speed.
+            let stone_speed = held.get_speed(&Block::STONE);
+            if stone_speed > 1.0 {
+                stone_speed
+            } else {
+                held.get_speed(block)
+            }
+        } else {
+            held.get_speed(block)
+        };
         // Haste
         if self.living_entity.has_effect(&StatusEffect::HASTE)
             || self.living_entity.has_effect(&StatusEffect::CONDUIT_POWER)
