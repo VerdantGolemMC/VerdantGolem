@@ -65,6 +65,34 @@ impl CommandExecutor for MobCapsExecutor {
     }
 }
 
+struct TrackingExecutor;
+
+impl CommandExecutor for TrackingExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        _args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            if crate::carpet::spawn_tracking::toggle() {
+                sender
+                    .send_message(TextComponent::text(
+                        "Started spawn tracking. Run /spawn tracking again to stop and report.",
+                    ))
+                    .await;
+            } else {
+                sender
+                    .send_message(TextComponent::text(crate::carpet::spawn_tracking::report()))
+                    .await;
+            }
+            Ok(1)
+        })
+    }
+}
+
 pub fn init_command_tree() -> CommandTree {
-    CommandTree::new(NAMES, DESCRIPTION).then(literal("mobcaps").execute(MobCapsExecutor))
+    CommandTree::new(NAMES, DESCRIPTION)
+        .then(literal("mobcaps").execute(MobCapsExecutor))
+        .then(literal("tracking").execute(TrackingExecutor))
 }

@@ -62,6 +62,7 @@ VerdantGolem 内置与 [fabric-carpet](https://github.com/gnembon/fabric-carpet)
 | `/carpet` / `/vgcarpet` | OP2 | 规则查询/设置/列表/恢复默认 |
 | `/counter [颜色] [reset]` | OP2 | 16 通道漏斗计数器读取/重置 |
 | `/spawn mobcaps` | OP2 | 全类别实时生物上限 |
+| `/spawn tracking` | OP2 | 自然刷怪采样统计（再执行一次停止并输出报告） |
 | `/perimeterinfo [pos]` | OP2 | 周边 33×33 柱的怪物可刷点扫描（含分层统计） |
 | `/player <名> spawn\|kill\|attack\|sneak\|jump\|drop\|mount\|dismount\|look\|stop` | OP2 | 假人全套控制 |
 | `/player list` | OP2 | 在线假人清单 |
