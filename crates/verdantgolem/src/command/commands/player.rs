@@ -160,7 +160,6 @@ impl CommandExecutor for AttackExecutor {
     ) -> CommandResult<'a> {
         Box::pin(async move {
             let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
-            let player = fake_player::get(name).ok_or_else(|| unknown(name))?;
             let now_attacking = !fake_player::is_attacking(name);
             fake_player::set_attacking(name, now_attacking).map_err(text_error)?;
             sender

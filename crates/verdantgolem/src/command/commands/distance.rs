@@ -35,7 +35,7 @@ impl CommandExecutor for DistanceExecutor {
 
             sender
                 .send_message(TextComponent::text(format!(
-                    "From {from:?} to {to}:\n\
+                    "From {from:?} to {to:?}:\n\
                      Manhattan (x+y+z): {manhattan}\n\
                      Euclidean: {euclidean}"
                 )))
