@@ -25,6 +25,7 @@ pub mod defaultgamemode;
 mod deop;
 mod dialog;
 mod difficulty;
+mod distance;
 mod effect;
 mod enchant;
 mod execute;
@@ -38,6 +39,7 @@ mod gamemode;
 mod gamerule;
 mod give;
 mod help;
+mod info;
 mod item;
 mod kick;
 mod kill;
@@ -148,6 +150,8 @@ pub fn default_dispatcher(
     dispatcher.register(carpet::init_command_tree(), "pumpkin:command.carpet");
     dispatcher.register(spawn::init_command_tree(), "pumpkin:command.spawn");
     dispatcher.register(player::init_command_tree(), "pumpkin:command.player");
+    dispatcher.register(info::init_command_tree(), "pumpkin:command.info");
+    dispatcher.register(distance::init_command_tree(), "pumpkin:command.distance");
     dispatcher.register(counter::init_command_tree(), "pumpkin:command.counter");
     dispatcher.register(
         stopsound::init_command_tree(),
@@ -388,6 +392,20 @@ fn register_level_0_permissions(registry: &PermissionRegistry) {
 #[expect(clippy::too_many_lines)]
 fn register_level_2_permissions(registry: &PermissionRegistry) {
     // Register permissions for commands with PermissionLvl::Two
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.info",
+            "Shows block and block-entity data",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
+    registry
+        .register_permission(Permission::new(
+            "pumpkin:command.distance",
+            "Measures the distance between two positions",
+            PermissionDefault::Op(PermissionLvl::Two),
+        ))
+        .unwrap_or_else(|e| tracing::warn!("{e}"));
     registry
         .register_permission(Permission::new(
             "pumpkin:command.player",

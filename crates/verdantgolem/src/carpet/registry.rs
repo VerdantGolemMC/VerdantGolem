@@ -363,6 +363,14 @@ carpet_rules! {
         field: hopper_counters,
         desc: "Hoppers transferring into wool count and destroy the items (16 channels, /counter).",
     };
+    RenewableSponges => {
+        name: "renewableSponges",
+        category: Feature,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: renewable_sponges,
+        desc: "Lightning striking a guardian turns it into an elder guardian.",
+    };
     FillUpdates => {
         name: "fillUpdates",
         category: Creative,
@@ -581,7 +589,7 @@ mod tests {
             // Every rule resolves back from its name.
             assert_eq!(Rule::from_name(def.name), Some(*rule));
         }
-        assert_eq!(Rule::ALL.len(), 20);
+        assert_eq!(Rule::ALL.len(), 21);
     }
 
     #[test]

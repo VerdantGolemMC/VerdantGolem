@@ -149,6 +149,126 @@ impl CommandExecutor for LookExecutor {
     }
 }
 
+struct AttackExecutor;
+
+impl CommandExecutor for AttackExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            let player = fake_player::get(name).ok_or_else(|| unknown(name))?;
+            let now_attacking = !fake_player::is_attacking(name);
+            fake_player::set_attacking(name, now_attacking).map_err(text_error)?;
+            sender
+                .send_message(TextComponent::text(format!(
+                    "{} attacking for {name}",
+                    if now_attacking { "Started" } else { "Stopped" }
+                )))
+                .await;
+            Ok(1)
+        })
+    }
+}
+
+fn text_error(error: String) -> crate::command::dispatcher::CommandError {
+    crate::command::dispatcher::CommandError::CommandFailed(TextComponent::text(error))
+}
+
+struct SneakExecutor;
+
+impl CommandExecutor for SneakExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            let player = fake_player::get(name).ok_or_else(|| unknown(name))?;
+            let entity = &player.living_entity.entity;
+            let sneaking = !entity.sneaking.load(std::sync::atomic::Ordering::Relaxed);
+            entity.set_sneaking(sneaking);
+            sender
+                .send_message(TextComponent::text(format!(
+                    "{name} is {}sneaking",
+                    if sneaking { "" } else { "no longer " }
+                )))
+                .await;
+            Ok(1)
+        })
+    }
+}
+
+struct JumpExecutor;
+
+impl CommandExecutor for JumpExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            let player = fake_player::get(name).ok_or_else(|| unknown(name))?;
+            let entity = &player.living_entity.entity;
+            let mut velocity = entity.velocity.load();
+            velocity.y = 0.42;
+            entity.velocity.store(velocity);
+            sender
+                .send_message(TextComponent::text(format!("{name} jumped")))
+                .await;
+            Ok(1)
+        })
+    }
+}
+
+struct DropExecutor;
+
+impl CommandExecutor for DropExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            let player = fake_player::get(name).ok_or_else(|| unknown(name))?;
+            player.drop_held_item(false);
+            sender
+                .send_message(TextComponent::text(format!("{name} dropped an item")))
+                .await;
+            Ok(1)
+        })
+    }
+}
+
+struct StopExecutor;
+
+impl CommandExecutor for StopExecutor {
+    fn execute<'a>(
+        &'a self,
+        sender: &'a CommandSender,
+        _server: &'a crate::server::Server,
+        args: &'a ConsumedArgs<'a>,
+    ) -> CommandResult<'a> {
+        Box::pin(async move {
+            let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+            fake_player::stop_actions(name).map_err(text_error)?;
+            sender
+                .send_message(TextComponent::text(format!("Stopped actions of {name}")))
+                .await;
+            Ok(1)
+        })
+    }
+}
+
 fn invalid_value(arg: &str) -> crate::command::dispatcher::CommandError {
     crate::command::dispatcher::CommandError::CommandFailed(TextComponent::text(format!(
         "Invalid value for {arg}"
@@ -168,6 +288,11 @@ pub fn init_command_tree() -> CommandTree {
             argument(ARG_NAME, SimpleArgConsumer)
                 .then(literal("spawn").execute(SpawnExecutor))
                 .then(literal("kill").execute(KillExecutor))
+                .then(literal("attack").execute(AttackExecutor))
+                .then(literal("sneak").execute(SneakExecutor))
+                .then(literal("jump").execute(JumpExecutor))
+                .then(literal("drop").execute(DropExecutor))
+                .then(literal("stop").execute(StopExecutor))
                 .then(
                     literal("look").then(
                         argument(ARG_YAW, SimpleArgConsumer)

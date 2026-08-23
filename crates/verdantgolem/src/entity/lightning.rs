@@ -5,6 +5,7 @@ use std::sync::{
 };
 
 use rand::RngExt;
+use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_data::world::WorldEvent;
 use verdantgolem_data::{Block, BlockId, BlockStateId};
@@ -262,6 +263,25 @@ impl EntityBase for LightningBoltEntity {
                     let hit_id = hit_entity.get_entity().entity_id;
                     if hit_guard.insert(hit_id) {
                         hit_entity.on_lightning_strike(hit_entity.as_ref(), self);
+
+                        // Carpet rule renewableSponges: guardians struck by
+                        // lightning become elder guardians (renewable sponges).
+                        if crate::carpet::values().renewable_sponges
+                            && hit_entity.get_entity().entity_type.id == EntityType::GUARDIAN.id
+                        {
+                            let struck = hit_entity.get_entity();
+                            let struck_pos = struck.pos.load();
+                            let struck_uuid = struck.entity_uuid;
+                            let struck_world = struck.world.load();
+                            struck.remove();
+                            let elder = crate::entity::r#type::from_type(
+                                &EntityType::ELDER_GUARDIAN,
+                                struck_pos,
+                                &struck_world,
+                                struck_uuid,
+                            );
+                            struck_world.spawn_entity(elder);
+                        }
                     }
                 }
             }

@@ -7,7 +7,10 @@
 
 use std::{
     collections::BTreeMap,
-    sync::{Arc, LazyLock, Mutex},
+    sync::{
+        Arc, LazyLock, Mutex,
+        atomic::{AtomicBool, AtomicU32, Ordering},
+    },
 };
 
 use uuid::Uuid;
@@ -18,11 +21,23 @@ use crate::{
     server::Server,
 };
 use arc_swap::ArcSwap;
+use verdantgolem_util::Hand;
 use verdantgolem_util::math::vector3::Vector3;
 
+/// A fake player plus its repeating-action state.
+pub struct FakePlayer {
+    player: Arc<Player>,
+    /// Continuous attack toggle (`/player <name> attack`).
+    attacking: AtomicBool,
+    attack_cooldown: AtomicU32,
+}
+
 /// Online fake players by name.
-static FAKES: LazyLock<Mutex<BTreeMap<String, Arc<Player>>>> =
+static FAKES: LazyLock<Mutex<BTreeMap<String, Arc<FakePlayer>>>> =
     LazyLock::new(|| Mutex::new(BTreeMap::new()));
+
+/// Ticks between fake-player attacks (~ vanilla sword cooldown).
+const ATTACK_INTERVAL: u32 = 12;
 
 /// Vanilla-compatible offline UUID for a fake player name (stable across restarts).
 #[must_use]
@@ -51,11 +66,125 @@ fn profile(name: &str) -> GameProfile {
 /// The online fake player named `name`.
 #[must_use]
 pub fn get(name: &str) -> Option<Arc<Player>> {
-    FAKES.lock().ok().and_then(|fakes| fakes.get(name).cloned())
+    FAKES
+        .lock()
+        .ok()
+        .and_then(|fakes| fakes.get(name).map(|fake| fake.player.clone()))
 }
 
-/// Names of all online fake players.
+/// Whether a fake player is continuously attacking.
 #[must_use]
+pub fn is_attacking(name: &str) -> bool {
+    FAKES
+        .lock()
+        .ok()
+        .and_then(|fakes| {
+            fakes
+                .get(name)
+                .map(|fake| fake.attacking.load(Ordering::Relaxed))
+        })
+        .unwrap_or(false)
+}
+
+/// Toggles the continuous attack action of a fake player.
+pub fn set_attacking(name: &str, on: bool) -> Result<(), String> {
+    let fakes = FAKES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    let fake = fakes
+        .get(name)
+        .ok_or_else(|| format!("no fake player named {name}"))?;
+    fake.attacking.store(on, Ordering::Relaxed);
+    fake.attack_cooldown.store(0, Ordering::Relaxed);
+    Ok(())
+}
+
+/// Clears all repeating actions of a fake player.
+pub fn stop_actions(name: &str) -> Result<(), String> {
+    set_attacking(name, false)
+}
+
+/// Ticks every fake player in `world`, applying repeating actions.
+/// Called once per world tick, so fakes only tick in their own world.
+pub fn tick_fakes(world: &Arc<crate::world::World>) {
+    let fakes: Vec<Arc<FakePlayer>> = FAKES
+        .lock()
+        .ok()
+        .map(|guard| {
+            guard
+                .values()
+                .filter(|fake| Arc::ptr_eq(&fake.player.world(), world))
+                .cloned()
+                .collect()
+        })
+        .unwrap_or_default();
+    for fake in fakes {
+        if !fake.attacking.load(Ordering::Relaxed) {
+            continue;
+        }
+        let cooldown = fake.attack_cooldown.load(Ordering::Relaxed);
+        if cooldown > 0 {
+            fake.attack_cooldown.store(cooldown - 1, Ordering::Relaxed);
+        } else {
+            fake.attack_cooldown
+                .store(ATTACK_INTERVAL, Ordering::Relaxed);
+            try_attack(&fake.player);
+        }
+    }
+}
+
+/// Attacks the closest living entity inside a cone in front of the fake
+/// player, like a crosshair attack.
+fn try_attack(player: &Arc<Player>) {
+    let entity = &player.living_entity.entity;
+    let pos = entity.pos.load();
+    let yaw = f64::from(entity.yaw.load()).to_radians();
+    let pitch = f64::from(entity.pitch.load()).to_radians();
+    let dir = Vector3::new(
+        -yaw.sin() * pitch.cos(),
+        -pitch.sin(),
+        yaw.cos() * pitch.cos(),
+    );
+
+    let center = pos + dir.multiply(2.0, 2.0, 2.0);
+    let search_box = verdantgolem_util::math::boundingbox::BoundingBox::new(
+        center.sub_raw(1.5, 1.5, 1.5),
+        center.add_raw(1.5, 1.5, 1.5),
+    );
+    let world = entity.world.load();
+
+    let mut best: Option<(f64, Arc<dyn crate::entity::EntityBase>)> = None;
+    for other in world.get_entities_at_box(&search_box) {
+        let other_entity = other.get_entity();
+        if other_entity.entity_id == entity.entity_id
+            || other_entity.entity_type.id == verdantgolem_data::entity::EntityType::PLAYER.id
+        {
+            continue;
+        }
+        if other.get_living_entity().is_none() {
+            continue;
+        }
+        let to = other_entity.pos.load() - pos;
+        let dist_sq = to.length_squared();
+        if dist_sq > 16.0 || dist_sq < 1.0e-6 {
+            continue;
+        }
+        // Keep targets roughly in front of the fake player.
+        let dot = dir.x * to.x + dir.y * to.y + dir.z * to.z;
+        if dot / dist_sq.sqrt() < 0.5 {
+            continue;
+        }
+        if best.as_ref().is_none_or(|(best_sq, _)| dist_sq < *best_sq) {
+            best = Some((dist_sq, other));
+        }
+    }
+
+    if let Some((_, target)) = best {
+        player.attack(&target);
+        player.swing_hand(Hand::Right, true);
+    }
+}
+
 pub fn list() -> Vec<String> {
     FAKES
         .lock()
@@ -94,7 +223,14 @@ pub async fn spawn(
     FAKES
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
-        .insert(name.to_string(), player);
+        .insert(
+            name.to_string(),
+            Arc::new(FakePlayer {
+                player,
+                attacking: AtomicBool::new(false),
+                attack_cooldown: AtomicU32::new(0),
+            }),
+        );
     Ok(())
 }
 
@@ -147,6 +283,7 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         fakes
             .remove(name)
+            .map(|fake| fake.player)
             .ok_or_else(|| format!("no fake player named {name}"))?
     };
 

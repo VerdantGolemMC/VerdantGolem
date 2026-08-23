@@ -1244,6 +1244,8 @@ impl World {
         self.flush_synced_block_events();
         self.update_active_chunks();
         self.tick_environment();
+        // Carpet fake players tick their repeating actions with their world.
+        crate::carpet::fake_player::tick_fakes(self);
         let mut raids = {
             let mut guard = self
                 .raids
