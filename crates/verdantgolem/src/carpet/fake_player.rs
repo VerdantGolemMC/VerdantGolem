@@ -63,7 +63,6 @@ pub fn list() -> Vec<String> {
 
 /// Spawns a fake player named `name` at `position` (with `yaw`/`pitch`) in `world`.
 pub async fn spawn(
-    server: &Arc<Server>,
     world: &Arc<crate::world::World>,
     name: &str,
     position: Vector3<f64>,
@@ -81,18 +80,19 @@ pub async fn spawn(
         return Err(format!("fake player {name} already exists"));
     }
     // Refuse to shadow a real online player.
-    for online in server.worlds.load().iter() {
-        if online
-            .players
-            .load()
-            .iter()
-            .any(|p| p.gameprofile.name.eq_ignore_ascii_case(name))
-        {
-            return Err(format!("a real player named {name} is online"));
-        }
+    if let Some(server) = world.server.upgrade()
+        && server.worlds.load().iter().any(|online| {
+            online
+                .players
+                .load()
+                .iter()
+                .any(|p| p.gameprofile.name.eq_ignore_ascii_case(name))
+        })
+    {
+        return Err(format!("a real player named {name} is online"));
     }
 
-    let player = spawn_untracked(server, world, name, position, yaw, pitch).await?;
+    let player = spawn_untracked(world, name, position, yaw, pitch).await?;
     FAKES
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
@@ -101,13 +101,15 @@ pub async fn spawn(
 }
 
 async fn spawn_untracked(
-    server: &Arc<Server>,
     world: &Arc<crate::world::World>,
     name: &str,
     position: Vector3<f64>,
     yaw: f32,
     pitch: f32,
 ) -> Result<Arc<Player>, String> {
+    let Some(server) = world.server.upgrade() else {
+        return Err("server is inactive".to_string());
+    };
     let Some((player, spawn_world)) = server
         .add_player(Arc::new(ClientPlatform::Local), profile(name), None)
         .await
@@ -140,7 +142,7 @@ async fn spawn_untracked(
 }
 
 /// Removes a fake player by name.
-pub async fn kill(server: &Arc<Server>, name: &str) -> Result<(), String> {
+pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
     let player = {
         let mut fakes = FAKES
             .lock()
@@ -169,5 +171,5 @@ pub async fn look_up(player: &Arc<Player>, yaw: f32, pitch: f32) {
     entity.head_yaw.store(yaw);
     entity.body_yaw.store(yaw);
     entity.pitch.store(pitch);
-    entity.send_pos_rot().await;
+    entity.send_pos_rot();
 }

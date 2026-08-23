@@ -76,7 +76,7 @@ impl CommandExecutor for SpawnExecutor {
                 }
             };
 
-            match fake_player::spawn(server, &world, &name, position, yaw, pitch).await {
+            match fake_player::spawn(&world, &name, position, yaw, pitch).await {
                 Ok(()) => {
                     sender
                         .send_message(TextComponent::text(format!("Spawned fake player {name}")))
