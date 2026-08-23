@@ -411,6 +411,14 @@ carpet_rules! {
         field: desert_shrubs,
         desc: "Saplings in hot, dry biomes wither into dead bushes (unless water is near).",
     };
+    RotatorBlock => {
+        name: "rotatorBlock",
+        category: Feature,
+        kind: Bool,
+        default: RuleValue::Bool(false),
+        field: rotator_block,
+        desc: "A dispenser holding a cactus rotates the block it faces counter-clockwise.",
+    };
     FillUpdates => {
         name: "fillUpdates",
         category: Creative,
@@ -629,7 +637,7 @@ mod tests {
             // Every rule resolves back from its name.
             assert_eq!(Rule::from_name(def.name), Some(*rule));
         }
-        assert_eq!(Rule::ALL.len(), 26);
+        assert_eq!(Rule::ALL.len(), 27);
     }
 
     #[test]

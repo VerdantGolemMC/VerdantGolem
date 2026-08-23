@@ -39,6 +39,7 @@ use crate::world::World;
 
 use crate::block::entities::dispenser::DispenserBlockEntity;
 use verdantgolem_data::block_properties::{BlockProperties, Facing};
+use verdantgolem_data::block_rotation::Rotation;
 use verdantgolem_data::entity::{EntityType, entity_from_egg};
 use verdantgolem_data::fluid::Fluid;
 use verdantgolem_data::item::Item;
@@ -258,6 +259,12 @@ impl DispenserBlock {
             if !Self::dispense_armor_stand(ctx, item) {
                 Self::drop_item(ctx, item);
             }
+        } else if item.item.id == Item::CACTUS.id && crate::carpet::values().rotator_block {
+            // carpet rule rotatorBlock: rotate the block in front
+            // counter-clockwise without consuming the cactus
+            if !Self::dispense_rotation(ctx) {
+                Self::drop_item(ctx, item);
+            }
         } else if item.item.id == Item::TNT.id {
             // TNT
             Self::dispense_tnt(ctx, item);
@@ -436,6 +443,25 @@ impl DispenserBlock {
         ctx.world
             .spawn_entity(Arc::new(ArmorStandEntity::new(entity)));
 
+        ctx.world
+            .sync_world_event(WorldEvent::SoundDispenserDispense, *ctx.position, 0);
+        true
+    }
+
+    /// Rotates the block in front of the dispenser counter-clockwise (Carpet
+    /// `rotatorBlock`). Returns false when the block has no rotation.
+    fn dispense_rotation(ctx: &DispenseContext<'_>) -> bool {
+        let target = Self::target_position(ctx);
+        let (block, state) = ctx.world.get_block_and_state(&target);
+        let rotated = block.rotate(state.id, Rotation::CounterClockwise90);
+        if rotated.id == state.id {
+            return false;
+        }
+        ctx.world.set_block_state(
+            &target,
+            rotated.id,
+            verdantgolem_world::world::BlockFlags::NOTIFY_ALL,
+        );
         ctx.world
             .sync_world_event(WorldEvent::SoundDispenserDispense, *ctx.position, 0);
         true

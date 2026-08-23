@@ -4,7 +4,7 @@ VerdantGolem 内置与 [fabric-carpet](https://github.com/gnembon/fabric-carpet)
 规则（rules）、漏斗计数器、假人、日志订阅与一整套技术向命令。规则通过 `/carpet`
 在运行时修改，按名称持久化到服务器根目录的 `carpet_rules.json`（未知/损坏条目自动回落默认值）。
 
-## 规则（26 条）
+## 规则（27 条）
 
 用 `/carpet list [类别]` 浏览，`/carpet <规则> [值]` 查询/设置，`/carpet default <规则>` 恢复默认。
 
@@ -53,6 +53,7 @@ VerdantGolem 内置与 [fabric-carpet](https://github.com/gnembon/fabric-carpet)
 | `renewableBlackstone` | `false` | 岩浆流过蓝冰（无灵魂沙）生成黑石 |
 | `desertShrubs` | `false` | 干热群系的树苗枯死为枯灌木（4 格内有水除外） |
 | `renewableSponges` | `false` | 雷击守卫者转化为远古守卫者 |
+| `rotatorBlock` | `false` | 发射器内的仙人掌逆时针旋转面前的方块（不消耗） |
 
 ## 命令
 
@@ -84,4 +85,4 @@ VerdantGolem 内置与 [fabric-carpet](https://github.com/gnembon/fabric-carpet)
 ## 尚未实现（规划中）
 
 假人 `use`/`move` 连续动作、`/spawn tracking` 刷怪采样、`stackableShulkerBoxes`、
-`rotatorBlock`（发射器仙人掌旋转）、`movableBlockEntities`、QC 准连接相关规则。
+`movableBlockEntities`、QC 准连接相关规则。
