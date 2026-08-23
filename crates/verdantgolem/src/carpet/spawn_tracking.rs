@@ -5,6 +5,7 @@
 
 use std::{
     collections::BTreeMap,
+    fmt::Write as _,
     sync::{
         LazyLock, Mutex,
         atomic::{AtomicBool, AtomicI64, AtomicU64, Ordering},
@@ -73,7 +74,7 @@ pub fn report() -> String {
         let mut entries: Vec<(&String, &u64)> = counts.iter().collect();
         entries.sort_by_key(|(_, count)| std::cmp::Reverse(**count));
         for (name, count) in entries.iter().take(10) {
-            message.push_str(&format!("\n{name}: {count}"));
+            let _ = writeln!(message, "{name}: {count}");
         }
     }
     message

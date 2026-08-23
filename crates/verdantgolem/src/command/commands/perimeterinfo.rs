@@ -1,3 +1,5 @@
+use std::fmt::Write as _;
+
 use crate::TextComponent;
 
 use crate::command::args::position_block::BlockPosArgumentConsumer;
@@ -81,7 +83,7 @@ impl CommandExecutor for PerimeterInfoExecutor {
             if spawnable > 0 {
                 message.push_str("\nHighest chance levels:");
                 for (y, count) in per_y.iter().take(5) {
-                    message.push_str(&format!("\ny={y}: {count} spots"));
+                    let _ = writeln!(message, "y={y}: {count} spots");
                 }
             } else {
                 message.push_str("\nThe perimeter is fully spawnproof!");

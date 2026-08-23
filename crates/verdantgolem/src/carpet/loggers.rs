@@ -44,12 +44,11 @@ pub fn toggle(logger: Logger, player: &Arc<Player>) -> bool {
         Logger::Tps => &mut subs.tps,
         Logger::MobCaps => &mut subs.mobcaps,
     };
-    match map.remove(&player.gameprofile.id) {
-        Some(_) => false,
-        None => {
-            map.insert(player.gameprofile.id, Arc::downgrade(player));
-            true
-        }
+    if let Some(_) = map.remove(&player.gameprofile.id) {
+        false
+    } else {
+        map.insert(player.gameprofile.id, Arc::downgrade(player));
+        true
     }
 }
 
@@ -67,7 +66,7 @@ fn cap_line(category: &MobCategory, count: i32, spawnable_chunks: i32, multiplie
     format!("{}: {count}/{cap}", logger_category_name(category))
 }
 
-fn logger_category_name(category: &MobCategory) -> &'static str {
+const fn logger_category_name(category: &MobCategory) -> &'static str {
     match category.id {
         0 => "monster",
         1 => "creature",
@@ -82,7 +81,7 @@ fn logger_category_name(category: &MobCategory) -> &'static str {
 
 /// Sends the subscribed readouts; called every server tick.
 pub async fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
-    if tick_number % LOG_INTERVAL != 0 {
+    if !tick_number.is_multiple_of(LOG_INTERVAL) {
         return;
     }
 
