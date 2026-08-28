@@ -74,17 +74,16 @@ impl CommandExecutor for SpawnExecutor {
         );
 
         let sender = sender.clone();
-        let task_name = name.clone();
         let server = world.server.upgrade().ok_or_else(|| {
             crate::command::dispatcher::CommandError::CommandFailed(TextComponent::text(
                 "Server is inactive",
             ))
         })?;
         server.spawn_task(async move {
-            match fake_player::spawn(&world, &task_name, position, yaw, pitch).await {
-                Ok(()) => sender.send_message(TextComponent::text(format!(
-                    "Spawned fake player {task_name}"
-                ))),
+            match fake_player::spawn(&world, &name, position, yaw, pitch).await {
+                Ok(()) => {
+                    sender.send_message(TextComponent::text(format!("Spawned fake player {name}")))
+                }
                 Err(error) => sender.send_message(
                     TextComponent::text(error)
                         .color_named(verdantgolem_util::text::color::NamedColor::Red),
