@@ -49,7 +49,7 @@
 
             cargoBuildFlags = [
               "--package"
-              "pumpkin"
+              "verdantgolem"
             ];
 
             CARGO_PROFILE_RELEASE_LTO = "thin";

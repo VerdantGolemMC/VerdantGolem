@@ -826,17 +826,17 @@ mod test {
     }
 
     #[test]
-    fn pumpkin_command_aliases() {
+    fn verdantgolem_command_aliases() {
         let commands_config = verdantgolem_config::CommandsConfig::default();
         let manager = PermissionManager::new();
         let dispatcher = default_dispatcher(&manager, &commands_config).fallback_dispatcher;
 
-        let pumpkin_tree = dispatcher.get_tree("pumpkin").unwrap();
+        let verdantgolem_tree = dispatcher.get_tree("verdantgolem").unwrap();
         let version_tree = dispatcher.get_tree("version").unwrap();
         let ver_tree = dispatcher.get_tree("ver").unwrap();
 
-        assert_eq!(pumpkin_tree.description, version_tree.description);
-        assert_eq!(pumpkin_tree.description, ver_tree.description);
+        assert_eq!(verdantgolem_tree.description, version_tree.description);
+        assert_eq!(verdantgolem_tree.description, ver_tree.description);
     }
 
     #[test]
