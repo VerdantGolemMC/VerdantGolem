@@ -69,7 +69,7 @@ pub mod updater;
 pub use license::{LicenseChecker, LicenseError};
 pub use models::{
     CheckLicenseResponse, CheckUpdateResponse, DEFAULT_MARKETPLACE_URL, LicenseLease,
-    LicenseStatus, VerdantGolemMetadata,
+    LicenseStatus, PumpkinMetadata,
 };
 pub use updater::{UpdateChecker, UpdateError};
 
@@ -79,7 +79,7 @@ use std::{
 };
 
 /// Global cache for verified plugin metadata.
-static GLOBAL_METADATA: OnceLock<VerdantGolemMetadata> = OnceLock::new();
+static GLOBAL_METADATA: OnceLock<PumpkinMetadata> = OnceLock::new();
 /// Global cache for plugin data folder path.
 static GLOBAL_DATA_FOLDER: OnceLock<PathBuf> = OnceLock::new();
 
@@ -93,13 +93,13 @@ static GLOBAL_DATA_FOLDER: OnceLock<PathBuf> = OnceLock::new();
 /// Returns `LicenseError::UnsignedPlugin` if the plugin is not signed or marketplace metadata is missing.
 pub fn init(
     context: &verdantgolem_plugin_api::Context,
-) -> Result<&'static VerdantGolemMetadata, LicenseError> {
+) -> Result<&'static PumpkinMetadata, LicenseError> {
     let data_folder = PathBuf::from(context.get_data_folder());
 
     #[cfg(target_arch = "wasm32")]
     {
         if let Some(market_meta) = context.get_marketplace_metadata() {
-            let meta: VerdantGolemMetadata = market_meta.into();
+            let meta: PumpkinMetadata = market_meta.into();
             return init_with_metadata(meta, data_folder);
         }
         Err(LicenseError::UnsignedPlugin)
@@ -118,9 +118,9 @@ pub fn init(
 ///
 /// Returns `LicenseError::NotInitialized` if caching fails.
 pub fn init_with_metadata(
-    metadata: VerdantGolemMetadata,
+    metadata: PumpkinMetadata,
     data_folder: impl AsRef<Path>,
-) -> Result<&'static VerdantGolemMetadata, LicenseError> {
+) -> Result<&'static PumpkinMetadata, LicenseError> {
     let folder = data_folder.as_ref().to_path_buf();
     let _ = GLOBAL_DATA_FOLDER.set(folder);
     let _ = GLOBAL_METADATA.set(metadata);
@@ -130,7 +130,7 @@ pub fn init_with_metadata(
 
 /// Returns a reference to the globally cached metadata if `init` has been called.
 #[must_use]
-pub fn get_metadata() -> Option<&'static VerdantGolemMetadata> {
+pub fn get_metadata() -> Option<&'static PumpkinMetadata> {
     GLOBAL_METADATA.get()
 }
 
@@ -139,7 +139,7 @@ pub fn get_metadata() -> Option<&'static VerdantGolemMetadata> {
 /// # Errors
 ///
 /// Returns `LicenseError::NotInitialized` if `init(context)` has not been called yet.
-pub fn metadata() -> Result<&'static VerdantGolemMetadata, LicenseError> {
+pub fn metadata() -> Result<&'static PumpkinMetadata, LicenseError> {
     GLOBAL_METADATA.get().ok_or(LicenseError::NotInitialized)
 }
 

@@ -123,7 +123,7 @@ impl CommandExecutor for KillExecutor {
         server.spawn_task(async move {
             match fake_player::kill(&task_server, &name).await {
                 Ok(()) => {
-                    sender.send_message(TextComponent::text(format!("Removed fake player {name}")))
+                    sender.send_message(TextComponent::text(format!("Removed fake player {name}")));
                 }
                 Err(error) => sender.send_message(
                     TextComponent::text(error)
