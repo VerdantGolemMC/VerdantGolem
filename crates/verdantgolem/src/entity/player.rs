@@ -2590,7 +2590,7 @@ impl Player {
                 .try_lock()
                 .is_ok_and(|screen_handler| {
                     screen_handler.as_any().is::<MerchantScreenHandler>()
-                        && !screen_handler.can_use(self)
+                        && !screen_handler.can_use(self.as_ref())
                 });
 
             if is_invalid {
@@ -2721,7 +2721,7 @@ impl Player {
         }
         self.last_attacked_ticks.fetch_add(1, Ordering::Relaxed);
 
-        self.living_entity.tick(self, server);
+        self.living_entity.tick(self.as_ref(), server);
 
         self.breath_manager.tick(self);
         self.hunger_manager.tick(self);
@@ -4756,7 +4756,7 @@ impl Player {
         let locale = Locale::from_str(&self.config.load().locale).unwrap_or(Locale::EnUs);
         if overlay {
             let be_packet = verdantgolem_protocol::bedrock::client::set_title::CSetTitle::new(
-                4,
+                verdantgolem_protocol::bedrock::client::TitleType::Actionbar,
                 text.0.to_bedrock_legacy(locale),
                 0,
                 0,

@@ -124,7 +124,7 @@ const fn effective_tps(raw_tps: f64, frozen: bool, runs_normally: bool, sprintin
 }
 
 /// Sends the subscribed readouts; called every server tick.
-pub async fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
+pub fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
     if !tick_number.is_multiple_of(LOG_INTERVAL) {
         return;
     }
@@ -197,10 +197,9 @@ pub async fn tick_loggers(server: &Arc<Server>, tick_number: u64) {
         })
         .collect();
 
-    futures::future::join_all(messages.into_iter().map(|(player, message)| async move {
-        player.send_system_message_raw(&message, true).await;
-    }))
-    .await;
+    for (player, message) in messages {
+        player.send_system_message_raw(&message, true);
+    }
 }
 
 #[cfg(test)]

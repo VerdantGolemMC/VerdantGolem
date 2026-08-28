@@ -319,6 +319,7 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.try_kick(message),
             Self::Bedrock(bedrock) => bedrock.try_kick(reason, message.clone().get_text()),
+            Self::Local => {}
         }
     }
 

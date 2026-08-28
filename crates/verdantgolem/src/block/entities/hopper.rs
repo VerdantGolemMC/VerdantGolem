@@ -296,7 +296,10 @@ impl HopperBlockEntity {
             let (target_block, _) = world.get_block_and_state(&target_pos);
             if let Some(channel) = crate::carpet::counters::wool_channel(target_block) {
                 let counted = {
-                    let mut items = self.items.write().await;
+                    let mut items = self
+                        .items
+                        .write()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner);
                     let mut counted = Vec::with_capacity(items.len());
                     for item in items.iter_mut() {
                         if !item.is_empty() {

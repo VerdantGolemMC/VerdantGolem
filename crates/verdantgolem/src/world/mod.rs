@@ -140,7 +140,7 @@ use verdantgolem_util::resource_location::ResourceLocation;
 use verdantgolem_util::text::{TextComponent, color::NamedColor};
 use verdantgolem_util::version::JavaMinecraftVersion;
 use verdantgolem_util::{
-    Difficulty,
+    Difficulty, GameMode,
     math::{boundingbox::BoundingBox, position::BlockPos, vector3::Vector3},
 };
 use verdantgolem_util::{
