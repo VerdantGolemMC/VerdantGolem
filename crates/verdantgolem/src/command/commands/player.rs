@@ -82,7 +82,7 @@ impl CommandExecutor for SpawnExecutor {
         server.spawn_task(async move {
             match fake_player::spawn(&world, &name, position, yaw, pitch).await {
                 Ok(()) => {
-                    sender.send_message(TextComponent::text(format!("Spawned fake player {name}")))
+                    sender.send_message(TextComponent::text(format!("Spawned fake player {name}")));
                 }
                 Err(error) => sender.send_message(
                     TextComponent::text(error)
