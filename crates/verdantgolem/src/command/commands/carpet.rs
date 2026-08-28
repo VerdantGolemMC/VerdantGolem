@@ -22,30 +22,26 @@ const ARG_CATEGORY: &str = "category";
 struct RootExecutor;
 
 impl CommandExecutor for RootExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let rules = CarpetRules::global();
-            let total = Rule::ALL.len();
-            let changed = Rule::ALL
-                .iter()
-                .copied()
-                .filter(|rule| rules.get(*rule) != rule.def().default)
-                .count();
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        let rules = CarpetRules::global();
+        let total = Rule::ALL.len();
+        let changed = Rule::ALL
+            .iter()
+            .copied()
+            .filter(|rule| rules.get(*rule) != rule.def().default)
+            .count();
 
-            sender
-                .send_message(TextComponent::text(format!(
-                    "{total} carpet rules available, {changed} changed from default. \
-                     Use /carpet list [category], /carpet <rule> [value] or /carpet default <rule>."
-                )))
-                .await;
+        sender.send_message(TextComponent::text(format!(
+            "{total} carpet rules available, {changed} changed from default. \
+             Use /carpet list [category], /carpet <rule> [value] or /carpet default <rule>."
+        )));
 
-            Ok(changed as i32)
-        })
+        Ok(changed as i32)
     }
 }
 
@@ -69,135 +65,119 @@ fn list_rules(rules: &CarpetRules, category: Option<RuleCategory>) -> String {
 struct ListExecutor;
 
 impl CommandExecutor for ListExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let category = if args.contains_key(ARG_CATEGORY) {
-                let name = SimpleArgConsumer::find_arg(args, ARG_CATEGORY)?;
-                Some(
-                    parse_category(name)
-                        .map_err(|error| CommandError::CommandFailed(TextComponent::text(error)))?,
-                )
-            } else {
-                None
-            };
-            let heading = category.map_or_else(
-                || "All carpet rules".to_string(),
-                |category| format!("Carpet rules in category {category}"),
-            );
-            sender
-                .send_message(TextComponent::text(format!(
-                    "{heading}:\n{}",
-                    list_rules(CarpetRules::global(), category)
-                )))
-                .await;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs,
+    ) -> CommandResult {
+        let category = if args.contains_key(ARG_CATEGORY) {
+            let name = SimpleArgConsumer::find_arg(args, ARG_CATEGORY)?;
+            Some(
+                parse_category(name)
+                    .map_err(|error| CommandError::CommandFailed(TextComponent::text(error)))?,
+            )
+        } else {
+            None
+        };
+        let heading = category.map_or_else(
+            || "All carpet rules".to_string(),
+            |category| format!("Carpet rules in category {category}"),
+        );
+        sender.send_message(TextComponent::text(format!(
+            "{heading}:\n{}",
+            list_rules(CarpetRules::global(), category)
+        )));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 
 struct QueryExecutor(Rule);
 
 impl CommandExecutor for QueryExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let def = self.0.def();
-            let value = CarpetRules::global().get(self.0);
-            sender
-                .send_message(TextComponent::text(format!(
-                    "{}: {} (default {})\n{}",
-                    def.name, value, def.default, def.desc
-                )))
-                .await;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        let def = self.0.def();
+        let value = CarpetRules::global().get(self.0);
+        sender.send_message(TextComponent::text(format!(
+            "{}: {} (default {})\n{}",
+            def.name, value, def.default, def.desc
+        )));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 
 struct SetExecutor(Rule);
 
 impl CommandExecutor for SetExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let def = self.0.def();
-            let raw = match def.kind {
-                ValueKind::Bool => BoolArgConsumer::find_arg(args, ARG_VALUE)?.to_string(),
-                ValueKind::Int | ValueKind::Float => {
-                    SimpleArgConsumer::find_arg(args, ARG_VALUE)?.to_string()
-                }
-            };
-            let value = parse_value(def.kind, &raw);
-
-            match value.and_then(|value| CarpetRules::global().set(self.0, value)) {
-                Ok(()) => {
-                    sender
-                        .send_message(TextComponent::text(format!(
-                            "Set rule {} to {}",
-                            def.name,
-                            CarpetRules::global().get(self.0)
-                        )))
-                        .await;
-                    Ok(1)
-                }
-                Err(error) => Err(CommandError::CommandFailed(TextComponent::text(format!(
-                    "Failed to set {}: {error}",
-                    def.name
-                )))),
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs,
+    ) -> CommandResult {
+        let def = self.0.def();
+        let raw = match def.kind {
+            ValueKind::Bool => BoolArgConsumer::find_arg(args, ARG_VALUE)?.to_string(),
+            ValueKind::Int | ValueKind::Float => {
+                SimpleArgConsumer::find_arg(args, ARG_VALUE)?.to_string()
             }
-        })
+        };
+        let value = parse_value(def.kind, &raw);
+
+        match value.and_then(|value| CarpetRules::global().set(self.0, value)) {
+            Ok(()) => {
+                sender.send_message(TextComponent::text(format!(
+                    "Set rule {} to {}",
+                    def.name,
+                    CarpetRules::global().get(self.0)
+                )));
+                Ok(1)
+            }
+            Err(error) => Err(CommandError::CommandFailed(TextComponent::text(format!(
+                "Failed to set {}: {error}",
+                def.name
+            )))),
+        }
     }
 }
 
 struct ResetExecutor;
 
 impl CommandExecutor for ResetExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let name = SimpleArgConsumer::find_arg(args, ARG_RULE)?;
-            let Some(rule) = Rule::from_name(name) else {
-                return Err(CommandError::CommandFailed(TextComponent::text(format!(
-                    "Unknown rule: {name}"
-                ))));
-            };
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs,
+    ) -> CommandResult {
+        let name = SimpleArgConsumer::find_arg(args, ARG_RULE)?;
+        let Some(rule) = Rule::from_name(name) else {
+            return Err(CommandError::CommandFailed(TextComponent::text(format!(
+                "Unknown rule: {name}"
+            ))));
+        };
 
-            let rules = CarpetRules::global();
-            if let Err(error) = rules.reset(rule) {
-                return Err(CommandError::CommandFailed(TextComponent::text(format!(
-                    "Failed to reset {}: {error}",
-                    rule.def().name
-                ))));
-            }
-            sender
-                .send_message(TextComponent::text(format!(
-                    "Reset rule {} to default {}",
-                    rule.def().name,
-                    rules.get(rule)
-                )))
-                .await;
+        let rules = CarpetRules::global();
+        if let Err(error) = rules.reset(rule) {
+            return Err(CommandError::CommandFailed(TextComponent::text(format!(
+                "Failed to reset {}: {error}",
+                rule.def().name
+            ))));
+        }
+        sender.send_message(TextComponent::text(format!(
+            "Reset rule {} to default {}",
+            rule.def().name,
+            rules.get(rule)
+        )));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 

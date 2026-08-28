@@ -38,138 +38,133 @@ fn draw_flags(fill_updates: bool) -> BlockFlags {
 
 impl CommandExecutor for DrawExecutor {
     #[expect(clippy::too_many_lines)]
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        server: &'a crate::server::Server,
-        args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let Some(world) = sender.world() else {
-                return Err(failed("draw must be run with a world context".to_string()));
-            };
-            let center: BlockPos =
-                BlockPosArgumentConsumer::find_loaded_arg(args, ARG_CENTER, &world)?;
-            let radius: i32 = SimpleArgConsumer::find_arg(args, ARG_RADIUS)?
-                .parse()
-                .map_err(|_| invalid(ARG_RADIUS))?;
-            if !(1..=MAX_RADIUS).contains(&radius) {
-                return Err(failed(format!("radius must be between 1 and {MAX_RADIUS}")));
-            }
-            let block = BlockArgumentConsumer::find_arg(args, ARG_BLOCK)?;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        server: &crate::server::Server,
+        args: &ConsumedArgs,
+    ) -> CommandResult {
+        let Some(world) = sender.world() else {
+            return Err(failed("draw must be run with a world context".to_string()));
+        };
+        let center: BlockPos = BlockPosArgumentConsumer::find_loaded_arg(args, ARG_CENTER, &world)?;
+        let radius: i32 = SimpleArgConsumer::find_arg(args, ARG_RADIUS)?
+            .parse()
+            .map_err(|_| invalid(ARG_RADIUS))?;
+        if !(1..=MAX_RADIUS).contains(&radius) {
+            return Err(failed(format!("radius must be between 1 and {MAX_RADIUS}")));
+        }
+        let block = BlockArgumentConsumer::find_arg(args, ARG_BLOCK)?;
 
-            let radius_sq = f64::from(radius).powi(2);
-            let shell_inner = (f64::from(radius) - 1.5).powi(2);
-            let mut targets = Vec::new();
-            for dx in -radius..=radius {
-                for dy in -radius..=radius {
-                    for dz in -radius..=radius {
-                        let dist_sq = f64::from(dx * dx + dy * dy + dz * dz);
-                        let in_shape = if self.filled {
-                            dist_sq <= radius_sq
-                        } else {
-                            dist_sq <= radius_sq && dist_sq >= shell_inner
-                        };
-                        if !in_shape {
-                            continue;
-                        }
-                        let x = center
-                            .0
-                            .x
-                            .checked_add(dx)
-                            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-                        let y = center
-                            .0
-                            .y
-                            .checked_add(dy)
-                            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-                        let z = center
-                            .0
-                            .z
-                            .checked_add(dz)
-                            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-                        targets.push(BlockPos::new(x, y, z));
+        let radius_sq = f64::from(radius).powi(2);
+        let shell_inner = (f64::from(radius) - 1.5).powi(2);
+        let mut targets = Vec::new();
+        for dx in -radius..=radius {
+            for dy in -radius..=radius {
+                for dz in -radius..=radius {
+                    let dist_sq = f64::from(dx * dx + dy * dy + dz * dz);
+                    let in_shape = if self.filled {
+                        dist_sq <= radius_sq
+                    } else {
+                        dist_sq <= radius_sq && dist_sq >= shell_inner
+                    };
+                    if !in_shape {
+                        continue;
                     }
+                    let x = center
+                        .0
+                        .x
+                        .checked_add(dx)
+                        .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+                    let y = center
+                        .0
+                        .y
+                        .checked_add(dy)
+                        .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+                    let z = center
+                        .0
+                        .z
+                        .checked_add(dz)
+                        .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+                    targets.push(BlockPos::new(x, y, z));
                 }
             }
+        }
 
-            if targets.iter().any(|pos| !world.is_in_build_limit(*pos)) {
-                return Err(failed("shape is outside the world".to_string()));
-            }
-            let min_x = center
-                .0
-                .x
-                .checked_sub(radius)
-                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-            let max_x = center
-                .0
-                .x
-                .checked_add(radius)
-                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-            let min_z = center
-                .0
-                .z
-                .checked_sub(radius)
-                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-            let max_z = center
-                .0
-                .z
-                .checked_add(radius)
-                .ok_or_else(|| failed("shape is outside the world".to_string()))?;
-            for chunk_x in (min_x >> 4)..=(max_x >> 4) {
-                for chunk_z in (min_z >> 4)..=(max_z >> 4) {
-                    if world
-                        .level
-                        .read_chunk_sync(&Vector2::new(chunk_x, chunk_z), |_| ())
-                        .is_none()
-                    {
-                        return Err(failed(format!(
-                            "shape contains unloaded chunk [{chunk_x}, {chunk_z}]"
-                        )));
-                    }
+        if targets.iter().any(|pos| !world.is_in_build_limit(*pos)) {
+            return Err(failed("shape is outside the world".to_string()));
+        }
+        let min_x = center
+            .0
+            .x
+            .checked_sub(radius)
+            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+        let max_x = center
+            .0
+            .x
+            .checked_add(radius)
+            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+        let min_z = center
+            .0
+            .z
+            .checked_sub(radius)
+            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+        let max_z = center
+            .0
+            .z
+            .checked_add(radius)
+            .ok_or_else(|| failed("shape is outside the world".to_string()))?;
+        for chunk_x in (min_x >> 4)..=(max_x >> 4) {
+            for chunk_z in (min_z >> 4)..=(max_z >> 4) {
+                if world
+                    .level
+                    .read_chunk_sync(&Vector2::new(chunk_x, chunk_z), |_| ())
+                    .is_none()
+                {
+                    return Err(failed(format!(
+                        "shape contains unloaded chunk [{chunk_x}, {chunk_z}]"
+                    )));
                 }
             }
+        }
 
-            let target_count = i64::try_from(targets.len()).unwrap_or(i64::MAX);
-            let fill_limit = crate::carpet::values().fill_limit.max(1);
-            if target_count > fill_limit {
-                return Err(failed(format!(
-                    "shape contains {target_count} blocks, exceeding fillLimit {fill_limit}"
-                )));
+        let target_count = i64::try_from(targets.len()).unwrap_or(i64::MAX);
+        let fill_limit = crate::carpet::values().fill_limit.max(1);
+        if target_count > fill_limit {
+            return Err(failed(format!(
+                "shape contains {target_count} blocks, exceeding fillLimit {fill_limit}"
+            )));
+        }
+        let vanilla_limit = server.level_info.load().game_rules.max_block_modifications;
+        if target_count > vanilla_limit {
+            return Err(failed(format!(
+                "shape contains {target_count} blocks, exceeding max block modifications {vanilla_limit}"
+            )));
+        }
+
+        // Preserve the command's air-only placement semantics, but determine
+        // every real state change before the first write.
+        let target_state = block.default_state.id;
+        targets.retain(|pos| {
+            let old = world.get_block_state(pos);
+            old.is_air() && old.id != target_state
+        });
+
+        let flags = draw_flags(crate::carpet::values().fill_updates);
+        let mut placed = 0usize;
+        for pos in targets {
+            let replaced = world.set_block_state(&pos, target_state, flags);
+            if replaced != target_state {
+                placed += 1;
             }
-            let vanilla_limit = server.level_info.load().game_rules.max_block_modifications;
-            if target_count > vanilla_limit {
-                return Err(failed(format!(
-                    "shape contains {target_count} blocks, exceeding max block modifications {vanilla_limit}"
-                )));
-            }
+        }
 
-            // Preserve the command's air-only placement semantics, but determine
-            // every real state change before the first write.
-            let target_state = block.default_state.id;
-            targets.retain(|pos| {
-                let old = world.get_block_state(pos);
-                old.is_air() && old.id != target_state
-            });
+        let shape = if self.filled { "ball" } else { "sphere" };
+        sender.send_message(TextComponent::text(format!(
+            "Drew a {shape} of radius {radius}: {placed} blocks placed"
+        )));
 
-            let flags = draw_flags(crate::carpet::values().fill_updates);
-            let mut placed = 0usize;
-            for pos in targets {
-                let replaced = world.set_block_state(&pos, target_state, flags).await;
-                if replaced != target_state {
-                    placed += 1;
-                }
-            }
-
-            let shape = if self.filled { "ball" } else { "sphere" };
-            sender
-                .send_message(TextComponent::text(format!(
-                    "Drew a {shape} of radius {radius}: {placed} blocks placed"
-                )))
-                .await;
-
-            Ok(i32::try_from(placed).unwrap_or(i32::MAX))
-        })
+        Ok(i32::try_from(placed).unwrap_or(i32::MAX))
     }
 }
 

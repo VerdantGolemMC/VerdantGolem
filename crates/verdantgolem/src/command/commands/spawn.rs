@@ -26,65 +26,60 @@ const CATEGORY_NAMES: [&str; 8] = [
 struct MobCapsExecutor;
 
 impl CommandExecutor for MobCapsExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let world = sender
-                .world()
-                .unwrap_or_else(|| server.get_world_from_dimension(&Dimension::OVERWORLD));
-            let spawn_state = world.spawn_state.load();
-            let multiplier = crate::carpet::values().mob_cap_multiplier;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        let world = sender
+            .world()
+            .unwrap_or_else(|| server.get_world_from_dimension(&Dimension::OVERWORLD));
+        let spawn_state = world.spawn_state.load();
+        let multiplier = crate::carpet::values().mob_cap_multiplier;
 
-            let mut message = format!(
-                "Mobcaps ({} spawnable chunks):",
-                spawn_state.spawnable_chunk_count()
-            );
-            for category in MobCategory::SPAWNING_CATEGORIES {
-                let count = spawn_state.category_count(category);
-                let line = if category.max < 0 {
-                    format!("\n{}: {}", CATEGORY_NAMES[category.id], count)
-                } else {
-                    let cap = crate::world::natural_spawner::scaled_mob_cap(
-                        category.max,
-                        spawn_state.spawnable_chunk_count(),
-                        multiplier,
-                    );
-                    format!("\n{}: {}/{}", CATEGORY_NAMES[category.id], count, cap)
-                };
-                message.push_str(&line);
-            }
+        let mut message = format!(
+            "Mobcaps ({} spawnable chunks):",
+            spawn_state.spawnable_chunk_count()
+        );
+        for category in MobCategory::SPAWNING_CATEGORIES {
+            let count = spawn_state.category_count(category);
+            let line = if category.max < 0 {
+                format!("\n{}: {}", CATEGORY_NAMES[category.id], count)
+            } else {
+                let cap = crate::world::natural_spawner::scaled_mob_cap(
+                    category.max,
+                    spawn_state.spawnable_chunk_count(),
+                    multiplier,
+                );
+                format!("\n{}: {}/{}", CATEGORY_NAMES[category.id], count, cap)
+            };
+            message.push_str(&line);
+        }
 
-            sender.send_message(TextComponent::text(message)).await;
+        sender.send_message(TextComponent::text(message));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 
 struct TrackingExecutor;
 
 impl CommandExecutor for TrackingExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let message = match crate::carpet::spawn_tracking::toggle() {
-                crate::carpet::spawn_tracking::ToggleResult::Started => {
-                    "Started spawn tracking. Run /spawn tracking again to stop and report."
-                        .to_string()
-                }
-                crate::carpet::spawn_tracking::ToggleResult::Stopped(report) => report,
-            };
-            sender.send_message(TextComponent::text(message)).await;
-            Ok(1)
-        })
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        let message = match crate::carpet::spawn_tracking::toggle() {
+            crate::carpet::spawn_tracking::ToggleResult::Started => {
+                "Started spawn tracking. Run /spawn tracking again to stop and report.".to_string()
+            }
+            crate::carpet::spawn_tracking::ToggleResult::Stopped(report) => report,
+        };
+        sender.send_message(TextComponent::text(message));
+        Ok(1)
     }
 }
 

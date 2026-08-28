@@ -19,7 +19,7 @@ use crate::command::{
     suggestion::{Suggestion, suggestions::Suggestions},
 };
 use crate::server::Server;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 #[derive(Debug)]
 pub enum CommandError {
@@ -239,7 +239,7 @@ pub struct CommandDispatcher {
 
 /// Stores registered [`CommandTree`]s and dispatches commands to them.
 impl CommandDispatcher {
-    pub fn handle_command(&self, sender: &CommandSender, server: &Server, cmd: &str) {
+    pub fn handle_command(&self, sender: &CommandSender, server: &Arc<Server>, cmd: &str) {
         let result = self.dispatch(sender, server, cmd);
         sender.set_success_count(u32::from(result.is_ok()));
 

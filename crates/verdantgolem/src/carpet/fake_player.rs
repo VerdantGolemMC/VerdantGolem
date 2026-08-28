@@ -468,7 +468,7 @@ fn mount_capacity(entity: &Arc<dyn EntityBase>) -> Option<usize> {
 
 /// Mounts a fake player onto the nearest mountable entity (boats, minecarts,
 /// mobs...). Returns a description of the vehicle.
-pub async fn mount(name: &str) -> Result<String, String> {
+pub fn mount(name: &str) -> Result<String, String> {
     let player = get(name).ok_or_else(|| format!("no fake player named {name}"))?;
     let entity = &player.living_entity.entity;
     if entity.has_vehicle() {
@@ -547,7 +547,7 @@ pub async fn mount(name: &str) -> Result<String, String> {
 }
 
 /// Dismounts a fake player from its vehicle.
-pub async fn dismount(name: &str) -> Result<(), String> {
+pub fn dismount(name: &str) -> Result<(), String> {
     let player = get(name).ok_or_else(|| format!("no fake player named {name}"))?;
     let entity = &player.living_entity.entity;
     let vehicle = entity

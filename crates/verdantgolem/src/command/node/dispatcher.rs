@@ -517,11 +517,8 @@ impl CommandDispatcher {
             if error.is(&DISPATCHER_UNKNOWN_COMMAND) {
                 // Run the fallback dispatcher instead.
                 // It might have the command we're looking for.
-                self.fallback_dispatcher.handle_command(
-                    &source.output,
-                    source.server().as_ref(),
-                    input,
-                );
+                self.fallback_dispatcher
+                    .handle_command(&source.output, source.server(), input);
             } else {
                 // Print the error to the output.
                 Self::send_error_to_source(source, error, input);

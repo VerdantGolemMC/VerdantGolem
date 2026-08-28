@@ -21,36 +21,34 @@ const ARG_POS: &str = "pos";
 struct InfoExecutor;
 
 impl CommandExecutor for InfoExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let Some(world) = sender.world() else {
-                return Err(failed("info must be run with a world context".to_string()));
-            };
-            let pos: BlockPos = BlockPosArgumentConsumer::find_loaded_arg(args, ARG_POS, &world)?;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs,
+    ) -> CommandResult {
+        let Some(world) = sender.world() else {
+            return Err(failed("info must be run with a world context".to_string()));
+        };
+        let pos: BlockPos = BlockPosArgumentConsumer::find_loaded_arg(args, ARG_POS, &world)?;
 
-            let (block, state) = world.get_block_and_state(&pos);
-            let mut message = format!(
-                "Block at {}: {} (state {})",
-                pos,
-                block.registry_key(),
-                state.id.as_u16()
-            );
+        let (block, state) = world.get_block_and_state(&pos);
+        let mut message = format!(
+            "Block at {}: {} (state {})",
+            pos,
+            block.registry_key(),
+            state.id.as_u16()
+        );
 
-            if let Some(block_entity) = world.get_block_entity(&pos) {
-                let mut nbt = NbtCompound::new();
-                block_entity.write_nbt(&mut nbt).await;
-                let _ = writeln!(message, "Block entity: {nbt:?}");
-            }
+        if let Some(block_entity) = world.get_block_entity(&pos) {
+            let mut nbt = NbtCompound::new();
+            block_entity.write_nbt(&mut nbt);
+            let _ = writeln!(message, "Block entity: {nbt:?}");
+        }
 
-            sender.send_message(TextComponent::text(message)).await;
+        sender.send_message(TextComponent::text(message));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 

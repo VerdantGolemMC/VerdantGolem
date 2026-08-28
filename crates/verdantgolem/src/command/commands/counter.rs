@@ -28,83 +28,75 @@ fn item_total(items: &[(String, u64)]) -> u64 {
 struct AllChannelsExecutor;
 
 impl CommandExecutor for AllChannelsExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let mut summary = String::from("Hopper counters:");
-            for (index, name) in counters::CHANNEL_NAMES.iter().enumerate() {
-                let total = item_total(&counters::snapshot(index));
-                if total > 0 {
-                    let _ = write!(summary, "\n{name}: {total} items");
-                }
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        let mut summary = String::from("Hopper counters:");
+        for (index, name) in counters::CHANNEL_NAMES.iter().enumerate() {
+            let total = item_total(&counters::snapshot(index));
+            if total > 0 {
+                let _ = write!(summary, "\n{name}: {total} items");
             }
-            sender.send_message(TextComponent::text(summary)).await;
+        }
+        sender.send_message(TextComponent::text(summary));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 
 struct ChannelExecutor(usize);
 
 impl CommandExecutor for ChannelExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let items = counters::snapshot(self.0);
-            let total = item_total(&items);
-            let name = counters::CHANNEL_NAMES[self.0];
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        let items = counters::snapshot(self.0);
+        let total = item_total(&items);
+        let name = counters::CHANNEL_NAMES[self.0];
 
-            let mut message = format!("{name}: {total} items total");
-            for (item, count) in items.iter().take(MAX_ITEMS_SHOWN) {
-                let _ = write!(message, "\n{item}: {count}");
-            }
-            if items.len() > MAX_ITEMS_SHOWN {
-                let _ = write!(
-                    message,
-                    "\n... and {} more item types",
-                    items.len() - MAX_ITEMS_SHOWN
-                );
-            }
+        let mut message = format!("{name}: {total} items total");
+        for (item, count) in items.iter().take(MAX_ITEMS_SHOWN) {
+            let _ = write!(message, "\n{item}: {count}");
+        }
+        if items.len() > MAX_ITEMS_SHOWN {
+            let _ = write!(
+                message,
+                "\n... and {} more item types",
+                items.len() - MAX_ITEMS_SHOWN
+            );
+        }
 
-            sender.send_message(TextComponent::text(message)).await;
+        sender.send_message(TextComponent::text(message));
 
-            Ok(command_count(total))
-        })
+        Ok(command_count(total))
     }
 }
 
 struct ResetExecutor(Option<usize>);
 
 impl CommandExecutor for ResetExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        _args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            counters::reset(self.0);
-            let scope = self.0.map_or_else(
-                || "all channels".to_string(),
-                |index| counters::CHANNEL_NAMES[index].to_string(),
-            );
-            sender
-                .send_message(TextComponent::text(format!(
-                    "Reset hopper counter for {scope}"
-                )))
-                .await;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        _args: &ConsumedArgs,
+    ) -> CommandResult {
+        counters::reset(self.0);
+        let scope = self.0.map_or_else(
+            || "all channels".to_string(),
+            |index| counters::CHANNEL_NAMES[index].to_string(),
+        );
+        sender.send_message(TextComponent::text(format!(
+            "Reset hopper counter for {scope}"
+        )));
 
-            Ok(1)
-        })
+        Ok(1)
     }
 }
 

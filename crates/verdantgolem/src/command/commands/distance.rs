@@ -19,30 +19,26 @@ const ARG_TO: &str = "to";
 struct DistanceExecutor;
 
 impl CommandExecutor for DistanceExecutor {
-    fn execute<'a>(
-        &'a self,
-        sender: &'a CommandSender,
-        _server: &'a crate::server::Server,
-        args: &'a ConsumedArgs<'a>,
-    ) -> CommandResult<'a> {
-        Box::pin(async move {
-            let from: Vector3<f64> = Position3DArgumentConsumer::find_arg(args, ARG_FROM)?;
-            let to: Vector3<f64> = Position3DArgumentConsumer::find_arg(args, ARG_TO)?;
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs,
+    ) -> CommandResult {
+        let from: Vector3<f64> = Position3DArgumentConsumer::find_arg(args, ARG_FROM)?;
+        let to: Vector3<f64> = Position3DArgumentConsumer::find_arg(args, ARG_TO)?;
 
-            let delta = to - from;
-            let manhattan = delta.x.abs() + delta.y.abs() + delta.z.abs();
-            let euclidean = delta.length();
+        let delta = to - from;
+        let manhattan = delta.x.abs() + delta.y.abs() + delta.z.abs();
+        let euclidean = delta.length();
 
-            sender
-                .send_message(TextComponent::text(format!(
-                    "From {from:?} to {to:?}:\n\
-                     Manhattan (x+y+z): {manhattan}\n\
-                     Euclidean: {euclidean}"
-                )))
-                .await;
+        sender.send_message(TextComponent::text(format!(
+            "From {from:?} to {to:?}:\n\
+             Manhattan (x+y+z): {manhattan}\n\
+             Euclidean: {euclidean}"
+        )));
 
-            Ok(manhattan as i32)
-        })
+        Ok(manhattan as i32)
     }
 }
 
