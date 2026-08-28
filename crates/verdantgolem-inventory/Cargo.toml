@@ -1,0 +1,30 @@
+[package]
+name = "verdantgolem-inventory"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+verdantgolem-protocol.workspace = true
+verdantgolem-data = { workspace = true, features = [
+    "item",
+    "screen",
+    "data_component",
+    "recipes",
+    "tag",
+    "fuels",
+    "enchantment",
+    "potion",
+    "statistic",
+] }
+
+verdantgolem-world.workspace = true
+verdantgolem-util.workspace = true
+
+rand.workspace = true
+tracing.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

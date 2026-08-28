@@ -27,7 +27,7 @@ body:
     id: version
     attributes:
       label: "Server Version / Commit"
-      description: "Provide your server version (Tip: Run `/pumpkin`)."
+      description: "Provide your server version (Tip: Run `/verdantgolem`)."
       placeholder: "e.g., 1.0.0/39b4cb3"
     validations:
       required: true

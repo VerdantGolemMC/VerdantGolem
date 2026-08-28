@@ -157,3 +157,8 @@ version_history.json
 world_nether/
 world_the_end/
 patchbukkit/
+# >>> Comet managed project state >>>
+!/.comet/
+/.comet/*
+!/.comet/config.yaml
+# <<< Comet managed project state <<<

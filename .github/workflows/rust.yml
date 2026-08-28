@@ -181,21 +181,21 @@ jobs:
           mkdir -p dist
           EXT=""
           if [ "${{ runner.os }}" == "Windows" ]; then EXT=".exe"; fi
-          cp "target/release/pumpkin$EXT" "dist/pumpkin-${{ runner.arch }}-${{ runner.os }}$EXT"
+          cp "target/release/verdantgolem$EXT" "dist/verdantgolem-${{ runner.arch }}-${{ runner.os }}$EXT"
           if [ "${{ runner.os }}" == "Linux" ]; then
             if [ "${{ runner.arch }}" == "X64" ]; then
               TARGET="x86_64-unknown-linux-musl"
             elif [ "${{ runner.arch }}" == "ARM64" ]; then
               TARGET="aarch64-unknown-linux-musl"
             fi
-            cp "target/$TARGET/release/pumpkin" "dist/pumpkin-${{ runner.arch }}-${{ runner.os }}-musl"
+            cp "target/$TARGET/release/verdantgolem" "dist/verdantgolem-${{ runner.arch }}-${{ runner.os }}-musl"
           fi
       - name: Export executable
         uses: actions/upload-artifact@v7
         with:
-          name: pumpkin-${{ runner.arch }}-${{ runner.os }}
+          name: verdantgolem-${{ runner.arch }}-${{ runner.os }}
           compression-level: 9
-          path: dist/pumpkin-*
+          path: dist/verdantgolem-*
   build_android_release:
     name: Build project in release for Android (AArch64)
     runs-on: ubuntu-latest
@@ -221,13 +221,13 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          cp "target/aarch64-linux-android/release/pumpkin" "dist/pumpkin-aarch64-android"
+          cp "target/aarch64-linux-android/release/verdantgolem" "dist/verdantgolem-aarch64-android"
       - name: Export executable
         uses: actions/upload-artifact@v7
         with:
-          name: pumpkin-aarch64-android
+          name: verdantgolem-aarch64-android
           compression-level: 9
-          path: dist/pumpkin-aarch64-android
+          path: dist/verdantgolem-aarch64-android
   draft_release:
     permissions:
       contents: write
@@ -241,7 +241,7 @@ jobs:
       - name: Download prebuilt binary artifacts
         uses: actions/download-artifact@v8
         with:
-          pattern: "**/pumpkin-*"
+          pattern: "**/verdantgolem-*"
           path: dist/
           merge-multiple: true
       - name: Generate release notes
@@ -261,7 +261,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           prerelease: true
-          files: dist/pumpkin*
+          files: dist/verdantgolem*
           tag_name: nightly
           name: Nightly Build
           body_path: dist/RELEASE.md

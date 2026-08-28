@@ -1,5 +1,5 @@
 [files]
-extend-exclude = ["assets/", "crates/pumpkin-data/src/generated"]
+extend-exclude = ["assets/", "crates/verdantgolem-data/src/generated"]
 
 [default.extend-words]
 handled = "handled"
@@ -8,3 +8,6 @@ ba = "ba"
 fo = "fo"
 undescore = "undescore"
 replaceables = "replaceables"
+
+[default.extend-words]
+verdantgolem = "verdantgolem"

@@ -1,23 +1,28 @@
 <div align="center">
 
-# Pumpkin
+# VerdantGolem
 
-![CI](https://github.com/Pumpkin-MC/Pumpkin/actions/workflows/rust.yml/badge.svg)
-[![Discord](https://img.shields.io/discord/1268592337445978193.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/wT8XjrjKkf)
+![CI](https://github.com/VerdantGolemMC/VerdantGolem/actions/workflows/rust.yml/badge.svg)
+[![Upstream Discord](https://img.shields.io/discord/1268592337445978193.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/wT8XjrjKkf)
 [![License: GPL](https://img.shields.io/badge/License-GPLv3-yellow.svg)](https://opensource.org/licenses/gpl-3-0)
 
 </div>
 
-[Pumpkin](https://pumpkinmc.org/) is a Minecraft server built entirely in Rust, offering a fast, efficient,
-and customizable experience. It prioritizes performance and player enjoyment while adhering to the core mechanics of the game.
+[VerdantGolem](https://github.com/VerdantGolemMC/VerdantGolem) is a fork of [Pumpkin](https://pumpkinmc.org/) — a Minecraft server built
+entirely in Rust — focused on faithfully restoring technical-survival (生电) mechanics, in the spirit of the
+[Carpet mod](https://github.com/gnembon/fabric-carpet): vanilla-accurate redstone, mob AI, and game behavior that
+technical farms and contraptions depend on.
+
+It keeps tracking upstream Pumpkin so improvements and protocol updates can be merged continuously.
 <div align="center">
 
-![Pumpkin Chunk Loading](./assets/pumpkin-chunk-loading.webp)
+![VerdantGolem Chunk Loading](./assets/verdantgolem-chunk-loading.webp)
 
 </div>
 
 ## Goals
 
+- **Technical survival (生电)**: Restore and preserve vanilla-accurate mechanics the way Carpet does — redstone, mob spawning, TNT, rail and light behavior that farms rely on.
 - **Performance**: Leveraging multi-threading for maximum speed and efficiency.
 - **Compatibility**: Supports the latest Java & Bedrock Minecraft server version while adhering to Vanilla game mechanics.
 - **Security**: Prioritizes security by preventing known security exploits.
@@ -25,9 +30,9 @@ and customizable experience. It prioritizes performance and player enjoyment whi
 - **Extensibility**: Provides a foundation for plugin development.
 
 > [!IMPORTANT]
-> Pumpkin is currently under heavy development.
+> VerdantGolem is currently under heavy development.
 >
-> [See what needs to be done before the 1.0.0 Release](https://github.com/Pumpkin-MC/Pumpkin/issues/449)
+> [See what upstream needs before the 1.0.0 Release](https://github.com/Pumpkin-MC/Pumpkin/issues/449)
 
 ## Features
 
@@ -89,15 +94,15 @@ and customizable experience. It prioritizes performance and player enjoyment whi
   - [x] Permissions
   - [x] Translations
 - Proxy
-  - [x] [BungeeCord](https://github.com/SpigotMC/BungeeCord)
-  - [x] [BungeeGuard](https://github.com/lucko/BungeeGuard)
-  - [x] [Velocity](https://github.com/PaperMC/Velocity)
+  - [x] Bungeecord
+  - [x] Velocity
 
 <!-- Check out our [Github Project](https://github.com/orgs/Pumpkin-MC/projects/3) to see current progress. -->
 
 ## How to run
 
-See our [Quick Start](https://docs.pumpkinmc.org/#quick-start) guide to get Pumpkin running.
+See the upstream [Quick Start](https://docs.pumpkinmc.org/#quick-start) guide to get VerdantGolem running
+(the steps are identical: clone, build with `cargo build --release`, and run the `verdantgolem` binary).
 
 ## Contributions
 
@@ -105,18 +110,20 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Docs
 
-Pumpkin's documentation can be found at <https://pumpkinmc.org/>
+Upstream Pumpkin's documentation can be found at <https://pumpkinmc.org/>
 
 ## Communication
 
-Consider joining [our Discord server](https://discord.gg/wT8XjrjKkf) to stay up-to-date on events, updates, and connect with other members.
+Consider joining [the upstream Discord server](https://discord.gg/wT8XjrjKkf) to stay up-to-date on events, updates, and connect with other members.
 
 ## Funding
 
-If you want to fund me and help the project, check out the [Donation Page](https://pumpkinmc.org/donate/).
+If you want to support the upstream project, check out the [Donation Page](https://pumpkinmc.org/donate/).
 
 ## License & Attribution
 
-* **Pumpkin Server**: Licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).
-* **Plugin API (`pumpkin-plugin-api` & `pumpkin-plugin-wit`)**: Dual-licensed under [MIT](crates/pumpkin-plugin-api/LICENSE-MIT) OR [Apache-2.0](crates/pumpkin-plugin-api/LICENSE-APACHE) for maximum flexibility when writing plugins.
+VerdantGolem is a fork of [Pumpkin](https://github.com/Pumpkin-MC/Pumpkin) and inherits its licensing:
+
+* **Server (originally Pumpkin Server)**: Licensed under the [GNU General Public License v3.0 (GPLv3)](LICENSE).
+* **Plugin API (`verdantgolem-plugin-api` & `pumpkin-plugin-wit`)**: Dual-licensed under [MIT](crates/verdantgolem-plugin-api/LICENSE-MIT) OR [Apache-2.0](crates/verdantgolem-plugin-api/LICENSE-APACHE) for maximum flexibility when writing plugins.
 * **Third-Party Assets & Data**: Bedrock mappings, protocol conversion data, and Minecraft assets are subject to their respective licenses and attribution terms. See [assets/NOTICE.md](assets/NOTICE.md) for full details.

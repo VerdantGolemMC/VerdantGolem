@@ -1,5 +1,5 @@
 {
-    "commands.pumpkin.version": "Pumpkin %s\n",
+    "commands.pumpkin.version": "VerdantGolem %s\n",
     "commands.pumpkin.description": "Geeft iedereen de mogelijkheid om snelle \nen efficiënte Minecraft-servers te hosten.\n",
     "commands.pumpkin.minecraft_version": "(Minecraft %1$s, Protocol %2$s)\n",
     "commands.pumpkin.github": "[GitHub-repository]",

@@ -28,7 +28,7 @@
           ...
         }:
         let
-          manifest = (lib.importTOML ./crates/pumpkin/Cargo.toml).package;
+          manifest = (lib.importTOML ./crates/verdantgolem/Cargo.toml).package;
           workspace-manifest = (lib.importTOML ./Cargo.toml).workspace.package;
         in
         {

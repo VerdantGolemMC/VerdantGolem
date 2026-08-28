@@ -1,5 +1,5 @@
 {
-	"name": "Pumpkin",
+	"name": "VerdantGolem",
 	"image": "mcr.microsoft.com/devcontainers/base:noble",
 	"features": {
 		"ghcr.io/devcontainers/features/rust:1": {},
