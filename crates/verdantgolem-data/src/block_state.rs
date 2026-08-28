@@ -219,7 +219,7 @@ impl BlockState {
     }
 
     #[must_use]
-    pub const fn rotate(&self, rotation: crate::block_rotation::Rotation) -> &'static Self {
+    pub fn rotate(&self, rotation: crate::block_rotation::Rotation) -> &'static Self {
         Block::from_state_id(self.id).rotate(self.id, rotation)
     }
 
@@ -282,7 +282,7 @@ impl BlockStateId {
 
     #[inline]
     #[must_use]
-    pub const fn rotate(self, rotation: crate::block_rotation::Rotation) -> &'static BlockState {
+    pub fn rotate(self, rotation: crate::block_rotation::Rotation) -> &'static BlockState {
         Block::from_state_id(self).rotate(self, rotation)
     }
 
