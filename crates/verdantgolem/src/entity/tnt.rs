@@ -111,7 +111,7 @@ impl TNTEntity {
                 // Cheap prefilter before any Arc clone.
                 .filter(|candidate| {
                     let candidate_entity = candidate.get_entity();
-                    candidate_entity.entity_type.id == EntityType::TNT.id
+                    candidate_entity.entity_type.id == verdantgolem_data::entity::EntityType::TNT.id
                         && candidate_entity.pos.load() == own_snapshot.position // f64 位比较与 compatible_with 的位置语义一致
                 })
                 .filter_map(|candidate| candidate.clone().get_tnt_entity())

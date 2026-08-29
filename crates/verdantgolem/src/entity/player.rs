@@ -4617,10 +4617,7 @@ impl Player {
         // Carpet rule missingTools: pickaxes also break glass at pickaxe speed
         // (speed only — drop rules are untouched, vanilla parity).
         let held = self.inventory().held_item();
-        let mut speed = if crate::carpet::values().missing_tools
-            && block
-                .is_tagged_with(&verdantgolem_data::tag::Block::C_GLASS_BLOCKS)
-                .unwrap_or(false)
+        let mut speed = if crate::carpet::values().missing_tools && block.registry_key().contains("glass")
         {
             let pick_speed = held.get_speed(&Block::STONE);
             if pick_speed > 1.0 {

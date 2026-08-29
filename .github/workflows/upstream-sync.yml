@@ -42,6 +42,16 @@ jobs:
         run: |
           git config user.name "verdantgolem-sync-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config rerere.enabled true
+          git config merge.renameLimit 999999
+
+      - name: Cache rerere
+        uses: actions/cache@v4
+        with:
+          path: .git/rr-cache
+          key: rerere-${{ github.run_id }}
+          restore-keys: |
+            rerere-
 
       - name: Fetch upstream
         run: |
@@ -69,7 +79,7 @@ jobs:
         id: merge
         run: |
           set +e
-          git merge --no-edit upstream/master
+          git merge --no-edit -Xfind-renames=15% upstream/master
           status=$?
           set -e
           if [ "$status" -eq 0 ]; then
@@ -90,6 +100,7 @@ jobs:
           keep_ours=(
             .github/workflows/rust.yml
             .github/workflows/docker.yml
+            .github/workflows/release.yml
             .github/CODEOWNERS
             .github/FUNDING.yml
             .github/PULL_REQUEST_TEMPLATE.md
@@ -113,7 +124,7 @@ jobs:
           done
 
           if git diff --name-only --diff-filter=U | grep -q .; then
-            python3 .github/sync/auto-resolve.py
+            python3 .github/sync/auto-resolve.py || true
           fi
 
           if git diff --name-only --diff-filter=U | grep -q .; then
@@ -121,8 +132,17 @@ jobs:
             git merge --abort
             echo "clean=false" >> "$GITHUB_OUTPUT"
           else
-            git commit --no-edit
-            echo "clean=true" >> "$GITHUB_OUTPUT"
+            # Audit: no orphan pumpkin paths may enter the tree.
+            if git diff --cached --name-status --diff-filter=A |
+                grep -E '^(crates/pumpkin/|tools/pumpkin-|egg-pumpkin\.json)' |
+                grep -v 'pumpkin-plugin-wit'; then
+              echo "::error::Merge staged files at orphan pumpkin paths"
+              git merge --abort
+              echo "clean=false" >> "$GITHUB_OUTPUT"
+            else
+              git commit --no-edit
+              echo "clean=true" >> "$GITHUB_OUTPUT"
+            fi
           fi
 
       - name: Push sync branch

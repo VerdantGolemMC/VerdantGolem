@@ -2,8 +2,16 @@ name: Cargo Build, Test, and Linting
 
 on:
   push:
+    branches: [master]
   pull_request:
   workflow_dispatch:
+
+concurrency:
+  group: rust-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always

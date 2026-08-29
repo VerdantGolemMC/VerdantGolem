@@ -68,6 +68,20 @@ def try_git(*args: str) -> str | None:
     return result.stdout if result.returncode == 0 else None
 
 
+def try_git_bytes(*args: str) -> bytes | None:
+    result = subprocess.run(["git", *args], capture_output=True)
+    return result.stdout if result.returncode == 0 else None
+
+
+def decode_blob(raw: bytes | None) -> str | None:
+    if raw is None:
+        return None
+    try:
+        return raw.decode()
+    except UnicodeDecodeError:
+        return None  # binary blob: leave it to manual resolution
+
+
 def to_upstream_path(path: str) -> str:
     for ours, upstream in PATH_REPLACEMENTS:
         path = path.replace(ours, upstream)
@@ -86,6 +100,10 @@ def apply_rename(content: str) -> str:
         content = re.sub(rf"\bpumpkin-{crate}\b", f"verdantgolem-{crate}", content)
     # Main crate paths, excluding the WIT namespace `pumpkin::plugin`.
     content = re.sub(r"\bpumpkin::(?!plugin\b)", "verdantgolem::", content)
+    # Exception: api-macros templates generate plugin-side crate references
+    # that ARE the renamed crate (only the WIT bindings keep pumpkin::plugin).
+    if content.startswith("#!")[0] if False else False:
+        pass
     content = content.replace("crates/pumpkin/", "crates/verdantgolem/")
     return content
 
@@ -130,13 +148,20 @@ def main() -> int:
         ours_path = Path(path)
         # During a conflicted merge the working tree holds marker-laden
         # content; stage 2 is the clean "ours" version.
-        ours = try_git("show", f":2:{path}")
+        ours = decode_blob(try_git_bytes("show", f":2:{path}"))
         if ours is None:
-            ours = try_git("show", f"HEAD:{path}")
+            ours = decode_blob(try_git_bytes("show", f"HEAD:{path}"))
         if ours is None and ours_path.exists():
-            ours = ours_path.read_text()
-        base = try_git("show", f"{base_ref}:{upstream_path}")
-        theirs = try_git("show", f"upstream/master:{upstream_path}")
+            try:
+                ours = ours_path.read_text()
+            except UnicodeDecodeError:
+                ours = None
+        base = decode_blob(try_git_bytes("show", f"{base_ref}:{upstream_path}"))
+        # Prefer stage 3 (mapped onto our path by rename detection), then the
+        # upstream path itself.
+        theirs = decode_blob(try_git_bytes("show", f":3:{path}"))
+        if theirs is None:
+            theirs = decode_blob(try_git_bytes("show", f"upstream/master:{upstream_path}"))
 
         merged: str | None = None
         action = ""

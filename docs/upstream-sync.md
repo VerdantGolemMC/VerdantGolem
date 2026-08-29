@@ -13,10 +13,14 @@ VerdantGolem 通过 GitHub Actions 自动跟踪上游 [Pumpkin-MC/Pumpkin](https
    - `crates/pumpkin-plugin-wit` 子模块指针 → 采上游（保持 WIT 契约对齐）。
    - 品牌/CI/部署文件 → 采我们侧（`README.md`、`Dockerfile`、`flake.nix`、`rust.yml` 矩阵等，
      完整清单见工作流内 `keep_ours` 数组）。
-4. **干净合并** → 推送 `auto/upstream-sync` 分支并开 PR，**CI 全部通过后自动合入 master**；
-   master 的 push 会再次触发发布流水线刷新 Nightly。
-5. **有残留冲突** → 自动创建/更新带 `upstream-sync` 标签的 issue，列出全部冲突路径。
-   此时不会推送任何半成品。
+4. **干净合并** → 合并后审计（禁止孤儿 `pumpkin-*` 路径进入树）→ 推送
+   `auto/upstream-sync` 分支并开 PR，**CI 全部通过后自动合入 master**；
+   master 的 push 会再次触发发布流水线刷新 Nightly。注意：需要 PAT/APP token
+   才能让 PR CI 与自动合并链路真正触发（GITHUB_TOKEN 的事件不创建 run）。
+5. **有残留冲突** → 以 Job Step Summary + `conflicted-paths` artifact 报告
+   （仓库禁用 Issues），绝不推送半成品。
+6. **Cargo.lock** 冲突时整体采上游，但 workspace 条目由 CI 构建自动补齐
+   （`--locked` 要求 lock 含 `verdantgolem-*` 包，见仓库历史 a0ecd4d59）。
 
 ## 为什么以后冲突会很少
 
