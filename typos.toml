@@ -8,6 +8,4 @@ ba = "ba"
 fo = "fo"
 undescore = "undescore"
 replaceables = "replaceables"
-
-[default.extend-words]
 verdantgolem = "verdantgolem"
