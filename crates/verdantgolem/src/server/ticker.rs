@@ -57,6 +57,16 @@ impl Ticker {
                 u64::try_from(tick_number).unwrap_or_default(),
             );
 
+            // Carpet `creativePlayersLoadChunks`: refresh ticket switches once
+            // a second so rule changes apply to stationary players too.
+            if u64::try_from(tick_number).is_ok_and(|t| t % 20 == 0) {
+                for world in server.worlds.load().iter() {
+                    for player in world.players.load().iter() {
+                        crate::world::chunker::refresh_loading_tickets(player);
+                    }
+                }
+            }
+
             let tick_interval = if manager.is_sprinting() {
                 Duration::ZERO
             } else {
