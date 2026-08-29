@@ -511,7 +511,6 @@ impl ChunkManager {
         level: &Arc<Level>,
         loading_chunks: &[Vector2<i32>],
         unloading_chunks: &[Vector2<i32>],
-        loads_chunks: bool,
     ) {
         view_distance += 1; // Margin for loading
         let old_center = self.center;
@@ -521,27 +520,20 @@ impl ChunkManager {
                 .chunk_loading
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
-            if loads_chunks {
-                let new_level = ChunkLoading::get_level_from_view_distance(view_distance);
-                lock.add_ticket(center, new_level);
+            let new_level = ChunkLoading::get_level_from_view_distance(view_distance);
+            lock.add_ticket(center, new_level);
 
-                let sim_dist = self.world.server.upgrade().map_or(10, |s| {
-                    s.advanced_config.networking.java.simulation_distance.get()
-                });
-                let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
-                lock.add_ticket(center, sim_level);
+            let sim_dist = self.world.server.upgrade().map_or(10, |s| {
+                s.advanced_config.networking.java.simulation_distance.get()
+            });
+            let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
+            lock.add_ticket(center, sim_level);
 
-                // Drop exactly the pair we last added rather than recomputing it. The
-                // simulation level is derived from live config and the view level from the
-                // previous view distance, so recomputing them can release a ticket we never
-                // took and strand the one we did.
-                if let Some((held_view, held_sim)) =
-                    self.held_tickets.replace((new_level, sim_level))
-                {
-                    lock.remove_ticket(old_center, held_view);
-                    lock.remove_ticket(old_center, held_sim);
-                }
-            } else if let Some((held_view, held_sim)) = self.held_tickets.take() {
+            // Drop exactly the pair we last added rather than recomputing it. The
+            // simulation level is derived from live config and the view level from the
+            // previous view distance, so recomputing them can release a ticket we never
+            // took and strand the one we did.
+            if let Some((held_view, held_sim)) = self.held_tickets.replace((new_level, sim_level)) {
                 lock.remove_ticket(old_center, held_view);
                 lock.remove_ticket(old_center, held_sim);
             }
@@ -585,41 +577,6 @@ impl ChunkManager {
             }
         }
         self.chunk_queue = BinaryHeap::from(tasks);
-    }
-
-    /// Reconciles this player's view/simulation tickets with rules that make
-    /// the player spectator-like without changing which already-loaded chunks
-    /// may be sent to their client.
-    pub fn set_loading_tickets_enabled(&mut self, enabled: bool) {
-        if self.view_distance == 0 || enabled == self.held_tickets.is_some() {
-            return;
-        }
-
-        let mut loading = self
-            .world
-            .level
-            .chunk_loading
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        if enabled {
-            let view_level = ChunkLoading::get_level_from_view_distance(self.view_distance);
-            let sim_dist = self.world.server.upgrade().map_or(10, |server| {
-                server
-                    .advanced_config
-                    .networking
-                    .java
-                    .simulation_distance
-                    .get()
-            });
-            let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
-            loading.add_ticket(self.center, view_level);
-            loading.add_ticket(self.center, sim_level);
-            self.held_tickets = Some((view_level, sim_level));
-        } else if let Some((view_level, sim_level)) = self.held_tickets.take() {
-            loading.remove_ticket(self.center, view_level);
-            loading.remove_ticket(self.center, sim_level);
-        }
-        loading.send_change();
     }
 
     pub fn clean_up(&mut self, level: &Arc<Level>) {
@@ -1051,8 +1008,6 @@ impl Player {
         let supports_player_loaded = match client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
-            // Headless fake players have no client-side loaded acknowledgement.
-            ClientPlatform::Local => false,
         };
         let initially_loaded = !supports_player_loaded;
 
@@ -1739,7 +1694,6 @@ impl Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 
@@ -2241,22 +2195,51 @@ impl Player {
         self.abilities.try_lock().is_ok_and(|a| a.flying)
     }
 
+    pub fn set_sprinting(&self, is_sprinting: bool) {
+        self.living_entity.set_sprinting(is_sprinting);
+    }
+
+    #[must_use]
+    pub fn get_block_speed_factor(&self) -> f32 {
+        self.living_entity.get_block_speed_factor()
+    }
+
     fn is_sleeping(&self) -> bool {
         // TODO: Track sleeping position state explicitly (vanilla checks sleepingPosition.isPresent()).
         self.sleeping_since.load().is_some()
     }
 
-    fn is_swimming(&self, flying: bool) -> bool {
-        let entity = self.get_entity();
-        let touching_water = entity.touching_water.load(Ordering::Relaxed);
-        let can_start_swimming = entity.water_height.load() > self.living_entity.get_swim_height();
+    #[must_use]
+    pub fn is_swimming(&self) -> bool {
+        !self.is_flying()
+            && self.gamemode.load() != GameMode::Spectator
+            && self.get_entity().is_swimming()
+    }
 
-        touching_water
-            && (entity.swimming.load(Ordering::Relaxed) || can_start_swimming)
-            && entity.is_sprinting()
-            && !entity.on_ground.load(Ordering::Relaxed)
-            && !flying
-            && !entity.has_vehicle()
+    pub fn update_swimming(&self) {
+        if self.is_flying() {
+            self.get_entity().set_swimming(false);
+        } else {
+            let entity = self.get_entity();
+            let is_sprinting = entity.is_sprinting();
+            let in_water = entity.is_in_water();
+            let is_passenger = entity.has_vehicle();
+
+            if entity.is_swimming() {
+                entity.set_swimming(is_sprinting && in_water && !is_passenger);
+            } else {
+                let is_under_water = entity.is_under_water();
+                let block_pos = entity.block_pos.load();
+                let world = entity.world.load();
+                let (fluid, _) = world.get_fluid_and_fluid_state(&block_pos);
+                let is_water_block = fluid.id == verdantgolem_data::fluid::Fluid::WATER.id
+                    || fluid.id == verdantgolem_data::fluid::Fluid::FLOWING_WATER.id;
+
+                entity.set_swimming(
+                    is_sprinting && is_under_water && !is_passenger && is_water_block,
+                );
+            }
+        }
     }
 
     const fn is_auto_spin_attack() -> bool {
@@ -2275,31 +2258,33 @@ impl Player {
             .is_space_empty(aabb.contract_all(1.0E-7))
     }
 
-    pub fn update_player_pose(&self) {
+    #[must_use]
+    pub fn get_desired_pose(&self) -> EntityPose {
         let entity = self.get_entity();
-        if !self.can_fit_pose(EntityPose::Swimming) {
-            return;
-        }
-
-        let flying = self.is_flying();
-        let swimming = self.is_swimming(flying);
-        entity.set_swimming(swimming);
-        let desired_pose = if self.is_sleeping() {
+        if self.is_sleeping() {
             EntityPose::Sleeping
-        } else if swimming {
+        } else if self.is_swimming() {
             EntityPose::Swimming
         } else if entity.is_fall_flying() {
             EntityPose::FallFlying
         } else if Self::is_auto_spin_attack() {
             EntityPose::SpinAttack
-        } else if entity.is_sneaking() && !flying {
+        } else if entity.is_sneaking() && !self.is_flying() {
             EntityPose::Crouching
         } else {
             EntityPose::Standing
-        };
+        }
+    }
 
-        let new_pose = if self.gamemode.load() == GameMode::Spectator
-            || entity.has_vehicle()
+    pub fn update_player_pose(&self) {
+        if !self.can_fit_pose(EntityPose::Swimming) {
+            return;
+        }
+
+        self.update_swimming();
+        let desired_pose = self.get_desired_pose();
+        let actual_pose = if self.gamemode.load() == GameMode::Spectator
+            || self.get_entity().has_vehicle()
             || self.can_fit_pose(desired_pose)
         {
             desired_pose
@@ -2309,9 +2294,7 @@ impl Player {
             EntityPose::Swimming
         };
 
-        if entity.pose.load() != new_pose {
-            entity.set_pose(new_pose);
-        }
+        self.get_entity().set_pose(actual_pose);
     }
 
     pub fn wake_up(&self) {
@@ -2535,7 +2518,6 @@ impl Player {
                         tracing::error!("Failed to handle Bedrock play packet: {err}");
                     }
                 }
-                ClientPlatform::Local => {}
             }
 
             count += 1;
@@ -2546,9 +2528,8 @@ impl Player {
     }
 
     #[expect(clippy::too_many_lines)]
-    pub fn tick(self: &Arc<Self>, server: &Server) {
+    pub fn tick<'a>(&'a self, server: &'a Server) {
         self.process_inbound_packets();
-        crate::world::chunker::refresh_loading_tickets(self);
 
         if self.is_spectator() {
             self.living_entity
@@ -2590,7 +2571,7 @@ impl Player {
                 .try_lock()
                 .is_ok_and(|screen_handler| {
                     screen_handler.as_any().is::<MerchantScreenHandler>()
-                        && !screen_handler.can_use(self.as_ref())
+                        && !screen_handler.can_use(self)
                 });
 
             if is_invalid {
@@ -2700,10 +2681,10 @@ impl Player {
                     let block = Block::from_state_id(state.id);
                     let can_harvest = p.can_harvest(state, block);
                     let flags = if can_harvest {
-                        verdantgolem_world::world::BlockFlags::NOTIFY_NEIGHBORS
+                        verdantgolem_world::world::BlockFlags::NOTIFY_ALL
                     } else {
                         verdantgolem_world::world::BlockFlags::SKIP_DROPS
-                            | verdantgolem_world::world::BlockFlags::NOTIFY_NEIGHBORS
+                            | verdantgolem_world::world::BlockFlags::NOTIFY_ALL
                     };
                     if world.break_block(&pos, Some(&p), flags).is_some() {
                         if let Some(server) = server_clone {
@@ -2721,7 +2702,7 @@ impl Player {
         }
         self.last_attacked_ticks.fetch_add(1, Ordering::Relaxed);
 
-        self.living_entity.tick(self.as_ref(), server);
+        self.living_entity.tick(self, server);
 
         self.breath_manager.tick(self);
         self.hunger_manager.tick(self);
@@ -2731,14 +2712,6 @@ impl Player {
         self.check_inventory_advancements();
         if let Ok(mut adv) = self.advancements.try_lock() {
             adv.flush_dirty(self, true);
-        }
-
-        if matches!(self.client.as_ref(), ClientPlatform::Local) {
-            self.living_entity.entity.send_pos_rot();
-            crate::world::chunker::update_position(self);
-            // A Local client has no input packet to release the jump key. Keep
-            // command-triggered jumps to a single physics tick.
-            self.living_entity.jumping.store(false, Ordering::Relaxed);
         }
 
         // experience handling
@@ -2839,19 +2812,6 @@ impl Player {
         }
     }
 
-    /// Queues one server-authoritative jump for a headless Local player.
-    /// Returns false when invoked for a network player or while airborne.
-    pub fn jump_local(&self) -> bool {
-        if !matches!(self.client.as_ref(), ClientPlatform::Local)
-            || !self.living_entity.entity.on_ground.load(Ordering::Relaxed)
-        {
-            return false;
-        }
-        self.living_entity.jumping.store(true, Ordering::Relaxed);
-        self.jump();
-        true
-    }
-
     pub fn progress_motion(&self, delta_pos: Vector3<f64>) {
         // TODO: Swimming, gliding...
         if self.living_entity.entity.on_ground.load(Ordering::Relaxed) {
@@ -2876,7 +2836,6 @@ impl Player {
         match self.client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
-            ClientPlatform::Local => false,
         }
     }
 
@@ -3090,7 +3049,6 @@ impl Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 
@@ -3766,12 +3724,12 @@ impl Player {
                         }
                         self.bedrock_spawned.store(false, Ordering::Relaxed);
                     }
-                    ClientPlatform::Local => {}
                 }
 
                 self.send_permission_lvl_update();
 
-                player.request_teleport(position, yaw, pitch);
+                player.get_entity().set_pos(position);
+                player.get_entity().set_rotation(yaw, pitch);
                 player.get_entity().last_pos.store(position);
 
                 self.send_abilities_update();
@@ -3785,6 +3743,17 @@ impl Player {
                 self.send_health();
 
                 new_world.send_world_info(&player, position, yaw, pitch);
+
+                if let ClientPlatform::Java(java_client) = player.client.as_ref() {
+                    let center_chunk = player.get_entity().chunk_pos.load();
+                    let chunk = new_world
+                        .level
+                        .get_or_fetch_chunk(center_chunk, std::clone::Clone::clone)
+                        .await;
+                    java_client.send_chunks(&[chunk]).await;
+                }
+
+                player.request_teleport(position, yaw, pitch);
             }
         }}
     }
@@ -3859,7 +3828,6 @@ impl Player {
                     client.try_enqueue_packet(data);
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 
@@ -4580,20 +4548,7 @@ impl Player {
     }
 
     pub fn get_mining_speed(&self, block: &'static Block) -> f32 {
-        let held = self.inventory().held_item();
-        let mut speed = if crate::carpet::values().missing_tools
-            && block.has_tag(&verdantgolem_data::tag::Block::C_GLASS_BLOCKS)
-        {
-            // Carpet rule missingTools: pickaxes also break glass at pickaxe speed.
-            let stone_speed = held.get_speed(&Block::STONE);
-            if stone_speed > 1.0 {
-                stone_speed
-            } else {
-                held.get_speed(block)
-            }
-        } else {
-            held.get_speed(block)
-        };
+        let mut speed = self.inventory().held_item().get_speed(block);
         // Haste
         if self.living_entity.has_effect(&StatusEffect::HASTE)
             || self.living_entity.has_effect(&StatusEffect::CONDUIT_POWER)
@@ -4754,17 +4709,6 @@ impl Player {
     pub fn send_system_message_raw(&self, text: &TextComponent, overlay: bool) {
         let je_packet = CSystemChatMessage::new(text, overlay);
         let locale = Locale::from_str(&self.config.load().locale).unwrap_or(Locale::EnUs);
-        if overlay {
-            let be_packet = verdantgolem_protocol::bedrock::client::set_title::CSetTitle::new(
-                verdantgolem_protocol::bedrock::client::TitleType::Actionbar,
-                text.0.to_bedrock_legacy(locale),
-                0,
-                0,
-                0,
-            );
-            self.try_enqueue_packet_editioned(&je_packet, &be_packet);
-            return;
-        }
         let be_packet = match &*text.0.content {
             verdantgolem_util::text::TextContent::Translate {
                 translate,
@@ -7233,7 +7177,6 @@ impl InventoryPlayer for Player {
                     }
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 
@@ -7319,7 +7262,6 @@ impl InventoryPlayer for Player {
                     }
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 
@@ -7351,7 +7293,6 @@ impl InventoryPlayer for Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 
@@ -7394,7 +7335,6 @@ impl InventoryPlayer for Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
-            ClientPlatform::Local => {}
         }
     }
 

@@ -111,7 +111,7 @@ pub fn write_chunk_data(
             "MOTION_BLOCKING_NO_LEAVES",
             verdantgolem_nbt::tag::NbtTag::LongArray(mbnl_vec),
         );
-        write_compound_nbt(&mut write, comp, *version)?;
+        write_compound_nbt(&mut write, &comp, *version)?;
     }
 
     if version >= &JavaMinecraftVersion::V_1_15 {
@@ -269,7 +269,7 @@ pub fn write_chunk_data(
             entity_nbt.put("x", verdantgolem_nbt::tag::NbtTag::Int(pos.0.x));
             entity_nbt.put("y", verdantgolem_nbt::tag::NbtTag::Int(pos.0.y));
             entity_nbt.put("z", verdantgolem_nbt::tag::NbtTag::Int(pos.0.z));
-            write_compound_nbt(&mut write, entity_nbt, *version)?;
+            write_compound_nbt(&mut write, &entity_nbt, *version)?;
         }
     }
 

@@ -128,7 +128,13 @@ def main() -> int:
     for path in conflicted:
         upstream_path = to_upstream_path(path)
         ours_path = Path(path)
-        ours = ours_path.read_text() if ours_path.exists() else None
+        # During a conflicted merge the working tree holds marker-laden
+        # content; stage 2 is the clean "ours" version.
+        ours = try_git("show", f":2:{path}")
+        if ours is None:
+            ours = try_git("show", f"HEAD:{path}")
+        if ours is None and ours_path.exists():
+            ours = ours_path.read_text()
         base = try_git("show", f"{base_ref}:{upstream_path}")
         theirs = try_git("show", f"upstream/master:{upstream_path}")
 
