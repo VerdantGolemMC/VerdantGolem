@@ -55,10 +55,10 @@ impl TNTEntity {
         if rules.tnt_primer_momentum_removed {
             return Vector3::new(0.0, 0.2, 0.0);
         }
-        let angle = if rules.hardcode_tnt_angle != -1.0 {
-            rules.hardcode_tnt_angle
-        } else {
+        let angle = if rules.hardcode_tnt_angle == -1.0 {
             rand::random::<f64>() * TAU
+        } else {
+            rules.hardcode_tnt_angle
         };
         Vector3::new(-angle.sin() * 0.02, 0.2, -angle.cos() * 0.02)
     }

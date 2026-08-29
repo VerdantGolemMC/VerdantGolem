@@ -4617,17 +4617,17 @@ impl Player {
         // Carpet rule missingTools: pickaxes also break glass at pickaxe speed
         // (speed only — drop rules are untouched, vanilla parity).
         let held = self.inventory().held_item();
-        let mut speed = if crate::carpet::values().missing_tools && block.registry_key().contains("glass")
-        {
-            let pick_speed = held.get_speed(&Block::STONE);
-            if pick_speed > 1.0 {
-                pick_speed
+        let mut speed =
+            if crate::carpet::values().missing_tools && block.registry_key().contains("glass") {
+                let pick_speed = held.get_speed(&Block::STONE);
+                if pick_speed > 1.0 {
+                    pick_speed
+                } else {
+                    held.get_speed(block)
+                }
             } else {
                 held.get_speed(block)
-            }
-        } else {
-            held.get_speed(block)
-        };
+            };
         // Haste
         if self.living_entity.has_effect(&StatusEffect::HASTE)
             || self.living_entity.has_effect(&StatusEffect::CONDUIT_POWER)
