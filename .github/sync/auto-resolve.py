@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 """Automatic conflict resolution for VerdantGolem upstream syncs.
 
-For every remaining conflicted path, decide whether OUR divergence from the
-merge base is purely mechanical (brand/crate renames). If it is, take the
-upstream side and re-apply the mechanical rename. Otherwise leave the path
-for human resolution.
+Resolution order per conflicted path (all paths below are our verdantgolem
+paths; upstream paths are the pumpkin equivalents):
+
+1. New upstream file (no merge-base copy, nothing on our side either):
+   take upstream content with the mechanical rename re-applied.
+2. Add/add where our copy is normalize-equal to upstream's: same as (1).
+3. Both sides exist with a merge-base copy: run a real three-way
+   `git merge-file`. Clean results are written and staged; overlapping
+   hunks stay conflicted for the report.
+4. Upstream deleted the file and our copy carries only mechanical rename
+   differences: delete ours.
+
+Anything left over is written to conflicted-paths.txt for the workflow to
+report; nothing half-merged is ever pushed.
 
 Run from the repository root while a merge is in progress.
 """
@@ -14,6 +24,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 CRATE_SNAKE = [
@@ -25,6 +36,23 @@ CRATE_HYPHEN = [
     "api-macros", "codecs", "config", "data", "inventory", "macros", "nbt",
     "plugin-api", "plugin-utils", "protocol", "util", "world", "codegen",
     "fuzzer",
+]
+
+PATH_REPLACEMENTS = [
+    ("crates/verdantgolem-plugin-api/", "crates/pumpkin-plugin-api/"),
+    ("crates/verdantgolem-plugin-utils/", "crates/pumpkin-plugin-utils/"),
+    ("crates/verdantgolem-protocol/", "crates/pumpkin-protocol/"),
+    ("crates/verdantgolem-data/", "crates/pumpkin-data/"),
+    ("crates/verdantgolem-world/", "crates/pumpkin-world/"),
+    ("crates/verdantgolem-util/", "crates/pumpkin-util/"),
+    ("crates/verdantgolem-nbt/", "crates/pumpkin-nbt/"),
+    ("crates/verdantgolem-config/", "crates/pumpkin-config/"),
+    ("crates/verdantgolem-inventory/", "crates/pumpkin-inventory/"),
+    ("crates/verdantgolem-macros/", "crates/pumpkin-macros/"),
+    ("crates/verdantgolem-codecs/", "crates/pumpkin-codecs/"),
+    ("crates/verdantgolem-api-macros/", "crates/pumpkin-api-macros/"),
+    ("crates/verdantgolem/", "crates/pumpkin/"),
+    ("tools/verdantgolem-", "tools/pumpkin-"),
 ]
 
 
@@ -41,23 +69,7 @@ def try_git(*args: str) -> str | None:
 
 
 def to_upstream_path(path: str) -> str:
-    replacements = [
-        ("crates/verdantgolem-plugin-api/", "crates/pumpkin-plugin-api/"),
-        ("crates/verdantgolem-plugin-utils/", "crates/pumpkin-plugin-utils/"),
-        ("crates/verdantgolem-protocol/", "crates/pumpkin-protocol/"),
-        ("crates/verdantgolem-data/", "crates/pumpkin-data/"),
-        ("crates/verdantgolem-world/", "crates/pumpkin-world/"),
-        ("crates/verdantgolem-util/", "crates/pumpkin-util/"),
-        ("crates/verdantgolem-nbt/", "crates/pumpkin-nbt/"),
-        ("crates/verdantgolem-config/", "crates/pumpkin-config/"),
-        ("crates/verdantgolem-inventory/", "crates/pumpkin-inventory/"),
-        ("crates/verdantgolem-macros/", "crates/pumpkin-macros/"),
-        ("crates/verdantgolem-codecs/", "crates/pumpkin-codecs/"),
-        ("crates/verdantgolem-api-macros/", "crates/pumpkin-api-macros/"),
-        ("crates/verdantgolem/", "crates/pumpkin/"),
-        ("tools/verdantgolem-", "tools/pumpkin-"),
-    ]
-    for ours, upstream in replacements:
+    for ours, upstream in PATH_REPLACEMENTS:
         path = path.replace(ours, upstream)
     return path
 
@@ -74,7 +86,6 @@ def apply_rename(content: str) -> str:
         content = re.sub(rf"\bpumpkin-{crate}\b", f"verdantgolem-{crate}", content)
     # Main crate paths, excluding the WIT namespace `pumpkin::plugin`.
     content = re.sub(r"\bpumpkin::(?!plugin\b)", "verdantgolem::", content)
-    # Path references into the renamed main crate directory.
     content = content.replace("crates/pumpkin/", "crates/verdantgolem/")
     return content
 
@@ -84,8 +95,23 @@ def normalize(content: str) -> str:
     return content.lower().replace("verdantgolem", "pumpkin")
 
 
-def is_mechanical(base: str, ours: str) -> bool:
-    return normalize(base) == normalize(ours)
+def three_way_merge(ours: str, base: str, theirs: str) -> str | None:
+    """Run git merge-file; return the merged content or None on conflict."""
+    with tempfile.TemporaryDirectory() as tmp:
+        ours_path = Path(tmp) / "ours"
+        base_path = Path(tmp) / "base"
+        theirs_path = Path(tmp) / "theirs"
+        ours_path.write_text(ours)
+        base_path.write_text(base)
+        theirs_path.write_text(theirs)
+        result = subprocess.run(
+            ["git", "merge-file", "-p", "-L", "ours", "-L", "base",
+             "-L", "theirs", str(ours_path), str(base_path), str(theirs_path)],
+            capture_output=True, text=True,
+        )
+        if result.returncode == 0:
+            return result.stdout
+        return None
 
 
 def main() -> int:
@@ -93,6 +119,7 @@ def main() -> int:
     conflicted = git("diff", "--name-only", "--diff-filter=U").split()
     if not conflicted:
         print("No conflicted paths.")
+        Path("conflicted-paths.txt").write_text("")
         return 0
 
     resolved: list[str] = []
@@ -100,29 +127,66 @@ def main() -> int:
 
     for path in conflicted:
         upstream_path = to_upstream_path(path)
-        try:
-            base = git("show", f"{base_ref}:{upstream_path}")
-        except RuntimeError:
-            base = None
-        try:
-            theirs = git("show", f"upstream/master:{upstream_path}")
-        except RuntimeError:
-            theirs = None
-
         ours_path = Path(path)
-        ours = ours_path.read_text() if ours_path.exists() else ""
+        ours = ours_path.read_text() if ours_path.exists() else None
+        base = try_git("show", f"{base_ref}:{upstream_path}")
+        theirs = try_git("show", f"upstream/master:{upstream_path}")
 
-        if theirs is not None and base is not None and is_mechanical(base, ours):
-            ours_path.write_text(apply_rename(theirs))
+        merged: str | None = None
+        action = ""
+
+        if path == "Cargo.lock":
+            # The lock is upstream-shaped; cargo rewrites our package entries
+            # during the next build, so upstream's side always wins.
+            if theirs is not None:
+                ours_path.write_text(theirs)
+                git("add", "--", path)
+                action = "lockfile tracks upstream"
+            else:
+                action = ""
+        elif ours is None and theirs is not None:
+            # New upstream file (possibly a rename detected on our side).
+            merged = apply_rename(theirs)
+            ours_path.write_text(merged)
             git("add", "--", path)
-            resolved.append(path)
-        elif theirs is None and base is not None and is_mechanical(base, ours):
-            # Upstream deleted the file and our side only carries renames.
-            git("rm", "-q", "--", path)
+            action = "new upstream file"
+        elif ours is not None and theirs is not None and base is None:
+            # Add/add: accept when normalize-equal, otherwise report.
+            if normalize(ours) == normalize(theirs):
+                ours_path.write_text(apply_rename(theirs))
+                git("add", "--", path)
+                action = "add/add normalize-equal"
+            else:
+                action = ""
+        elif ours is not None and theirs is not None and base is not None:
+            if normalize(ours) == normalize(base):
+                # Our side only carries mechanical renames: take theirs.
+                merged = apply_rename(theirs)
+                action = "ours is mechanical only"
+            else:
+                merged = three_way_merge(ours, base, theirs)
+                action = "three-way merge"
+            if merged is not None:
+                ours_path.write_text(merged)
+                git("add", "--", path)
+            else:
+                action = ""
+        elif ours is not None and theirs is None and base is not None:
+            if normalize(ours) == normalize(base):
+                git("rm", "-q", "--", path)
+                resolved.append(path)
+                action = "upstream deleted; ours mechanical"
+            else:
+                action = ""
+        else:
+            action = ""
+
+        if action:
+            print(f"RESOLVED  {path}  ({action})")
             resolved.append(path)
         else:
+            print(f"UNRESOLVED {path}  (upstream: {upstream_path})")
             unresolved.append(path)
-            print(f"UNRESOLVED {path} (upstream: {upstream_path})")
 
     print(f"auto-resolved: {len(resolved)}; unresolved: {len(unresolved)}")
     Path("conflicted-paths.txt").write_text(
