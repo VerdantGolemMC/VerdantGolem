@@ -1,0 +1,191 @@
+name: Upstream Sync
+
+# Automated sync from upstream Pumpkin (Pumpkin-MC/Pumpkin).
+#
+# Policy (see docs/upstream-sync.md):
+# - Files we deliberately diverged (brand, CI matrix, deployment) keep OUR side.
+# - The plugin-wit submodule pointer tracks upstream (WIT contract stays aligned).
+# - Everything else merges normally; rename detection maps upstream changes onto
+#   the verdantgolem tree because the merge base is a fully renamed upstream.
+# - Clean merges open a PR; CI must pass before it is merged.
+# - Leftover conflicts open/update a tracking issue instead of pushing garbage.
+
+on:
+  schedule:
+    - cron: "0 3 * * *" # daily, 03:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+env:
+  SYNC_BRANCH: auto/upstream-sync
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Configure git
+        run: |
+          git config user.name "verdantgolem-sync-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/Pumpkin-MC/Pumpkin.git
+          git fetch upstream master:refs/remotes/upstream/master
+
+      - name: Check for new upstream commits
+        id: check
+        run: |
+          base="$(git merge-base HEAD upstream/master)"
+          head_up="$(git rev-parse upstream/master)"
+          if [ "$base" = "$head_up" ]; then
+            echo "synced=false" >> "$GITHUB_OUTPUT"
+            echo "Already in sync with upstream ($head_up)."
+          else
+            {
+              echo "synced=true"
+              echo "count=$(git rev-list --count HEAD..upstream/master)"
+              echo "up=$head_up"
+            } >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Merge upstream
+        if: steps.check.outputs.synced == 'true'
+        id: merge
+        run: |
+          set +e
+          git merge --no-edit upstream/master
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Merge reported conflicts; applying automatic resolutions"
+
+          # The WIT submodule pointer follows the upstream contract.
+          if git diff --name-only --diff-filter=U | grep -qx 'crates/pumpkin-plugin-wit'; then
+            wit_sha="$(git rev-parse upstream/master:crates/pumpkin-plugin-wit)"
+            git update-index --cacheinfo "160000,$wit_sha,crates/pumpkin-plugin-wit"
+            echo "plugin-wit pointer -> $wit_sha"
+          fi
+
+          # Brand / CI / deployment files intentionally diverge; keep ours.
+          keep_ours=(
+            .github/workflows/rust.yml
+            .github/workflows/docker.yml
+            .github/CODEOWNERS
+            .github/FUNDING.yml
+            .github/PULL_REQUEST_TEMPLATE.md
+            .github/ISSUE_TEMPLATE/bug_report.yml
+            README.md
+            CONTRIBUTING.md
+            assets/NOTICE.md
+            Dockerfile
+            docker-compose.yml
+            .dockerignore
+            flake.nix
+            .devcontainer/devcontainer.json
+            typos.toml
+          )
+          for path in "${keep_ours[@]}"; do
+            if git diff --name-only --diff-filter=U | grep -qx "$path"; then
+              git checkout --ours -- "$path"
+              git add -- "$path"
+              echo "kept ours: $path"
+            fi
+          done
+
+          if git diff --name-only --diff-filter=U | grep -q .; then
+            git diff --name-only --diff-filter=U > conflicted-paths.txt
+            git merge --abort
+            echo "clean=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "clean=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push sync branch
+        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'true'
+        run: |
+          if git diff --quiet origin/master HEAD; then
+            echo "Merge produced no content changes; nothing to sync."
+            exit 0
+          fi
+          git push -f origin "HEAD:refs/heads/$SYNC_BRANCH"
+
+      - name: Open PR and merge after CI
+        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          up="${{ steps.check.outputs.up }}"
+          count="${{ steps.check.outputs.count }}"
+          body="Automated upstream sync.
+
+          - Upstream: Pumpkin-MC/Pumpkin@${up}
+          - New upstream commits: ${count}
+          - Brand/CI files auto-kept on our side; plugin-wit tracks upstream.
+          - This PR merges automatically once CI passes."
+
+          existing="$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh pr edit "$existing" --title "chore: sync upstream Pumpkin" --body "$body"
+            pr="$existing"
+          else
+            pr="$(gh pr create --head "$SYNC_BRANCH" --base master \
+              --title "chore: sync upstream Pumpkin" --body "$body")"
+          fi
+
+          echo "PR: $pr"
+          # Wait for CI (PR push + pull_request checks) before merging.
+          if timeout 7200 gh pr checks "$SYNC_BRANCH" --watch --interval 60; then
+            gh pr merge "$SYNC_BRANCH" --merge
+            echo "Sync PR merged."
+          else
+            gh pr comment "$SYNC_BRANCH" --body "CI did not pass (or timed out) within 2h; leaving the PR open for manual review."
+            exit 1
+          fi
+
+      - name: Open or update conflict issue
+        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create upstream-sync --color 5319E7 2>/dev/null || true
+          {
+            echo "Automatic upstream sync hit conflicts that policy does not cover."
+            echo
+            echo "- Target upstream: \`$(git rev-parse upstream/master)\`"
+            echo "- New upstream commits: ${{ steps.check.outputs.count }}"
+            echo
+            echo '```'
+            cat conflicted-paths.txt
+            echo '```'
+            echo
+            echo "Manual fix: \`git fetch upstream && git merge upstream/master\`, resolve the"
+            echo "paths above (most map 1:1 onto the verdantgolem tree), then push to master."
+          } > issue-body.md
+          number="$(gh issue list --label upstream-sync --state open --json number --jq '.[0].number')"
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --title "Upstream sync needs manual conflict resolution" --body-file issue-body.md
+          else
+            gh issue create --title "Upstream sync needs manual conflict resolution" \
+              --body-file issue-body.md --label upstream-sync
+          fi
