@@ -3308,298 +3308,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pumpkin"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "aes 0.9.2",
- "arc-swap",
- "async-trait",
- "axum",
- "base64 0.23.1",
- "bitflags 2.13.1",
- "bytes",
- "colored",
- "console-subscriber",
- "crossbeam",
- "dashmap",
- "ed25519-dalek",
- "flate2",
- "futures",
- "hex",
- "hmac 0.13.0",
- "hyper",
- "image",
- "indexmap",
- "libloading",
- "notify",
- "num-bigint 0.5.1",
- "ordered-float",
- "postcard",
- "pumpkin-codecs",
- "pumpkin-config",
- "pumpkin-data",
- "pumpkin-inventory",
- "pumpkin-macros",
- "pumpkin-nbt",
- "pumpkin-protocol",
- "pumpkin-util",
- "pumpkin-world",
- "rand",
- "rayon",
- "rsa",
- "rustc-hash",
- "rustc_version_runtime",
- "rustyline",
- "serde",
- "serde_json",
- "serde_repr",
- "sha1 0.11.0",
- "sha2 0.11.0",
- "sysinfo",
- "tempfile",
- "thiserror 2.0.20",
- "time",
- "tokio",
- "tokio-util",
- "tracing",
- "tracing-serde-structured",
- "tracing-subscriber",
- "ureq",
- "uuid",
- "wasm-encoder 0.257.1",
- "wasmparser 0.257.1",
- "wasmtime",
- "wasmtime-wasi",
- "wasmtime-wasi-http",
- "webrtc",
-]
-
-[[package]]
-name = "pumpkin-api-macros"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "proc-macro-error2",
- "proc-macro2",
- "quote",
- "syn 3.0.4",
-]
-
-[[package]]
-name = "pumpkin-codecs"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "serde_json",
- "tracing",
-]
-
-[[package]]
-name = "pumpkin-codegen"
-version = "0.1.0-dev+26.1"
-dependencies = [
- "heck",
- "indexmap",
- "md5",
- "proc-macro2",
- "pumpkin-nbt",
- "pumpkin-util",
- "quote",
- "rayon",
- "semver",
- "serde",
- "serde_json",
- "serde_repr",
- "syn 3.0.4",
- "wit-encoder",
-]
-
-[[package]]
-name = "pumpkin-config"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "pumpkin-util",
- "serde",
- "toml 1.1.4+spec-1.1.0",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "pumpkin-data"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "crc-fast",
- "criterion",
- "phf",
- "pumpkin-nbt",
- "pumpkin-util",
- "rand",
- "serde",
-]
-
-[[package]]
-name = "pumpkin-fuzzer"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "clap",
- "colored",
- "rand",
- "tokio",
-]
-
-[[package]]
-name = "pumpkin-inventory"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "pumpkin-data",
- "pumpkin-protocol",
- "pumpkin-util",
- "pumpkin-world",
- "rand",
- "thiserror 2.0.20",
- "tracing",
-]
-
-[[package]]
-name = "pumpkin-macros"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "heck",
- "proc-macro-error2",
- "proc-macro2",
- "pumpkin-data",
- "quote",
- "syn 3.0.4",
-]
-
-[[package]]
-name = "pumpkin-nbt"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "bytes",
- "cesu8",
- "criterion",
- "flate2",
- "pumpkin-codecs",
- "tempfile",
- "thiserror 2.0.20",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "pumpkin-plugin-api"
-version = "0.1.0"
-dependencies = [
- "postcard",
- "serde_json",
- "tracing",
- "tracing-serde-structured",
- "wit-bindgen",
-]
-
-[[package]]
-name = "pumpkin-plugin-utils"
-version = "0.1.0"
-dependencies = [
- "pumpkin-plugin-api",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.20",
- "tracing",
- "ureq",
-]
-
-[[package]]
-name = "pumpkin-protocol"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "aes 0.9.2",
- "async-compression",
- "bitflags 2.13.1",
- "bytes",
- "cesu8",
- "cfb8",
- "flate2",
- "hybrid-array",
- "pumpkin-data",
- "pumpkin-macros",
- "pumpkin-nbt",
- "pumpkin-util",
- "pumpkin-world",
- "serde",
- "serde_json",
- "thiserror 2.0.20",
- "tokio",
- "uuid",
- "xxhash-rust",
-]
-
-[[package]]
-name = "pumpkin-util"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "base64 0.23.1",
- "bytes",
- "colored",
- "criterion",
- "crypto-bigint 0.7.5",
- "dashmap",
- "ecdsa 0.17.0",
- "md5",
- "num-derive",
- "num-traits",
- "p384 0.14.0",
- "proc-macro2",
- "pumpkin-codecs",
- "pumpkin-nbt",
- "quote",
- "rsa",
- "serde",
- "serde_json",
- "sha2 0.11.0",
- "syn 3.0.4",
- "thiserror 2.0.20",
- "ureq",
- "uuid",
-]
-
-[[package]]
-name = "pumpkin-world"
-version = "0.1.0-dev+26.2-26.40"
-dependencies = [
- "arc-swap",
- "bitflags 2.13.1",
- "bytes",
- "criterion",
- "crossbeam",
- "dashmap",
- "flate2",
- "futures",
- "itertools 0.15.0",
- "lz4-java-wrc",
- "pumpkin-config",
- "pumpkin-data",
- "pumpkin-nbt",
- "pumpkin-util",
- "rand",
- "rayon",
- "rustc-hash",
- "ruzstd",
- "serde",
- "serde_json",
- "sha2 0.11.0",
- "slotmap",
- "tempfile",
- "thiserror 2.0.20",
- "tokio",
- "tokio-util",
- "tracing",
- "uuid",
- "xxhash-rust",
-]
-
-[[package]]
 name = "pxfm"
 version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5200,6 +4908,299 @@ name = "valuable"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
+
+[[package]]
+name = "verdantgolem"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "aes 0.9.2",
+ "arc-swap",
+ "async-trait",
+ "axum",
+ "base64 0.23.1",
+ "bitflags 2.13.1",
+ "bytes",
+ "colored",
+ "console-subscriber",
+ "crossbeam",
+ "dashmap",
+ "ed25519-dalek",
+ "flate2",
+ "futures",
+ "hex",
+ "hmac 0.13.0",
+ "hyper",
+ "image",
+ "indexmap",
+ "libloading",
+ "md5",
+ "notify",
+ "num-bigint 0.5.1",
+ "ordered-float",
+ "postcard",
+ "rand",
+ "rayon",
+ "rsa",
+ "rustc-hash",
+ "rustc_version_runtime",
+ "rustyline",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "sha1 0.11.0",
+ "sha2 0.11.0",
+ "sysinfo",
+ "tempfile",
+ "thiserror 2.0.20",
+ "time",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-serde-structured",
+ "tracing-subscriber",
+ "ureq",
+ "uuid",
+ "verdantgolem-codecs",
+ "verdantgolem-config",
+ "verdantgolem-data",
+ "verdantgolem-inventory",
+ "verdantgolem-macros",
+ "verdantgolem-nbt",
+ "verdantgolem-protocol",
+ "verdantgolem-util",
+ "verdantgolem-world",
+ "wasm-encoder 0.257.1",
+ "wasmparser 0.257.1",
+ "wasmtime",
+ "wasmtime-wasi",
+ "wasmtime-wasi-http",
+ "webrtc",
+]
+
+[[package]]
+name = "verdantgolem-api-macros"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn 3.0.4",
+]
+
+[[package]]
+name = "verdantgolem-codecs"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "verdantgolem-codegen"
+version = "0.1.0-dev+26.1"
+dependencies = [
+ "heck",
+ "indexmap",
+ "md5",
+ "proc-macro2",
+ "quote",
+ "rayon",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "syn 3.0.4",
+ "verdantgolem-nbt",
+ "verdantgolem-util",
+ "wit-encoder",
+]
+
+[[package]]
+name = "verdantgolem-config"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "serde",
+ "toml 1.1.4+spec-1.1.0",
+ "tracing",
+ "uuid",
+ "verdantgolem-util",
+]
+
+[[package]]
+name = "verdantgolem-data"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "crc-fast",
+ "criterion",
+ "phf",
+ "rand",
+ "serde",
+ "verdantgolem-nbt",
+ "verdantgolem-util",
+]
+
+[[package]]
+name = "verdantgolem-fuzzer"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "clap",
+ "colored",
+ "rand",
+ "tokio",
+]
+
+[[package]]
+name = "verdantgolem-inventory"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "rand",
+ "thiserror 2.0.20",
+ "tracing",
+ "verdantgolem-data",
+ "verdantgolem-protocol",
+ "verdantgolem-util",
+ "verdantgolem-world",
+]
+
+[[package]]
+name = "verdantgolem-macros"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "heck",
+ "proc-macro-error2",
+ "proc-macro2",
+ "quote",
+ "syn 3.0.4",
+ "verdantgolem-data",
+]
+
+[[package]]
+name = "verdantgolem-nbt"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "bytes",
+ "cesu8",
+ "criterion",
+ "flate2",
+ "tempfile",
+ "thiserror 2.0.20",
+ "tracing",
+ "uuid",
+ "verdantgolem-codecs",
+]
+
+[[package]]
+name = "verdantgolem-plugin-api"
+version = "0.1.0"
+dependencies = [
+ "postcard",
+ "serde_json",
+ "tracing",
+ "tracing-serde-structured",
+ "wit-bindgen",
+]
+
+[[package]]
+name = "verdantgolem-plugin-utils"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.20",
+ "tracing",
+ "ureq",
+ "verdantgolem-plugin-api",
+]
+
+[[package]]
+name = "verdantgolem-protocol"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "aes 0.9.2",
+ "async-compression",
+ "bitflags 2.13.1",
+ "bytes",
+ "cesu8",
+ "cfb8",
+ "flate2",
+ "hybrid-array",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.20",
+ "tokio",
+ "uuid",
+ "verdantgolem-data",
+ "verdantgolem-macros",
+ "verdantgolem-nbt",
+ "verdantgolem-util",
+ "verdantgolem-world",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "verdantgolem-util"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "base64 0.23.1",
+ "bytes",
+ "colored",
+ "criterion",
+ "crypto-bigint 0.7.5",
+ "dashmap",
+ "ecdsa 0.17.0",
+ "md5",
+ "num-derive",
+ "num-traits",
+ "p384 0.14.0",
+ "proc-macro2",
+ "quote",
+ "rsa",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "syn 3.0.4",
+ "thiserror 2.0.20",
+ "ureq",
+ "uuid",
+ "verdantgolem-codecs",
+ "verdantgolem-nbt",
+]
+
+[[package]]
+name = "verdantgolem-world"
+version = "0.1.0-dev+26.2-26.40"
+dependencies = [
+ "arc-swap",
+ "bitflags 2.13.1",
+ "bytes",
+ "criterion",
+ "crossbeam",
+ "dashmap",
+ "flate2",
+ "futures",
+ "itertools 0.15.0",
+ "lz4-java-wrc",
+ "rand",
+ "rayon",
+ "rustc-hash",
+ "ruzstd",
+ "serde",
+ "serde_json",
+ "sha2 0.11.0",
+ "slotmap",
+ "tempfile",
+ "thiserror 2.0.20",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+ "verdantgolem-config",
+ "verdantgolem-data",
+ "verdantgolem-nbt",
+ "verdantgolem-util",
+ "xxhash-rust",
+]
 
 [[package]]
 name = "version_check"
