@@ -3,12 +3,14 @@ name: Upstream Sync
 # Automated sync from upstream Pumpkin (Pumpkin-MC/Pumpkin).
 #
 # Policy (see docs/upstream-sync.md):
-# - Files we deliberately diverged (brand, CI matrix, deployment) keep OUR side.
-# - The plugin-wit submodule pointer tracks upstream (WIT contract stays aligned).
-# - Everything else merges normally; rename detection maps upstream changes onto
-#   the verdantgolem tree because the merge base is a fully renamed upstream.
+# - Rename detection maps most upstream changes onto the verdantgolem tree.
+# - Conflict resolution order: plugin-wit tracks upstream; brand/CI/deployment
+#   files keep ours; files whose only local divergence is the mechanical
+#   rename take upstream content with the rename re-applied
+#   (.github/sync/auto-resolve.py).
 # - Clean merges open a PR; CI must pass before it is merged.
-# - Leftover conflicts open/update a tracking issue instead of pushing garbage.
+# - Leftover conflicts fail the run with a step summary + artifact; the repo
+#   has Issues disabled so nothing is pushed blindly.
 
 on:
   schedule:
@@ -18,7 +20,6 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 concurrency:
   group: upstream-sync
@@ -112,10 +113,15 @@ jobs:
           done
 
           if git diff --name-only --diff-filter=U | grep -q .; then
+            python3 .github/sync/auto-resolve.py
+          fi
+
+          if git diff --name-only --diff-filter=U | grep -q .; then
             git diff --name-only --diff-filter=U > conflicted-paths.txt
             git merge --abort
             echo "clean=false" >> "$GITHUB_OUTPUT"
           else
+            git commit --no-edit
             echo "clean=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -140,7 +146,8 @@ jobs:
 
           - Upstream: Pumpkin-MC/Pumpkin@${up}
           - New upstream commits: ${count}
-          - Brand/CI files auto-kept on our side; plugin-wit tracks upstream.
+          - Auto-resolution: brand/CI files keep ours, plugin-wit tracks
+            upstream, mechanically-renamed files take upstream content.
           - This PR merges automatically once CI passes."
 
           existing="$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[0].number')"
@@ -162,30 +169,30 @@ jobs:
             exit 1
           fi
 
-      - name: Open or update conflict issue
+      - name: Report unresolved conflicts
         if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
         run: |
-          gh label create upstream-sync --color 5319E7 2>/dev/null || true
           {
-            echo "Automatic upstream sync hit conflicts that policy does not cover."
+            echo "## Upstream sync hit unresolved conflicts"
             echo
-            echo "- Target upstream: \`$(git rev-parse upstream/master)\`"
+            echo "- Target upstream: \`${{ steps.check.outputs.up }}\`"
             echo "- New upstream commits: ${{ steps.check.outputs.count }}"
             echo
+            echo "These files need manual resolution (see docs/upstream-sync.md):"
             echo '```'
             cat conflicted-paths.txt
             echo '```'
-            echo
-            echo "Manual fix: \`git fetch upstream && git merge upstream/master\`, resolve the"
-            echo "paths above (most map 1:1 onto the verdantgolem tree), then push to master."
-          } > issue-body.md
-          number="$(gh issue list --label upstream-sync --state open --json number --jq '.[0].number')"
-          if [ -n "$number" ]; then
-            gh issue edit "$number" --title "Upstream sync needs manual conflict resolution" --body-file issue-body.md
-          else
-            gh issue create --title "Upstream sync needs manual conflict resolution" \
-              --body-file issue-body.md --label upstream-sync
-          fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload conflict list
+        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
+        uses: actions/upload-artifact@v7
+        with:
+          name: conflicted-paths
+          path: conflicted-paths.txt
+
+      - name: Fail on unresolved conflicts
+        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
+        run: |
+          echo "Conflicted files remain; nothing was pushed."
+          exit 1
