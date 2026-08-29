@@ -649,6 +649,10 @@ pub trait EntityBase: Send + Sync + std::any::Any {
         None
     }
 
+    fn get_tnt_entity(self: Arc<Self>) -> Option<Arc<crate::entity::tnt::TNTEntity>> {
+        None
+    }
+
     fn get_player(&self) -> Option<&Player> {
         None
     }

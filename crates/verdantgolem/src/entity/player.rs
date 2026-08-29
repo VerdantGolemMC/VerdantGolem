@@ -411,6 +411,9 @@ pub struct ChunkManager {
     held_tickets: Option<(i8, i8)>,
     /// The current world for chunk loading. Updated on dimension change.
     world: Arc<World>,
+    /// Carpet `creativePlayersLoadChunks`: whether this player holds chunk
+    /// loading tickets around their center (false = behave like a spectator).
+    loading_tickets_enabled: bool,
 }
 
 impl ChunkManager {
@@ -435,6 +438,7 @@ impl ChunkManager {
             last_chunk_batch_sent_at: Instant::now(),
             held_tickets: None,
             world,
+            loading_tickets_enabled: true,
         }
     }
 
@@ -442,6 +446,39 @@ impl ChunkManager {
     #[must_use]
     pub const fn world(&self) -> &Arc<World> {
         &self.world
+    }
+
+    /// Carpet `creativePlayersLoadChunks`: toggles whether this player's
+    /// center holds chunk-loading tickets. Takes effect immediately.
+    pub fn set_loading_tickets_enabled(&mut self, enabled: bool) {
+        if self.loading_tickets_enabled == enabled {
+            return;
+        }
+        self.loading_tickets_enabled = enabled;
+        let level = self.world.level.clone();
+        let mut lock = level
+            .chunk_loading
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        if enabled && self.held_tickets.is_none() {
+            let view_level = ChunkLoading::get_level_from_view_distance(self.view_distance);
+            let sim_level = self.simulation_ticket_level();
+            lock.add_ticket(self.center, view_level);
+            lock.add_ticket(self.center, sim_level);
+            self.held_tickets = Some((view_level, sim_level));
+            lock.send_change();
+        } else if !enabled && let Some((view_level, sim_level)) = self.held_tickets.take() {
+            lock.remove_ticket(self.center, view_level);
+            lock.remove_ticket(self.center, sim_level);
+            lock.send_change();
+        }
+    }
+
+    fn simulation_ticket_level(&self) -> i8 {
+        let sim_dist = self.world.server.upgrade().map_or(10, |s| {
+            s.advanced_config.networking.java.simulation_distance.get()
+        });
+        ChunkLoading::get_level_from_simulation_distance(sim_dist)
     }
 
     #[must_use]
@@ -521,13 +558,12 @@ impl ChunkManager {
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
             let new_level = ChunkLoading::get_level_from_view_distance(view_distance);
-            lock.add_ticket(center, new_level);
+            let sim_level = self.simulation_ticket_level();
 
-            let sim_dist = self.world.server.upgrade().map_or(10, |s| {
-                s.advanced_config.networking.java.simulation_distance.get()
-            });
-            let sim_level = ChunkLoading::get_level_from_simulation_distance(sim_dist);
-            lock.add_ticket(center, sim_level);
+            if self.loading_tickets_enabled {
+                lock.add_ticket(center, new_level);
+                lock.add_ticket(center, sim_level);
+            }
 
             // Drop exactly the pair we last added rather than recomputing it. The
             // simulation level is derived from live config and the view level from the
@@ -1694,6 +1730,7 @@ impl Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -2518,6 +2555,7 @@ impl Player {
                         tracing::error!("Failed to handle Bedrock play packet: {err}");
                     }
                 }
+                ClientPlatform::Local => {}
             }
 
             count += 1;
@@ -2800,6 +2838,19 @@ impl Player {
         }
     }
 
+    /// Carpet fake-player jump: succeeds only while on the ground, applies
+    /// the vanilla jump velocity and records the jump statistic.
+    pub fn jump_local(&self) -> bool {
+        if !self.living_entity.entity.on_ground.load(Ordering::Relaxed) {
+            return false;
+        }
+        let mut velocity = self.living_entity.entity.velocity.load();
+        velocity.y = 0.42;
+        self.living_entity.entity.velocity.store(velocity);
+        self.jump();
+        true
+    }
+
     pub fn jump(&self) {
         self.stats
             .lock()
@@ -2836,6 +2887,7 @@ impl Player {
         match self.client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
+            ClientPlatform::Local => {}
         }
     }
 
@@ -3049,6 +3101,7 @@ impl Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -3724,6 +3777,7 @@ impl Player {
                         }
                         self.bedrock_spawned.store(false, Ordering::Relaxed);
                     }
+                ClientPlatform::Local => {}
                 }
 
                 self.send_permission_lvl_update();
@@ -3828,6 +3882,7 @@ impl Player {
                     client.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7177,6 +7232,7 @@ impl InventoryPlayer for Player {
                     }
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7262,6 +7318,7 @@ impl InventoryPlayer for Player {
                     }
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7293,6 +7350,7 @@ impl InventoryPlayer for Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 
@@ -7335,6 +7393,7 @@ impl InventoryPlayer for Player {
                     bedrock.try_enqueue_packet(data);
                 }
             }
+            ClientPlatform::Local => {}
         }
     }
 

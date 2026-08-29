@@ -91,13 +91,16 @@ pub fn update_position(player: &Arc<Player>) {
             .lock()
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         let world = chunk_manager.world().clone();
+        // Carpet `creativePlayersLoadChunks`: keep the ticket switch in sync
+        // on every move (idempotent); stationary players are covered by
+        // refresh_loading_ticks.
+        chunk_manager.set_loading_tickets_enabled(loads_chunks);
         chunk_manager.update_center_and_view_distance(
             new_chunk_center,
             view_distance.into(),
             &world.level,
             &loading_chunks,
             &unloading_chunks,
-            loads_chunks,
         );
         world
     };
