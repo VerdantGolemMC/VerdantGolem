@@ -20,7 +20,7 @@ use super::{
     bossbar::{Bossbar, BossbarColor, BossbarDivisions, BossbarFlags},
 };
 use crate::entity::{Entity, EntityBase, decoration::end_crystal::EndCrystalEntity};
-use pumpkin_data::block_properties::BlockProperties;
+use verdantgolem_data::block_properties::BlockProperties;
 
 // ── Constants (match vanilla exactly) ────────────────────────────────────────
 
@@ -38,7 +38,7 @@ pub const EVENT_DISPLAY_NAME: &str = "entity.minecraft.ender_dragon";
 
 // ── End Spike definition ─────────────────────────────────────────────────────
 
-pub use pumpkin_world::generation::feature::features::end_spike::Spike as EndSpike;
+pub use verdantgolem_world::generation::feature::features::end_spike::Spike as EndSpike;
 
 // ── Respawn stage ─────────────────────────────────────────────────────────────
 
@@ -147,7 +147,7 @@ impl DragonFight {
 
     #[must_use]
     pub fn get_spikes() -> [EndSpike; 10] {
-        pumpkin_world::generation::feature::features::end_spike::EndSpikeFeature::get_spikes_for_seed(0)
+        verdantgolem_world::generation::feature::features::end_spike::EndSpikeFeature::get_spikes_for_seed(0)
     }
 
     // ── Main tick ─────────────────────────────────────────────────────────────
@@ -833,7 +833,7 @@ impl DragonFight {
                         let z_edge = z_wall || on_top;
 
                         let mut props =
-                            pumpkin_data::block_properties::OakFenceLikeProperties::default(
+                            verdantgolem_data::block_properties::OakFenceLikeProperties::default(
                                 &Block::IRON_BARS,
                             );
                         props.north = x_edge && dz != 2;

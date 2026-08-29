@@ -98,7 +98,7 @@ impl<'a> ServerPacket<'a> for CSetContainerContent<'a> {
             ItemStackSerializer::read_with_version(bytebuf, version)?
         } else {
             ItemStackSerializer(std::borrow::Cow::Borrowed(
-                pumpkin_data::item_stack::ItemStack::EMPTY,
+                verdantgolem_data::item_stack::ItemStack::EMPTY,
             ))
         };
         Ok(Self {

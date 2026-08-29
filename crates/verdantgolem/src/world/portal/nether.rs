@@ -835,7 +835,7 @@ impl NetherPortal {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pumpkin_util::math::boundingbox::EntityDimensions;
+    use verdantgolem_util::math::boundingbox::EntityDimensions;
 
     #[test]
     fn portal_teleport_position_x_axis() {

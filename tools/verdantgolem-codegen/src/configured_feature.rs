@@ -820,7 +820,7 @@ pub fn value_to_configured_feature(v: &Value) -> TokenStream {
                 let x = exit_arr[0].as_i64().unwrap_or(0) as i32;
                 let y = exit_arr[1].as_i64().unwrap_or(0) as i32;
                 let z = exit_arr[2].as_i64().unwrap_or(0) as i32;
-                quote! { Some(pumpkin_util::math::position::BlockPos::new(#x, #y, #z)) }
+                quote! { Some(verdantgolem_util::math::position::BlockPos::new(#x, #y, #z)) }
             } else {
                 quote! { None }
             };

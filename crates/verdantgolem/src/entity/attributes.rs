@@ -267,8 +267,8 @@ impl AttributeRegistry {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pumpkin_data::attributes::Attributes;
-    use pumpkin_data::entity::EntityType;
+    use verdantgolem_data::attributes::Attributes;
+    use verdantgolem_data::entity::EntityType;
 
     #[test]
     fn player_base_attributes() {

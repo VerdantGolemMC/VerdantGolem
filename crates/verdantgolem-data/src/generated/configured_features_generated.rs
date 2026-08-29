@@ -1551,7 +1551,7 @@ fn build_configured_features()
         verdantgolem_data::configured_feature::ConfiguredFeature::EndGatewayReturn,
         ConfiguredFeature::EndGateway(
             crate::generation::feature::features::end_gateway::EndGatewayFeature {
-                exit: Some(pumpkin_util::math::position::BlockPos::new(
+                exit: Some(verdantgolem_util::math::position::BlockPos::new(
                     100i32, 50i32, 0i32,
                 )),
                 exact: true,
