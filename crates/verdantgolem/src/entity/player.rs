@@ -1044,6 +1044,7 @@ impl Player {
         let supports_player_loaded = match client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
+            ClientPlatform::Local => false,
         };
         let initially_loaded = !supports_player_loaded;
 
@@ -2887,7 +2888,8 @@ impl Player {
         match self.client.as_ref() {
             ClientPlatform::Java(client) => client.version.load() >= JavaMinecraftVersion::V_1_21_4,
             ClientPlatform::Bedrock(_) => true,
-            ClientPlatform::Local => {}
+            // Fake players have no client to answer the "loaded" packet.
+            ClientPlatform::Local => false,
         }
     }
 

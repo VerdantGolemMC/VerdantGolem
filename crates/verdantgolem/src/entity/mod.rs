@@ -3000,6 +3000,7 @@ impl Entity {
                 match player.client.as_ref() {
                     ClientPlatform::Java(_) => java_recipients.push(player),
                     ClientPlatform::Bedrock(client) => bedrock_recipients.push(client),
+                    ClientPlatform::Local => {}
                 }
             }
         }

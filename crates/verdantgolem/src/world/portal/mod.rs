@@ -160,6 +160,7 @@ impl PortalType {
                                         client.try_enqueue_packet(data);
                                     }
                                 }
+                            crate::net::ClientPlatform::Local => {}
                             }
                         }
 
