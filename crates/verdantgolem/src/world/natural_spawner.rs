@@ -616,10 +616,8 @@ pub fn spawn_mobs_for_chunk_generation(
                         .get_entity()
                         .set_rotation(rand::random::<f32>() * 360., 0.);
                     world.spawn_entity_non_save(entity);
-                    crate::carpet::spawn_tracking::record(
-                        world.dimension.minecraft_name,
-                        entity_type,
-                    );
+                    // Not recorded by /spawn tracking: worldgen creature packs
+                    // are not runtime natural spawns and would skew rates.
                     success = true;
                 }
 

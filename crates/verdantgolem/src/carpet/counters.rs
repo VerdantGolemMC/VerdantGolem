@@ -43,20 +43,23 @@ pub fn wool_channel(block: &Block) -> Option<usize> {
 
 /// Records `count` items of `item_key` on `channel`.
 pub fn add(channel: usize, item_key: &str, count: u64) {
-    if let Ok(mut counters) = COUNTERS.lock()
-        && let Some(items) = counters.get_mut(channel)
-    {
+    let mut counters = lock();
+    if let Some(items) = counters.get_mut(channel) {
         let total = items.entry(item_key.to_string()).or_insert(0);
         *total = total.saturating_add(count);
     }
 }
 
+fn lock() -> std::sync::MutexGuard<'static, Channels> {
+    COUNTERS
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
 /// Snapshot of one channel as `(item, count)` pairs, largest count first.
 #[must_use]
 pub fn snapshot(channel: usize) -> Vec<(String, u64)> {
-    let Ok(counters) = COUNTERS.lock() else {
-        return Vec::new();
-    };
+    let counters = lock();
     let Some(items) = counters.get(channel) else {
         return Vec::new();
     };

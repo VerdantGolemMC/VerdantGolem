@@ -448,13 +448,15 @@ impl DispenserBlock {
         true
     }
 
-    /// Rotates the block in front of the dispenser counter-clockwise (Carpet
-    /// `rotatorBlock`). Returns false when the block has no rotation.
+    /// Rotates the block in front of the dispenser clockwise (Carpet
+    /// `rotatorBlock`). The cactus is never consumed; on a non-rotatable
+    /// target nothing is dispensed instead of ejecting the item.
     fn dispense_rotation(ctx: &DispenseContext<'_>) -> bool {
         let target = Self::target_position(ctx);
         let (block, state) = ctx.world.get_block_and_state(&target);
-        let rotated = block.rotate(state.id, Rotation::CounterClockwise90);
+        let rotated = block.rotate(state.id, Rotation::Clockwise90);
         if rotated.id == state.id {
+            ctx.world.update_neighbors(&target, None);
             return false;
         }
         ctx.world.set_block_state(

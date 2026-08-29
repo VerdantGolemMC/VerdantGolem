@@ -599,9 +599,20 @@ pub trait EntityBase: Send + Sync + std::any::Any {
                 }
             }
         } else {
+            // Carpet rule maxEntityCollisions (0 = unlimited). Only actual,
+            // pushable collision targets consume the configured allowance.
+            let configured_limit = crate::carpet::values().max_entity_collisions;
+            let mut collisions_left = (configured_limit > 0).then_some(configured_limit as usize);
+
             let other_entities = world.get_entities_at_box(&entity_bb);
             for other in other_entities {
-                if other.get_entity().entity_id != self_entity.entity_id {
+                if collisions_left == Some(0) {
+                    break;
+                }
+                if other.get_entity().entity_id != self_entity.entity_id && other.is_pushable() {
+                    if let Some(remaining) = collisions_left.as_mut() {
+                        *remaining = remaining.saturating_sub(1);
+                    }
                     dyn_self.push(other.as_ref());
                     pushed = true;
                 }
@@ -609,7 +620,13 @@ pub trait EntityBase: Send + Sync + std::any::Any {
 
             let players = world.get_players_at_box(&entity_bb);
             for player in players {
-                if player.get_entity().entity_id != self_entity.entity_id {
+                if collisions_left == Some(0) {
+                    break;
+                }
+                if player.get_entity().entity_id != self_entity.entity_id && player.is_pushable() {
+                    if let Some(remaining) = collisions_left.as_mut() {
+                        *remaining = remaining.saturating_sub(1);
+                    }
                     dyn_self.push(player.as_ref());
                     pushed = true;
                 }
@@ -1497,23 +1514,24 @@ impl Entity {
     pub fn check_zero_velo(&self) {
         let mut motion = self.velocity.load();
 
-        if self.entity_type == &EntityType::PLAYER {
-            if motion.horizontal_length_squared() < 9.0E-6 {
+        let clamp = crate::carpet::values().momentum_clamp_threshold;
+        if clamp > 0.0 && self.entity_type == &EntityType::PLAYER {
+            if motion.horizontal_length_squared() < clamp * clamp {
                 motion.x = 0.0;
 
                 motion.z = 0.0;
             }
-        } else {
-            if motion.x.abs() < 0.003 {
+        } else if clamp > 0.0 {
+            if motion.x.abs() < clamp {
                 motion.x = 0.0;
             }
 
-            if motion.z.abs() < 0.003 {
+            if motion.z.abs() < clamp {
                 motion.z = 0.0;
             }
         }
 
-        if motion.y.abs() < 0.003 {
+        if clamp > 0.0 && motion.y.abs() < clamp {
             motion.y = 0.0;
         }
 

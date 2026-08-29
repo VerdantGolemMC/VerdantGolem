@@ -62,8 +62,11 @@ impl CommandExecutor for PerimeterInfoExecutor {
             .checked_add(SCAN_RADIUS)
             .ok_or_else(|| failed("scan area is outside the world".to_string()))?;
 
-        let bottom_y = world.get_bottom_y();
-        let top_y = world.get_top_y();
+        // Full-height scans (~700k block reads for 33x33x384) stall the tick;
+        // mob spawning only matters within +-32 blocks of the scan center.
+        let window = 32;
+        let bottom_y = (center.0.y - window).max(world.get_bottom_y());
+        let top_y = (center.0.y + window).min(world.get_top_y());
         for corner in [
             BlockPos::new(min_x, bottom_y, min_z),
             BlockPos::new(max_x, top_y, max_z),

@@ -81,7 +81,7 @@ impl BlockBehaviour for SaplingBlock {
         // unless water is nearby.
         if crate::carpet::values().desert_shrubs {
             let biome = args.world.level.get_rough_biome(args.position);
-            if biome.weather.base_temperature() >= 2.0 {
+            if biome.registry_id == "minecraft:desert" {
                 let near_water = (args.position.0.x - 4..=args.position.0.x + 4).any(|dx| {
                     (args.position.0.z - 4..=args.position.0.z + 4).any(|dz| {
                         (args.position.0.y - 4..=args.position.0.y + 1).any(|dy| {

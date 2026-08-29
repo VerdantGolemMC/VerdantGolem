@@ -203,7 +203,10 @@ impl ClientPlatform {
         match self {
             Self::Java(java) => java.spawn_task(task),
             Self::Bedrock(bedrock) => bedrock.spawn_task(task),
-            Self::Local => None,
+            // Fake players have no client task loop, but their futures (chunk
+            // entity activation, cross-dimension teleport) must still run on
+            // the shared runtime.
+            Self::Local => Some(tokio::spawn(task)),
         }
     }
 

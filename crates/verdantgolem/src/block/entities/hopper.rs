@@ -149,6 +149,17 @@ impl HopperBlockEntity {
     }
     fn try_move_items(&self, state: HopperLikeProperties, world: &Arc<World>) {
         if self.cooldown_time.load(Ordering::Relaxed) <= 0 && state.enabled {
+            // carpet hopperCounters: an empty hopper facing wool still counts
+            // as a (zero-item) transfer, keeping the 8gt cooldown instead of
+            // rescanning entities every tick.
+            if crate::carpet::values().hopper_counters && self.is_empty() {
+                let target_pos = self.position.offset(to_offset(&self.facing));
+                let (target_block, _) = world.get_block_and_state(&target_pos);
+                if crate::carpet::counters::wool_channel(target_block).is_some() {
+                    self.cooldown_time.store(8, Ordering::Relaxed);
+                    return;
+                }
+            }
             let mut success = if self.is_empty() {
                 false
             } else {
@@ -344,7 +355,7 @@ impl HopperBlockEntity {
                 .read()
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .clone();
-            for item in &items {
+            for (slot_index, item) in items.iter().enumerate() {
                 if !item.is_empty() {
                     let mut move_event = crate::plugin::api::events::inventory::inventory_move_item::InventoryMoveItemEvent::new(
                         self.position,
@@ -360,9 +371,12 @@ impl HopperBlockEntity {
                     if move_event.cancelled {
                         continue;
                     }
-                    let mut item_clone = item.clone();
-                    let one_item = item_clone.split(1);
+                    let mut updated = item.clone();
+                    let one_item = updated.split(1);
                     if Self::add_one_item(self, container.as_ref(), &one_item) {
+                        // Write the decremented stack back, otherwise the hopper
+                        // would duplicate items into the target forever.
+                        self.set_stack(slot_index, updated);
                         return true;
                     }
                 }

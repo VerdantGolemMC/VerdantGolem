@@ -107,8 +107,8 @@ impl FlowingLava {
                     && world.dimension == Dimension::OVERWORLD
                     && block_pos.0.y < 0
                 {
-                    // carpet rule renewableDeepslate
-                    Block::DEEPSLATE
+                    // carpet rule renewableDeepslate (cobbled for flowing lava)
+                    Block::COBBLED_DEEPSLATE
                 } else {
                     Block::COBBLESTONE
                 };
@@ -300,7 +300,16 @@ impl FlowingFluid for FlowingLava {
         if new_props.level == Level::L8 && new_props.falling == Falling::True {
             // Stone creation when lava meets water
             if block == &Block::WATER {
-                world.set_block_state(pos, Block::STONE.default_state.id, BlockFlags::NOTIFY_ALL);
+                // carpet rule renewableDeepslate: Overworld below y=0 forms deepslate.
+                let target = if crate::carpet::values().renewable_deepslate
+                    && world.dimension == Dimension::OVERWORLD
+                    && pos.0.y < 0
+                {
+                    Block::DEEPSLATE
+                } else {
+                    Block::STONE
+                };
+                world.set_block_state(pos, target.default_state.id, BlockFlags::NOTIFY_ALL);
                 world.sync_world_event(WorldEvent::LavaFizz, *pos, 0);
                 return;
             }

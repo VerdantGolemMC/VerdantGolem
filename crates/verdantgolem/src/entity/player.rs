@@ -4376,6 +4376,15 @@ impl Player {
             verdantgolem_util::text::TextComponent::get_text,
         );
         let source_str = source.unwrap_or_else(|| "Plugin".to_string());
+        // Carpet fake players sit on a loopback sentinel address; banning it
+        // would blacklist 127.0.0.1 and kick every local player.
+        if matches!(self.client.as_ref(), crate::net::ClientPlatform::Local) {
+            tracing::info!(
+                "Skipping IP ban for fake player {} (no network address)",
+                self.gameprofile.name
+            );
+            return;
+        }
         let target_ip = self.client.address().ip();
 
         if log_to_console {
@@ -4605,7 +4614,23 @@ impl Player {
     }
 
     pub fn get_mining_speed(&self, block: &'static Block) -> f32 {
-        let mut speed = self.inventory().held_item().get_speed(block);
+        // Carpet rule missingTools: pickaxes also break glass at pickaxe speed
+        // (speed only — drop rules are untouched, vanilla parity).
+        let held = self.inventory().held_item();
+        let mut speed = if crate::carpet::values().missing_tools
+            && block
+                .is_tagged_with(&verdantgolem_data::tag::Block::C_GLASS_BLOCKS)
+                .unwrap_or(false)
+        {
+            let pick_speed = held.get_speed(&Block::STONE);
+            if pick_speed > 1.0 {
+                pick_speed
+            } else {
+                held.get_speed(block)
+            }
+        } else {
+            held.get_speed(block)
+        };
         // Haste
         if self.living_entity.has_effect(&StatusEffect::HASTE)
             || self.living_entity.has_effect(&StatusEffect::CONDUIT_POWER)

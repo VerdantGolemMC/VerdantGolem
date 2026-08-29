@@ -89,7 +89,7 @@ const fn logger_category_name(category: &MobCategory) -> &'static str {
         1 => "creature",
         2 => "ambient",
         3 => "axolotls",
-        4 => "underground_water",
+        4 => "underground_water_creature",
         5 => "water_creature",
         6 => "water_ambient",
         _ => "misc",

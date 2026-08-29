@@ -268,6 +268,12 @@ impl EntityBase for LightningBoltEntity {
                         // lightning become elder guardians (renewable sponges).
                         if crate::carpet::values().renewable_sponges
                             && hit_entity.get_entity().entity_type.id == EntityType::GUARDIAN.id
+                            // Carpet parity: a guardian killed by this strike
+                            // takes the vanilla death path instead of converting.
+                            && !hit_entity
+                                .get_entity()
+                                .removed
+                                .load(std::sync::atomic::Ordering::Relaxed)
                         {
                             let struck = hit_entity.get_entity();
                             let struck_pos = struck.pos.load();

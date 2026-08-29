@@ -51,10 +51,12 @@ impl TNTEntity {
     #[must_use]
     pub fn primer_velocity() -> Vector3<f64> {
         let rules = crate::carpet::values();
-        let angle = if rules.hardcode_tnt_angle >= 0.0 {
-            rules.hardcode_tnt_angle
-        } else if rules.tnt_primer_momentum_removed {
+        // Carpet priority: tntPrimerMomentumRemoved overrides hardcodeTNTangle.
+        if rules.tnt_primer_momentum_removed {
             return Vector3::new(0.0, 0.2, 0.0);
+        }
+        let angle = if rules.hardcode_tnt_angle != -1.0 {
+            rules.hardcode_tnt_angle
         } else {
             rand::random::<f64>() * TAU
         };
@@ -106,6 +108,12 @@ impl TNTEntity {
             let entities = world.entities.load();
             entities
                 .iter()
+                // Cheap prefilter before any Arc clone.
+                .filter(|candidate| {
+                    let candidate_entity = candidate.get_entity();
+                    candidate_entity.entity_type.id == EntityType::TNT.id
+                        && candidate_entity.pos.load() == own_snapshot.position // f64 位比较与 compatible_with 的位置语义一致
+                })
                 .filter_map(|candidate| candidate.clone().get_tnt_entity())
                 .filter(|candidate| {
                     candidate.entity.entity_id != self_id
@@ -163,10 +171,9 @@ impl EntityBase for TNTEntity {
 
         // Carpet rule mergeTNT: only the lowest-id entity absorbs identical,
         // stationary peers, preserving the number of eventual explosions.
-        if crate::carpet::values().merge_tnt
-            && entity.on_ground.load(Ordering::Relaxed)
-            && self.fuse.load(Relaxed).is_multiple_of(20)
-        {
+        // No fuse-phase gate (unlike %20): chain-explosion TNT spawns with
+        // fuse 10..29 and would never hit a multiple of 20 before exploding.
+        if crate::carpet::values().merge_tnt && entity.on_ground.load(Ordering::Relaxed) {
             self.try_merge_stationary_tnt();
             if entity.removed.load(Relaxed) || self.merged_count.load(Acquire) == 0 {
                 return;

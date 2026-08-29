@@ -186,6 +186,9 @@ pub fn tick_fakes(world: &Arc<crate::world::World>) {
         if !fake.attacking.load(Ordering::Relaxed) {
             continue;
         }
+        if fake.player.living_entity.health.load() <= 0.0 {
+            continue; // dead fakes take no actions until revived
+        }
         let cooldown = fake.attack_cooldown.load(Ordering::Relaxed);
         if cooldown > 0 {
             fake.attack_cooldown.store(cooldown - 1, Ordering::Relaxed);
@@ -399,6 +402,12 @@ async fn spawn_untracked(
         .level
         .get_or_fetch_chunk(entity.chunk_pos.load(), |_| ())
         .await;
+    // A previously killed fake player was saved with 0 health; revive it so
+    // the respawned entity isn't a permanent corpse (carpet parity).
+    if player.living_entity.health.load() <= 0.0 {
+        player.living_entity.reset_state();
+    }
+
     world.spawn_local_player(&player);
 
     Ok(player)

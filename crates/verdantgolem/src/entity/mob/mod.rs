@@ -1030,6 +1030,10 @@ impl<T: Mob + Send + 'static> EntityBase for T {
                 .is_some();
             if !category.is_persistent && entity.custom_name.load().is_none() && !is_leashed {
                 let world = entity.world.load();
+                if world.players.load().is_empty() {
+                    // No players: keep spawn-chunk/forceload mobs alive.
+                    return;
+                }
                 let world_age = world.get_world_age();
                 if world_age % 20 == i64::from(entity.entity_id % 20) {
                     let pos = entity.pos.load();

@@ -255,7 +255,7 @@ impl PistonBlock {
         if sticky {
             let pull_pos = pos.offset_dir(dir.to_offset(), 2);
             let (block, state) = world.get_block_and_state(&pull_pos);
-            if data == 2 {
+            if r#type == 2 {
                 world.set_block_state(
                     &extended_pos,
                     Block::AIR.default_state.id,

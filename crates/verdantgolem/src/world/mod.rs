@@ -5244,8 +5244,22 @@ impl World {
             .unwrap_or(Block::AIR.default_state.id);
 
         if !flags.contains(BlockFlags::FORCE_STATE) && replaced_block_state_id == block_state_id {
+            if flags.contains(BlockFlags::NOTIFY_LISTENERS) {
+                self.unsent_block_changes
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .insert(*position, block_state_id);
+            }
             return block_state_id;
         }
+
+        // Queue the change for clients (commands, fluids, pistons...).
+        // Worldgen runs before anyone watches the chunk; flush skips entries
+        // for chunks that aren't sent to any player.
+        self.unsent_block_changes
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .insert(*position, block_state_id);
 
         let old_block = Block::from_state_id(replaced_block_state_id);
         let new_block = Block::from_state_id(block_state_id);
