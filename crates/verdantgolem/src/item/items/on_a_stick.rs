@@ -1,4 +1,6 @@
 use std::any::Any;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_util::Hand;
 
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
@@ -15,7 +17,7 @@ impl ItemMetadata for CarrotOnAStickItem {
 }
 
 impl ItemBehaviour for CarrotOnAStickItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let vehicle_opt = player
             .get_entity()
             .vehicle
@@ -26,8 +28,10 @@ impl ItemBehaviour for CarrotOnAStickItem {
             && let Some(steerable) = vehicle.get_item_steerable()
             && steerable.boost()
         {
-            player.damage_held_item(7);
+            player.damage_item_in_hand(hand, 7);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -42,7 +46,7 @@ impl ItemMetadata for WarpedFungusOnAStickItem {
 }
 
 impl ItemBehaviour for WarpedFungusOnAStickItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let vehicle_opt = player
             .get_entity()
             .vehicle
@@ -53,8 +57,10 @@ impl ItemBehaviour for WarpedFungusOnAStickItem {
             && let Some(steerable) = vehicle.get_item_steerable()
             && steerable.boost()
         {
-            player.damage_held_item(7);
+            player.damage_item_in_hand(hand, 7);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -1,10 +1,12 @@
 use std::sync::Arc;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::entity::vehicle::boat::BoatEntity;
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, consume_item_in_hand};
 use verdantgolem_data::Block;
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::fluid::Fluid;
@@ -88,7 +90,7 @@ impl ItemMetadata for BoatItem {
 
 impl ItemBehaviour for BoatItem {
     /// Vanilla: `BoatItem.use()` - raycasts to find placement position
-    fn normal_use(&self, item: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let world = player.world();
         let (start_pos, end_pos) = self.get_start_and_end_pos(player);
 
@@ -111,7 +113,7 @@ impl ItemBehaviour for BoatItem {
         };
 
         let Some((hit_pos, _direction)) = world.raycast(start_pos, end_pos, checker) else {
-            return;
+            return false;
         };
 
         // Calculate hit position - center of the block top or water surface
@@ -145,23 +147,23 @@ impl ItemBehaviour for BoatItem {
             // Check if entity's bounding box contains the player's eye position
             if entity_box.intersects(&BoundingBox::new(player_eye_pos, player_eye_pos)) {
                 // Entity is blocking the line of sight at eye position
-                return;
+                return false;
             }
         }
 
         // Create the boat entity
-        let entity_type = Self::item_to_entity(item);
+        let entity_type = Self::item_to_entity(stack.item);
         let dimensions = Self::get_entity_dimensions(entity_type);
         let boat_box = BoundingBox::new_from_pos(hit_vec.x, hit_vec.y, hit_vec.z, &dimensions);
 
         // Vanilla: if (!world.isSpaceEmpty(lv7, lv7.getBoundingBox())) return FAIL
         if !world.is_space_empty(boat_box) {
-            return;
+            return false;
         }
 
         // Check no entities occupy the space
         if !world.get_entities_at_box(&boat_box).is_empty() {
-            return;
+            return false;
         }
 
         // Create and spawn the boat
@@ -175,12 +177,11 @@ impl ItemBehaviour for BoatItem {
         world.spawn_entity(boat_entity);
 
         // Decrement item unless in creative mode
-        let mut stack = player.inventory.held_item();
-        stack.decrement_unless_creative(player.gamemode.load(), 1);
-        player.inventory.set_held_item(stack);
+        consume_item_in_hand(player, hand, 1);
 
         // TODO: world.emitGameEvent(user, GameEvent.ENTITY_PLACE, hitResult.getPos())
         // TODO: user.incrementStat(Stats.USED.getOrCreateStat(this))
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

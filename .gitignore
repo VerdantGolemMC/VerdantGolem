@@ -162,3 +162,7 @@ patchbukkit/
 /.comet/*
 !/.comet/config.yaml
 # <<< Comet managed project state <<<
+
+# Python regression tooling
+__pycache__/
+*.py[cod]

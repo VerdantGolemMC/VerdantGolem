@@ -23,6 +23,7 @@ use verdantgolem_world::generation::proto_chunk::GenerationCache;
 
 pub mod chunker;
 pub mod explosion;
+mod forced_chunks;
 pub mod loot;
 pub mod map;
 pub mod portal;
@@ -276,7 +277,8 @@ pub struct World {
     pub dragon_fight: Option<std::sync::Mutex<dragon_fight::DragonFight>>,
     pub spawn_state: ArcSwap<SpawnState>,
     pub active_chunks: ArcSwap<FxHashSet<Vector2<i32>>>,
-    pub forced_chunks: std::sync::Mutex<FxHashSet<Vector2<i32>>>,
+    /// Saved forced chunks, protected together with their loading-ticket deltas.
+    forced_chunks: std::sync::Mutex<forced_chunks::ForcedChunkStore>,
     /// The spawn ticket currently installed in the level chunk loader.
     spawn_chunk_ticket: std::sync::Mutex<Option<(Vector2<i32>, i8)>>,
     /// Block entities indexed by chunk, so ticking only visits the currently
@@ -359,6 +361,15 @@ impl World {
         let dragon_fight = (dimension.minecraft_name == Dimension::THE_END.minecraft_name)
             .then(|| std::sync::Mutex::new(dragon_fight::DragonFight::new()));
 
+        let forced_chunks = forced_chunks::ForcedChunkStore::load(&level.level_folder.dim_folder);
+        if let Err(error) = forced_chunks.snapshot() {
+            error!(
+                dimension = dimension.minecraft_name,
+                %error,
+                "Failed to load forced chunks; saved data retained and /forceload disabled for this dimension"
+            );
+        }
+
         let custom_data_path = level
             .level_folder
             .root_folder
@@ -404,13 +415,102 @@ impl World {
             dragon_fight,
             spawn_state: ArcSwap::new(Arc::new(SpawnState::empty())),
             active_chunks: ArcSwap::new(Arc::new(FxHashSet::default())),
-            forced_chunks: std::sync::Mutex::new(FxHashSet::default()),
+            forced_chunks: std::sync::Mutex::new(forced_chunks),
             spawn_chunk_ticket: std::sync::Mutex::new(None),
             server,
             block_entities: DashMap::new(),
             custom_data: std::sync::Mutex::new(custom_data),
             custom_block_entity_data: DashMap::new(),
         }
+    }
+
+    /// Restore saved loading tickets only after `level.world_portal` has been
+    /// attached. Called for both startup dimensions and dynamically created worlds.
+    pub(crate) fn initialize_forced_chunks(self: &Arc<Self>) {
+        let result = self
+            .forced_chunks
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .initialize_tickets(|delta| self.apply_forced_chunk_delta(delta));
+        match result {
+            Ok(count) if count > 0 => info!(
+                dimension = self.dimension.minecraft_name,
+                count, "Restored forced chunk loading tickets"
+            ),
+            Err(error) => error!(
+                dimension = self.dimension.minecraft_name,
+                %error,
+                "Forced chunk restoration failed; existing saved data was not modified"
+            ),
+            Ok(_) => {}
+        }
+        self.update_active_chunks();
+    }
+
+    pub(crate) fn add_forced_chunks(
+        self: &Arc<Self>,
+        positions: impl IntoIterator<Item = Vector2<i32>>,
+    ) -> std::io::Result<usize> {
+        self.mutate_forced_chunks(|store| {
+            store.add(positions, |delta| self.apply_forced_chunk_delta(delta))
+        })
+    }
+
+    pub(crate) fn remove_forced_chunks(
+        self: &Arc<Self>,
+        positions: impl IntoIterator<Item = Vector2<i32>>,
+    ) -> std::io::Result<usize> {
+        self.mutate_forced_chunks(|store| {
+            store.remove(positions, |delta| self.apply_forced_chunk_delta(delta))
+        })
+    }
+
+    pub(crate) fn clear_forced_chunks(self: &Arc<Self>) -> std::io::Result<usize> {
+        self.mutate_forced_chunks(|store| store.clear(|delta| self.apply_forced_chunk_delta(delta)))
+    }
+
+    pub(crate) fn forced_chunk_positions(&self) -> std::io::Result<Vec<Vector2<i32>>> {
+        let store = self
+            .forced_chunks
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut positions: Vec<_> = store.snapshot()?.iter().copied().collect();
+        positions.sort_unstable_by_key(|position| (position.x, position.y));
+        Ok(positions)
+    }
+
+    fn mutate_forced_chunks(
+        self: &Arc<Self>,
+        mutate: impl FnOnce(&mut forced_chunks::ForcedChunkStore) -> std::io::Result<usize>,
+    ) -> std::io::Result<usize> {
+        let result = {
+            let mut store = self
+                .forced_chunks
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
+            // Disk commit, in-memory list, and ticket changes remain inside one
+            // lock. A simultaneous add/remove cannot reorder the ticket deltas.
+            mutate(&mut store)
+        };
+        // Refresh even on errors: a post-rename directory-sync failure reports
+        // uncertain durability but already committed the new file and tickets.
+        self.update_active_chunks();
+        result
+    }
+
+    fn apply_forced_chunk_delta(&self, delta: &forced_chunks::ForcedChunkDelta) {
+        let mut loading = self
+            .level
+            .chunk_loading
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        for position in &delta.removed {
+            loading.remove_force_ticket(*position);
+        }
+        for position in &delta.added {
+            loading.add_force_ticket(*position);
+        }
+        loading.send_change();
     }
 
     pub fn update_active_chunks(self: &Arc<Self>) {
@@ -434,7 +534,12 @@ impl World {
                 }
             }
         }
-        if let Ok(forced) = self.forced_chunks.lock() {
+        if let Ok(forced) = self
+            .forced_chunks
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .snapshot()
+        {
             active_chunks.extend(forced.iter().copied());
         }
 

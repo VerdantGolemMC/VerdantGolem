@@ -1,12 +1,13 @@
 use crate::TextComponent;
 use crate::carpet::fake_player;
+use crate::carpet::fake_player::actions::{ActionKind, ActionMode, MovementDirection};
 
 use crate::command::args::FindArg;
 use crate::command::args::simple::SimpleArgConsumer;
 
 use crate::command::args::ConsumedArgs;
 use crate::command::tree::CommandTree;
-use crate::command::tree::builder::{argument, literal};
+use crate::command::tree::builder::{NonLeafNodeBuilder, argument, literal};
 use crate::command::{CommandExecutor, CommandResult, CommandSender};
 
 const NAMES: [&str; 1] = ["player"];
@@ -16,6 +17,7 @@ const DESCRIPTION: &str = "Manages carpet-style fake players.";
 const ARG_NAME: &str = "name";
 const ARG_YAW: &str = "yaw";
 const ARG_PITCH: &str = "pitch";
+const ARG_INTERVAL: &str = "ticks";
 
 struct ListExecutor;
 
@@ -151,10 +153,16 @@ impl CommandExecutor for LookExecutor {
             .parse()
             .map_err(|_| invalid_value(ARG_PITCH))?;
 
+        if !yaw.is_finite() {
+            return Err(invalid_value(ARG_YAW));
+        }
+        if !pitch.is_finite() || !(-90.0..=90.0).contains(&pitch) {
+            return Err(invalid_value(ARG_PITCH));
+        }
         let Some(player) = fake_player::get(name) else {
             return Err(unknown(name));
         };
-        fake_player::look_up(&player, yaw, pitch);
+        fake_player::look_up(&player, yaw.rem_euclid(360.0), pitch);
         sender.send_message(TextComponent::text(format!(
             "Turned fake player {name} to yaw {yaw}, pitch {pitch}"
         )));
@@ -179,6 +187,108 @@ impl CommandExecutor for AttackExecutor {
             if now_attacking { "Started" } else { "Stopped" }
         )));
         Ok(1)
+    }
+}
+
+#[derive(Clone, Copy)]
+enum ActionTiming {
+    Once,
+    Continuous,
+    Interval,
+}
+
+struct ActionExecutor {
+    kind: ActionKind,
+    timing: ActionTiming,
+}
+
+fn parse_interval(value: &str) -> Result<ActionMode, String> {
+    let ticks = value
+        .parse::<u32>()
+        .map_err(|_| "Action interval must be a positive 32-bit integer of ticks".to_string())?;
+    ActionMode::interval(ticks)
+}
+
+impl CommandExecutor for ActionExecutor {
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs<'_>,
+    ) -> CommandResult {
+        let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+        let mode = match self.timing {
+            ActionTiming::Once => ActionMode::Once,
+            ActionTiming::Continuous => ActionMode::Continuous,
+            ActionTiming::Interval => {
+                parse_interval(SimpleArgConsumer::find_arg(args, ARG_INTERVAL)?)
+                    .map_err(text_error)?
+            }
+        };
+        fake_player::set_action(name, self.kind, Some(mode)).map_err(text_error)?;
+        let action = match self.kind {
+            ActionKind::Attack => "attack",
+            ActionKind::Use => "use",
+        };
+        let timing = match mode {
+            ActionMode::Once => "once".to_string(),
+            ActionMode::Continuous => "continuously".to_string(),
+            ActionMode::Interval(ticks) => format!("every {ticks} ticks"),
+        };
+        sender.send_message(TextComponent::text(format!(
+            "Scheduled {action} {timing} for {name}"
+        )));
+        Ok(1)
+    }
+}
+
+struct MoveExecutor(Option<MovementDirection>);
+
+impl CommandExecutor for MoveExecutor {
+    fn execute(
+        &self,
+        sender: &CommandSender,
+        _server: &crate::server::Server,
+        args: &ConsumedArgs<'_>,
+    ) -> CommandResult {
+        let name = SimpleArgConsumer::find_arg(args, ARG_NAME)?;
+        fake_player::set_movement(name, self.0).map_err(text_error)?;
+        let movement = match self.0 {
+            Some(MovementDirection::Forward) => "Moving forward",
+            Some(MovementDirection::Backward) => "Moving backward",
+            Some(MovementDirection::Left) => "Moving left",
+            Some(MovementDirection::Right) => "Moving right",
+            None => "Stopped movement",
+        };
+        sender.send_message(TextComponent::text(format!("{movement} for {name}")));
+        Ok(1)
+    }
+}
+
+fn action_tree(name: &'static str, kind: ActionKind) -> NonLeafNodeBuilder {
+    let node = literal(name)
+        .then(literal("once").execute(ActionExecutor {
+            kind,
+            timing: ActionTiming::Once,
+        }))
+        .then(literal("continuous").execute(ActionExecutor {
+            kind,
+            timing: ActionTiming::Continuous,
+        }))
+        .then(
+            literal("interval").then(argument(ARG_INTERVAL, SimpleArgConsumer).execute(
+                ActionExecutor {
+                    kind,
+                    timing: ActionTiming::Interval,
+                },
+            )),
+        );
+    match kind {
+        ActionKind::Attack => node.execute(AttackExecutor),
+        ActionKind::Use => node.execute(ActionExecutor {
+            kind,
+            timing: ActionTiming::Once,
+        }),
     }
 }
 
@@ -317,7 +427,25 @@ pub fn init_command_tree() -> CommandTree {
             argument(ARG_NAME, SimpleArgConsumer)
                 .then(literal("spawn").execute(SpawnExecutor))
                 .then(literal("kill").execute(KillExecutor))
-                .then(literal("attack").execute(AttackExecutor))
+                .then(action_tree("attack", ActionKind::Attack))
+                .then(action_tree("use", ActionKind::Use))
+                .then(
+                    literal("move")
+                        .execute(MoveExecutor(Some(MovementDirection::Forward)))
+                        .then(
+                            literal("forward")
+                                .execute(MoveExecutor(Some(MovementDirection::Forward))),
+                        )
+                        .then(
+                            literal("backward")
+                                .execute(MoveExecutor(Some(MovementDirection::Backward))),
+                        )
+                        .then(literal("left").execute(MoveExecutor(Some(MovementDirection::Left))))
+                        .then(
+                            literal("right").execute(MoveExecutor(Some(MovementDirection::Right))),
+                        )
+                        .then(literal("stop").execute(MoveExecutor(None))),
+                )
                 .then(literal("sneak").execute(SneakExecutor))
                 .then(literal("jump").execute(JumpExecutor))
                 .then(literal("drop").execute(DropExecutor))
@@ -336,6 +464,15 @@ pub fn init_command_tree() -> CommandTree {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn intervals_reject_zero_negative_fractional_and_overflow() {
+        for invalid in ["0", "-1", "1.5", "ticks", "4294967296", ""] {
+            assert!(parse_interval(invalid).is_err(), "accepted {invalid}");
+        }
+        assert_eq!(parse_interval("1"), ActionMode::interval(1));
+        assert_eq!(parse_interval("4294967295"), ActionMode::interval(u32::MAX));
+    }
 
     #[test]
     fn fake_player_names_match_vanilla_rules() {

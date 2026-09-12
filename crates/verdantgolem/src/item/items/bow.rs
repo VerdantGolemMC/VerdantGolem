@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::entity::projectile::arrow::{ArrowEntity, ArrowPickup};
@@ -22,29 +23,24 @@ impl ItemMetadata for BowItem {
 }
 
 impl ItemBehaviour for BowItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         // Check if player has arrows (or is in creative mode)
         let has_arrows = Self::has_arrows(player);
         let gamemode = player.gamemode.load();
 
         if !has_arrows && gamemode != GameMode::Creative {
-            return;
+            return false;
         }
 
-        // Get the held item stack
-        let inventory = player.inventory();
-        let stack = inventory.held_item();
-
         // Start the bow drawing animation
-        player.living_entity.set_active_hand(
-            verdantgolem_util::Hand::Right,
-            stack,
-            Self::USE_DURATION,
-        );
+        player
+            .living_entity
+            .set_active_hand(hand, stack.clone(), Self::USE_DURATION);
+        true
     }
 
-    fn on_stopped_using(&self, _stack: &ItemStack, player: &Player) {
-        Self::release_bow(player);
+    fn on_stopped_using(&self, stack: &ItemStack, player: &Player, hand: Hand) {
+        Self::release_bow(player, stack, hand);
     }
 
     fn get_use_duration(&self) -> i32 {
@@ -63,7 +59,11 @@ impl BowItem {
     const ARROW_SPEED_MULTIPLIER: f32 = 3.0;
 
     /// Called when the player releases the bow
-    pub fn release_bow(player: &Player) {
+    pub fn release_bow(player: &Player, stack: &ItemStack, hand: Hand) {
+        let held = player.inventory().get_stack_in_hand(hand);
+        if held.is_empty() || !held.are_items_and_components_equal(stack) {
+            return;
+        }
         // Get the used ticks
         let use_ticks = player.living_entity.item_use_time.load(Ordering::Relaxed);
         let use_ticks = Self::USE_DURATION - use_ticks;
@@ -94,18 +94,16 @@ impl BowItem {
         let power = Self::get_power_for_time(use_ticks);
 
         // Check for Infinity enchantment
-        let mut has_infinity = false;
-        let held = player.inventory().held_item();
-        if let Some(enchantments) =
-            held.get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
-        {
-            has_infinity = enchantments
-                .enchantment
-                .iter()
-                .any(|(e, _)| **e == verdantgolem_data::Enchantment::INFINITY);
-        }
+        let has_infinity = held
+            .get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
+            .is_some_and(|enchantments| {
+                enchantments
+                    .enchantment
+                    .iter()
+                    .any(|(e, _)| **e == verdantgolem_data::Enchantment::INFINITY)
+            });
 
-        Self::fire_arrow(player, power, &projectile);
+        Self::fire_arrow(player, power, &projectile, &held);
 
         // Consume arrow (if not creative and no Infinity)
         if let Some(slot) = arrow_slot
@@ -116,7 +114,7 @@ impl BowItem {
         }
 
         // Damage bow
-        player.damage_held_item(1);
+        player.damage_item_in_hand(hand, 1);
     }
 
     /// Check if player has arrows in their inventory
@@ -136,7 +134,7 @@ impl BowItem {
     }
 
     /// Fire an arrow from the bow
-    pub fn fire_arrow(player: &Player, power: f32, projectile: &ItemStack) {
+    pub fn fire_arrow(player: &Player, power: f32, projectile: &ItemStack, bow: &ItemStack) {
         if power < 0.1 {
             return; // Not enough charge
         }
@@ -162,10 +160,9 @@ impl BowItem {
         let mut arrow =
             ArrowEntity::new_shot(arrow_entity, player.get_entity(), projectile, pickup);
 
-        // Read enchantments of the held item (bow)
-        let stack = player.inventory().held_item();
+        // Read enchantments from the bow that is actually being released.
         if let Some(enchantments) =
-            stack.get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
+            bow.get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
         {
             for (enchantment, level) in enchantments.enchantment.iter() {
                 if **enchantment == verdantgolem_data::Enchantment::POWER {
@@ -177,8 +174,6 @@ impl BowItem {
                 }
             }
         }
-        drop(stack);
-
         // Set velocity based on player's look direction and power
         let (yaw, pitch) = player.rotation();
         let speed = power * Self::ARROW_SPEED_MULTIPLIER;

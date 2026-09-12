@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::item::ItemEntity;
 use crate::entity::player::Player;
@@ -86,30 +87,29 @@ fn get_random_archaeology_loot() -> &'static Item {
 }
 
 impl ItemBehaviour for BrushItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         player.world().play_sound(
             Sound::ItemBrushBrushingGeneric,
             SoundCategory::Players,
             &player.position(),
         );
-        let stack = player.inventory().held_item();
-        player.living_entity.set_active_hand(
-            verdantgolem_util::Hand::Right,
-            stack,
-            Self::USE_DURATION,
-        );
+        player
+            .living_entity
+            .set_active_hand(hand, stack.clone(), Self::USE_DURATION);
+        true
     }
 
     fn use_on_block(
         &self,
-        _item: &mut ItemStack,
+        item: &mut ItemStack,
         player: &Player,
+        hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         let is_sand = block == &Block::SUSPICIOUS_SAND;
         let is_gravel = block == &Block::SUSPICIOUS_GRAVEL;
@@ -168,7 +168,7 @@ impl ItemBehaviour for BrushItem {
                 world.spawn_entity(item_entity);
             }
 
-            player.damage_held_item(1);
+            player.damage_used_item_stack(item, 1);
         } else {
             world.play_sound(
                 Sound::ItemBrushBrushingGeneric,
@@ -177,15 +177,21 @@ impl ItemBehaviour for BrushItem {
             );
         }
 
-        let stack = player.inventory().held_item();
-        player.living_entity.set_active_hand(
-            verdantgolem_util::Hand::Right,
-            stack,
-            Self::USE_DURATION,
-        );
+        if !item.is_empty() {
+            player
+                .living_entity
+                .set_active_hand(hand, item.clone(), Self::USE_DURATION);
+        }
+        true
     }
 
-    fn use_on_entity(&self, _item: &mut ItemStack, player: &Player, entity: Arc<dyn EntityBase>) {
+    fn use_on_entity(
+        &self,
+        item: &mut ItemStack,
+        player: &Player,
+        hand: Hand,
+        entity: Arc<dyn EntityBase>,
+    ) -> bool {
         let ent = entity.get_entity();
         if ent.entity_type == &EntityType::ARMADILLO {
             let world = player.world();
@@ -201,7 +207,7 @@ impl ItemBehaviour for BrushItem {
             ));
             world.spawn_entity(item_entity);
 
-            player.damage_held_item(16);
+            player.damage_used_item_stack(item, 16);
         } else {
             let world = player.world();
             world.play_sound(
@@ -211,12 +217,12 @@ impl ItemBehaviour for BrushItem {
             );
         }
 
-        let stack = player.inventory().held_item();
-        player.living_entity.set_active_hand(
-            verdantgolem_util::Hand::Right,
-            stack,
-            Self::USE_DURATION,
-        );
+        if !item.is_empty() {
+            player
+                .living_entity
+                .set_active_hand(hand, item.clone(), Self::USE_DURATION);
+        }
+        true
     }
 
     fn get_use_duration(&self) -> i32 {

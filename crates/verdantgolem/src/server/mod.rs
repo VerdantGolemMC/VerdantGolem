@@ -392,6 +392,7 @@ impl Server {
             ));
             let portal: Arc<dyn WorldPortalExt> = Arc::new(WorldPortal(world.clone()));
             level.world_portal.store(Arc::new(Some(portal)));
+            world.initialize_forced_chunks();
             worlds_vec.push(world);
         }
 
@@ -476,6 +477,7 @@ impl Server {
         let world = Arc::new(world);
         let portal: Arc<dyn WorldPortalExt> = Arc::new(WorldPortal(world.clone()));
         level.world_portal.store(Arc::new(Some(portal)));
+        world.initialize_forced_chunks();
         self.worlds.rcu(|worlds| {
             let mut new_worlds = (**worlds).clone();
             new_worlds.push(world.clone());
@@ -1059,6 +1061,9 @@ impl Server {
 
     /// Ticks the game logic for all worlds. This is the part that is affected by `/tick freeze`.
     pub fn tick_worlds(self: &Arc<Self>) {
+        // One shared simulated tick for all dimensions; frozen network-only
+        // ticks must not dilute hopper-counter production rates.
+        crate::carpet::counters::advance_game_tick();
         self.task_scheduler.tick(self);
 
         let worlds = self.worlds.load();

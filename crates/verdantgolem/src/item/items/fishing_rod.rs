@@ -1,6 +1,8 @@
 use std::any::Any;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::entity::projectile::fishing_bobber::FishingBobberEntity;
@@ -19,7 +21,7 @@ impl ItemMetadata for FishingRodItem {
 }
 
 impl ItemBehaviour for FishingRodItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, _hand: Hand) -> bool {
         let world = player.world();
         let bobber_id = player.fishing_bobber.load(Ordering::Relaxed);
 
@@ -67,6 +69,7 @@ impl ItemBehaviour for FishingRodItem {
                 &player.position(),
             );
         }
+        true
     }
 
     fn as_any(&self) -> &dyn Any {

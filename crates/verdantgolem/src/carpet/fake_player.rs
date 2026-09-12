@@ -5,12 +5,13 @@
 //! running while nobody is online, but have no network connection and never
 //! receive packets.
 
+pub mod actions;
+
+use self::actions::{ActionKind, ActionMode, ActionScheduler, MovementDirection};
+
 use std::{
     collections::BTreeMap,
-    sync::{
-        Arc, LazyLock, Mutex,
-        atomic::{AtomicBool, AtomicU32, Ordering},
-    },
+    sync::{Arc, LazyLock, Mutex, atomic::Ordering},
 };
 
 use uuid::Uuid;
@@ -21,19 +22,17 @@ use crate::{
     server::Server,
 };
 use arc_swap::ArcSwap;
+use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::tag::Taggable;
-use verdantgolem_data::{attributes::Attributes, entity::EntityType};
 use verdantgolem_util::{
-    GameMode, Hand,
+    Hand,
     math::{boundingbox::BoundingBox, vector3::Vector3},
 };
 
 /// A fake player plus its repeating-action state.
 pub struct FakePlayer {
     player: Arc<Player>,
-    /// Continuous attack toggle (`/player <name> attack`).
-    attacking: AtomicBool,
-    attack_cooldown: AtomicU32,
+    actions: Mutex<ActionScheduler>,
 }
 
 enum FakeEntry {
@@ -88,9 +87,6 @@ impl Drop for SpawnReservation {
     }
 }
 
-/// Ticks between fake-player attacks (~ vanilla sword cooldown).
-const ATTACK_INTERVAL: u32 = 12;
-
 /// Vanilla-compatible offline UUID for a fake player name (stable across restarts).
 #[must_use]
 pub fn offline_uuid(name: &str) -> Uuid {
@@ -132,44 +128,84 @@ pub fn get(name: &str) -> Option<Arc<Player>> {
         })
 }
 
-/// Whether a fake player is continuously attacking.
-#[must_use]
-pub fn is_attacking(name: &str) -> bool {
+fn get_fake(name: &str) -> Result<Arc<FakePlayer>, String> {
     FAKES
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner)
         .get(&normalize_name(name))
         .and_then(|entry| match entry {
-            FakeEntry::Online(fake) => Some(fake.attacking.load(Ordering::Relaxed)),
+            FakeEntry::Online(fake) => Some(fake.clone()),
             FakeEntry::Spawning => None,
         })
-        .unwrap_or(false)
+        .ok_or_else(|| format!("no fake player named {name}"))
 }
 
-/// Toggles the continuous attack action of a fake player.
+/// Whether a fake player has an attack action scheduled.
+#[must_use]
+pub fn is_attacking(name: &str) -> bool {
+    get_fake(name).is_ok_and(|fake| {
+        fake.actions
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .is_active(ActionKind::Attack)
+    })
+}
+
+/// Preserves the original bare `/player <name> attack` toggle.
 pub fn set_attacking(name: &str, on: bool) -> Result<(), String> {
-    let fakes = FAKES
+    set_action(
+        name,
+        ActionKind::Attack,
+        on.then_some(ActionMode::Continuous),
+    )
+}
+
+/// Replaces one action without changing the other action or movement.
+pub fn set_action(name: &str, kind: ActionKind, mode: Option<ActionMode>) -> Result<(), String> {
+    let fake = get_fake(name)?;
+    fake.actions
         .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let fake = fakes
-        .get(&normalize_name(name))
-        .and_then(|entry| match entry {
-            FakeEntry::Online(fake) => Some(fake),
-            FakeEntry::Spawning => None,
-        })
-        .ok_or_else(|| format!("no fake player named {name}"))?;
-    fake.attacking.store(on, Ordering::Relaxed);
-    fake.attack_cooldown.store(0, Ordering::Relaxed);
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .set(kind, mode);
+    // Replacing use releases any previously held item, including a charged bow.
+    // Never hold the scheduler/registry lock across callbacks into plugins.
+    if kind == ActionKind::Use {
+        fake.player.release_item_use();
+    }
     Ok(())
 }
 
-/// Clears all repeating actions of a fake player.
-pub fn stop_actions(name: &str) -> Result<(), String> {
-    set_attacking(name, false)
+/// Sets continuous local-space movement, applied by normal collision physics.
+pub fn set_movement(name: &str, direction: Option<MovementDirection>) -> Result<(), String> {
+    let fake = get_fake(name)?;
+    fake.actions
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .movement = direction;
+    if direction.is_none() {
+        fake.player.clear_local_movement();
+    }
+    Ok(())
 }
 
-/// Ticks every fake player in `world`, applying repeating actions.
-/// Called once per world tick, so fakes only tick in their own world.
+/// Clears all actions and releases held use, jump, sneak, and movement input.
+pub fn stop_actions(name: &str) -> Result<(), String> {
+    let fake = get_fake(name)?;
+    fake.actions
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .stop();
+    fake.player.release_item_use();
+    fake.player.clear_local_movement();
+    let entity = &fake.player.living_entity.entity;
+    entity.set_sneaking(false);
+    fake.player.set_sprinting(false);
+    fake.player.stop_mining();
+    Ok(())
+}
+
+/// Called once per simulated world tick, before player physics. Network-only
+/// frozen ticks neither consume scheduled actions nor advance their delays.
 pub fn tick_fakes(world: &Arc<crate::world::World>) {
     let fakes: Vec<Arc<FakePlayer>> = FAKES
         .lock()
@@ -183,128 +219,43 @@ pub fn tick_fakes(world: &Arc<crate::world::World>) {
         })
         .collect();
     for fake in fakes {
-        if !fake.attacking.load(Ordering::Relaxed) {
+        let player = &fake.player;
+        if !player.can_perform_actions() {
+            player.clear_local_movement();
+            player.cancel_item_use();
+            player.stop_mining();
             continue;
         }
-        if fake.player.living_entity.health.load() <= 0.0 {
-            continue; // dead fakes take no actions until revived
+        let actions = fake
+            .actions
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .tick();
+        if actions.release_use {
+            player.release_item_use();
         }
-        let cooldown = fake.attack_cooldown.load(Ordering::Relaxed);
-        if cooldown > 0 {
-            fake.attack_cooldown.store(cooldown - 1, Ordering::Relaxed);
-        } else {
-            fake.attack_cooldown
-                .store(ATTACK_INTERVAL, Ordering::Relaxed);
-            try_attack(&fake.player);
-        }
-    }
-}
-
-/// Returns the normalized distance along `delta` where a segment first enters
-/// `bounding_box`.
-fn ray_aabb_t(
-    start: &Vector3<f64>,
-    delta: &Vector3<f64>,
-    bounding_box: &BoundingBox,
-) -> Option<f64> {
-    let mut t_min = 0.0f64;
-    let mut t_max = 1.0f64;
-    let minimum = [bounding_box.min.x, bounding_box.min.y, bounding_box.min.z];
-    let maximum = [bounding_box.max.x, bounding_box.max.y, bounding_box.max.z];
-    let origin = [start.x, start.y, start.z];
-    let direction = [delta.x, delta.y, delta.z];
-
-    for axis in 0..3 {
-        if direction[axis].abs() < 1.0e-9 {
-            if origin[axis] < minimum[axis] || origin[axis] > maximum[axis] {
-                return None;
-            }
-        } else {
-            let first = (minimum[axis] - origin[axis]) / direction[axis];
-            let second = (maximum[axis] - origin[axis]) / direction[axis];
-            t_min = t_min.max(first.min(second));
-            t_max = t_max.min(first.max(second));
-            if t_max < t_min {
-                return None;
-            }
+        let input = actions
+            .movement
+            .map_or((0.0, 0.0), MovementDirection::input);
+        player.set_local_movement(input.0, input.1);
+        // A held use takes priority over attack, just as with a real client's
+        // right mouse button. Consumed/cancelled use never falls through.
+        let used = actions.use_item && player.use_look_target();
+        if actions.attack && !used && !player.is_using_item() {
+            try_attack(player);
         }
     }
-
-    (0.0..=1.0).contains(&t_min).then_some(t_min)
 }
 
-fn hit_is_before_block(entity_t: f64, block_t: Option<f64>) -> bool {
-    block_t.is_none_or(|block_t| entity_t < block_t)
-}
-
-/// Attacks the first living entity under the fake player's crosshair, subject
-/// to the player's interaction range and solid-block occlusion.
+/// Attack the crosshair target through the shared real-player interaction path.
 fn try_attack(player: &Arc<Player>) {
-    let entity = &player.living_entity.entity;
-    let gamemode = player.gamemode.load();
-    if gamemode == GameMode::Spectator {
-        return;
-    }
+    use crate::entity::player::interaction::LookTarget;
+    use verdantgolem_protocol::java::server::play::ActionType;
 
-    let mut reach = player
-        .living_entity
-        .get_attribute_value(&Attributes::ENTITY_INTERACTION_RANGE);
-    if gamemode == GameMode::Creative {
-        // The generated player type has no attribute table yet, so apply the
-        // vanilla creative modifier explicitly.
-        reach += 2.0;
-    }
-
-    let start = entity.get_eye_pos();
-    let direction =
-        Vector3::rotation_vector(f64::from(entity.pitch.load()), f64::from(entity.yaw.load()));
-    let delta = direction * reach;
-    let end = start + delta;
-    let search_box = BoundingBox::new(
-        Vector3::new(start.x.min(end.x), start.y.min(end.y), start.z.min(end.z)),
-        Vector3::new(start.x.max(end.x), start.y.max(end.y), start.z.max(end.z)),
-    )
-    .expand_all(1.0);
-    let world = entity.world.load();
-
-    let block_t = if let Some((block_pos, _)) = world.raycast(start, end, |pos, world| {
-        let state = world.get_block_state(pos);
-        !state.is_air() && !state.outline_shapes.is_empty()
-    }) {
-        let offset = block_pos.0.to_f64();
-        world
-            .get_block_state(&block_pos)
-            .get_block_outline_shapes_at(&block_pos)
-            .filter_map(|shape| {
-                let world_shape = BoundingBox::new(shape.min + offset, shape.max + offset);
-                ray_aabb_t(&start, &delta, &world_shape)
-            })
-            .min_by(f64::total_cmp)
-    } else {
-        None
-    };
-
-    let mut best: Option<(f64, Arc<dyn crate::entity::EntityBase>)> = None;
-    for other in world.get_all_at_box(&search_box) {
-        let other_entity = other.get_entity();
-        if other_entity.entity_id == entity.entity_id || !other_entity.is_alive() {
-            continue;
-        }
-        if other.get_living_entity().is_none() {
-            continue;
-        }
-        let Some(hit_t) = ray_aabb_t(&start, &delta, &other_entity.bounding_box.load()) else {
-            continue;
-        };
-        if hit_is_before_block(hit_t, block_t)
-            && best.as_ref().is_none_or(|(best_t, _)| hit_t < *best_t)
-        {
-            best = Some((hit_t, other));
-        }
-    }
-
-    if let Some((_, target)) = best {
-        player.attack(&target);
+    if let LookTarget::Entity(target, _) = player.look_target()
+        && let Some(server) = player.world().server.upgrade()
+    {
+        player.interact_entity(target, ActionType::Attack, Hand::Right, None, &server);
         player.swing_hand(Hand::Right, true);
     }
 }
@@ -349,8 +300,7 @@ pub async fn spawn(
     let player = spawn_untracked(world, name, position, yaw, pitch).await?;
     reservation.commit(Arc::new(FakePlayer {
         player,
-        attacking: AtomicBool::new(false),
-        attack_cooldown: AtomicU32::new(0),
+        actions: Mutex::new(ActionScheduler::default()),
     }));
     Ok(())
 }
@@ -424,7 +374,20 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
             return Err(format!("fake player {name} is still spawning"));
         }
         match fakes.remove(&key) {
-            Some(FakeEntry::Online(fake)) => fake.player.clone(),
+            Some(FakeEntry::Online(fake)) => {
+                fake.actions
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner)
+                    .stop();
+                // Outstanding tick snapshots may still hold this Arc. Mark
+                // it removed before the first await so every action/physics
+                // entry point rejects it during asynchronous chunk cleanup.
+                fake.player
+                    .get_entity()
+                    .removed
+                    .store(true, Ordering::Relaxed);
+                fake.player.clone()
+            }
             Some(FakeEntry::Spawning) => {
                 fakes.insert(key, FakeEntry::Spawning);
                 return Err(format!("fake player {name} is still spawning"));
@@ -433,6 +396,9 @@ pub async fn kill(server: &Server, name: &str) -> Result<(), String> {
         }
     };
 
+    player.cancel_item_use();
+    player.clear_local_movement();
+    player.stop_mining();
     player.remove().await;
     server.remove_player(&player);
     let player_data_error = server
@@ -621,20 +587,5 @@ mod tests {
 
         let second = SpawnReservation::reserve("RESERVEBOT").unwrap();
         drop(second);
-    }
-
-    #[test]
-    fn ray_aabb_and_occlusion_ordering() {
-        let start = Vector3::new(0.0, 0.5, 0.5);
-        let delta = Vector3::new(4.0, 0.0, 0.0);
-        let hit_box = BoundingBox::new(Vector3::new(2.0, 0.0, 0.0), Vector3::new(3.0, 1.0, 1.0));
-        let miss_box = BoundingBox::new(Vector3::new(2.0, 2.0, 0.0), Vector3::new(3.0, 3.0, 1.0));
-
-        assert_eq!(ray_aabb_t(&start, &delta, &hit_box), Some(0.5));
-        assert_eq!(ray_aabb_t(&start, &delta, &miss_box), None);
-        assert!(hit_is_before_block(0.4, Some(0.5)));
-        assert!(!hit_is_before_block(0.5, Some(0.5)));
-        assert!(!hit_is_before_block(0.6, Some(0.5)));
-        assert!(hit_is_before_block(0.9, None));
     }
 }

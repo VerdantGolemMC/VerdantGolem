@@ -323,8 +323,7 @@ impl BlockBehaviour for SignBlock {
         let is_hanging = args.block.name.contains("hanging");
         let clicked_face = args
             .use_item_on
-            .and_then(|u| verdantgolem_data::BlockDirection::try_from(u.face.0).ok())
-            .unwrap_or(verdantgolem_data::BlockDirection::Up);
+            .map_or(verdantgolem_data::BlockDirection::Up, |hit| hit.face);
 
         // Detection for floor-to-wall attachment (broken rn)
         if is_hanging && clicked_face == BlockDirection::Up {

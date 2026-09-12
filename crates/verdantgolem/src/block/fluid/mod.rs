@@ -12,13 +12,13 @@ pub mod flowing {
 }
 
 use super::{BlockIsReplacing, registry::BlockActionResult};
+use crate::block::BlockUseContext;
 use crate::entity::{EntityBase, player::Player};
 use crate::{server::Server, world::World};
 use std::sync::Arc;
 use verdantgolem_data::BlockDirection;
 use verdantgolem_data::BlockStateId;
 use verdantgolem_data::{fluid::Fluid, item::Item};
-use verdantgolem_protocol::java::server::play::SUseItemOn;
 use verdantgolem_util::math::position::BlockPos;
 
 pub trait FluidBehaviour: Send + Sync {
@@ -63,7 +63,7 @@ pub trait FluidBehaviour: Send + Sync {
         fluid: &Fluid,
         _face: BlockDirection,
         _block_pos: &BlockPos,
-        _use_item_on: &SUseItemOn,
+        _use_item_on: &BlockUseContext,
         _replacing: BlockIsReplacing,
     ) -> BlockStateId {
         fluid.states[fluid.default_state_index as usize].block_state_id

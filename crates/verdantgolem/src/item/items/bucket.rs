@@ -1,8 +1,9 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::{
     entity::player::Player,
-    item::{ItemBehaviour, ItemMetadata},
+    item::{ItemBehaviour, ItemMetadata, set_item_in_hand},
 };
 use verdantgolem_data::{
     Block, BlockDirection, BlockStateId,
@@ -102,7 +103,7 @@ fn set_waterlogged(block: &Block, state: BlockStateId, waterlogged: bool) -> Blo
     block.from_properties(&props).to_state_id(block)
 }
 
-fn give_player_bucket_item(player: &Player, item: &'static Item) {
+fn give_player_bucket_item(player: &Player, hand: Hand, item: &'static Item) {
     if player.gamemode.load() == GameMode::Creative {
         let has_item = {
             let inv = player
@@ -112,20 +113,20 @@ fn give_player_bucket_item(player: &Player, item: &'static Item) {
                 .unwrap_or_else(std::sync::PoisonError::into_inner);
             inv.iter().any(|stack| stack.item.id == item.id)
         };
-        if has_item {
+        if has_item || player.inventory.off_hand_item().item.id == item.id {
             return;
         }
         let mut item_stack = ItemStack::new(1, item);
         player.inventory.insert_stack_anywhere(&mut item_stack);
     } else {
         let item_stack = ItemStack::new(1, item);
-        let mut held_stack = player.inventory.held_item();
+        let mut held_stack = player.inventory.get_stack_in_hand(hand);
 
         if held_stack.item_count == 1 {
-            player.inventory.set_held_item(item_stack);
+            set_item_in_hand(player, hand, item_stack);
         } else {
             held_stack.decrement(1);
-            player.inventory.set_held_item(held_stack);
+            set_item_in_hand(player, hand, held_stack);
             let mut stack_to_give = item_stack;
             let was_added = player.inventory.insert_stack_anywhere(&mut stack_to_give);
             if !was_added && !stack_to_give.is_empty() {
@@ -282,7 +283,7 @@ pub(crate) fn try_place_filled_bucket(
 }
 
 impl ItemBehaviour for EmptyBucketItem {
-    fn normal_use(&self, _block: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let world = player.world();
         let (start_pos, end_pos) = get_start_and_end_pos(player);
 
@@ -301,11 +302,11 @@ impl ItemBehaviour for EmptyBucketItem {
         };
 
         let Some((block_pos, direction)) = world.raycast(start_pos, end_pos, checker) else {
-            return;
+            return false;
         };
 
         let Some(item) = try_pickup_bucket_item(&world, block_pos, direction) else {
-            return;
+            return false;
         };
 
         if let Some(server) = world.server.upgrade()
@@ -319,11 +320,13 @@ impl ItemBehaviour for EmptyBucketItem {
                 );
             server.plugin_manager.fire_blocking(&server, &mut event);
             if event.cancelled {
-                return;
+                // Cancellation handles the interaction; do not try another use target.
+                return true;
             }
         }
 
-        give_player_bucket_item(player, item);
+        give_player_bucket_item(player, hand, item);
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -332,7 +335,8 @@ impl ItemBehaviour for EmptyBucketItem {
 }
 
 impl ItemBehaviour for FilledBucketItem {
-    fn normal_use(&self, item: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
+        let item = stack.item;
         let world = player.world();
         let (start_pos, end_pos) = get_start_and_end_pos(player);
         let checker = |pos: &BlockPos, world_inner: &Arc<World>| {
@@ -344,15 +348,15 @@ impl ItemBehaviour for FilledBucketItem {
         };
 
         let Some((pos, direction)) = world.raycast(start_pos, end_pos, checker) else {
-            return;
+            return false;
         };
 
         if should_evaporate_in_nether(item, &world) {
             play_bucket_evaporation(&world, &player.position());
-            return;
+            return true;
         }
         if !try_place_filled_bucket(&world, item, pos, direction) {
-            return;
+            return false;
         }
 
         if let Some(server) = world.server.upgrade()
@@ -369,11 +373,9 @@ impl ItemBehaviour for FilledBucketItem {
 
         //TODO: Spawn entity if applicable
         if player.gamemode.load() != GameMode::Creative {
-            let item_stack = ItemStack::new(1, &Item::BUCKET);
-            player
-                .inventory
-                .set_slot(player.inventory.get_selected_slot() as usize, item_stack);
+            give_player_bucket_item(player, hand, &Item::BUCKET);
         }
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {
@@ -382,16 +384,16 @@ impl ItemBehaviour for FilledBucketItem {
 }
 
 impl ItemBehaviour for MilkBucketItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
-        let stack = player.inventory().held_item();
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         player
             .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, 32);
+            .set_active_hand(hand, stack.clone(), 32);
+        true
     }
 
-    fn on_stopped_using(&self, _stack: &ItemStack, player: &Player) {
+    fn on_stopped_using(&self, _stack: &ItemStack, player: &Player, hand: Hand) {
         player.living_entity.reset_effects_and_attributes();
-        give_player_bucket_item(player, &Item::BUCKET);
+        give_player_bucket_item(player, hand, &Item::BUCKET);
     }
 
     fn get_use_duration(&self) -> i32 {

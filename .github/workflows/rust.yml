@@ -1,10 +1,20 @@
 name: Cargo Build, Test, and Linting
+run-name: ${{ inputs.sync_run_id && format('Upstream sync {0}', inputs.sync_run_id) || github.event.pull_request.title || github.event.head_commit.message || github.workflow }}
 
 on:
   push:
     branches: [master]
   pull_request:
   workflow_dispatch:
+    inputs:
+      sync_run_id:
+        description: "Correlation ID for upstream sync verification"
+        type: string
+        default: ""
+      publish_nightly:
+        description: "Publish validated master artifacts after an automated merge"
+        type: boolean
+        default: false
 
 concurrency:
   group: rust-${{ github.ref }}
@@ -18,6 +28,59 @@ env:
   RUSTFLAGS: "-Dwarnings"
 
 jobs:
+  sync_regressions:
+    name: Upstream sync regression tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Lint GitHub workflows with pinned actionlint
+        run: |
+          tool_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$tool_dir"
+          release="https://github.com/rhysd/actionlint/releases/download/v1.7.12"
+          archive="actionlint_1.7.12_linux_amd64.tar.gz"
+          curl --fail --location --retry 3 "$release/$archive" -o "$tool_dir/$archive"
+          curl --fail --location --retry 3 "$release/actionlint_1.7.12_checksums.txt" -o "$tool_dir/checksums.txt"
+          (
+            cd "$tool_dir"
+            grep " $archive\$" checksums.txt | sha256sum --check -
+            tar -xzf "$archive"
+          )
+          "$tool_dir/actionlint" -color
+      - run: python3 -m unittest discover -s .github/sync -p 'test_*.py' -v
+      - run: python3 -m unittest discover -s tools/tests -p 'test_technical_survival_smoke.py' -v
+  technical_smoke:
+    name: Technical survival smoke tests
+    runs-on: ubuntu-latest
+    needs: [format, machete, clippy_debug, clippy_release]
+    timeout-minutes: 35
+    env:
+      CARGO_BUILD_JOBS: 2
+      CARGO_PROFILE_DEV_DEBUG: 0
+      CARGO_PROFILE_TEST_DEBUG: 0
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --locked -p verdantgolem --bin verdantgolem
+      - name: Exercise the real server in a fresh temporary world
+        run: |
+          mkdir -p "$RUNNER_TEMP/technical-smoke"
+          python3 tools/tests/technical_survival_smoke.py \
+            --server "$PWD/target/debug/verdantgolem" \
+            --temp-parent "$RUNNER_TEMP/technical-smoke" --keep
+      - name: Preserve smoke logs and saved-world assertions
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: technical-survival-smoke
+          path: ${{ runner.temp }}/technical-smoke/
+          retention-days: 7
   format:
     name: Check formatting
     runs-on: ubuntu-latest
@@ -142,6 +205,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [build_and_test]
     strategy:
+      fail-fast: false
       matrix:
         os:
           [
@@ -237,9 +301,9 @@ jobs:
   draft_release:
     permissions:
       contents: write
-    needs: [build_release, build_android_release]
+    needs: [build_release, build_android_release, technical_smoke, sync_regressions]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_nightly))
     steps:
       - uses: actions/checkout@v7
         with:

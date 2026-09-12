@@ -1,9 +1,10 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::entity::projectile::firework_rocket::FireworkRocketEntity;
 use crate::entity::{Entity, EntityBase};
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, consume_item_in_hand};
 use crate::server::Server;
 use verdantgolem_data::Block;
 use verdantgolem_data::BlockDirection;
@@ -24,14 +25,15 @@ impl ItemMetadata for FireworkRocketItem {
 impl ItemBehaviour for FireworkRocketItem {
     fn use_on_block(
         &self,
-        _item: &mut ItemStack,
+        item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         cursor_pos: Vector3<f32>,
         _block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         let entity = Entity::new(
             world.clone(),
@@ -44,9 +46,11 @@ impl ItemBehaviour for FireworkRocketItem {
         );
         let entity = FireworkRocketEntity::new(entity);
         world.spawn_entity(Arc::new(entity));
+        item.decrement_unless_creative(player.gamemode.load(), 1);
+        true
     }
 
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         if player.get_entity().is_fall_flying() {
             let world = player.world();
             let entity = Entity::new(
@@ -56,7 +60,10 @@ impl ItemBehaviour for FireworkRocketItem {
             );
             let entity = FireworkRocketEntity::new_shot(entity, player.get_entity());
             world.spawn_entity(Arc::new(entity));
+            consume_item_in_hand(player, hand, 1);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

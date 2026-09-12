@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::EntityBase;
@@ -53,29 +54,36 @@ impl ItemBehaviour for ShearsItem {
 
     fn use_on_block(
         &self,
-        _item: &mut ItemStack,
+        item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         let state_id = world.get_block_state_id(&location);
 
-        if handle_growing_plant(player, &location, block, state_id) {
-            return;
+        if handle_growing_plant(player, item, &location, block, state_id) {
+            return true;
         }
 
-        if handle_beehive(player, &location, block, state_id) {
-            return;
+        if handle_beehive(player, item, &location, block, state_id) {
+            return true;
         }
 
-        handle_pumpkin(player, &location, block);
+        handle_pumpkin(player, item, &location, block)
     }
 
-    fn use_on_entity(&self, _item: &mut ItemStack, player: &Player, entity: Arc<dyn EntityBase>) {
+    fn use_on_entity(
+        &self,
+        item: &mut ItemStack,
+        player: &Player,
+        _hand: Hand,
+        entity: Arc<dyn EntityBase>,
+    ) -> bool {
         if let Some(sheep) = entity
             .cast_any()
             .downcast_ref::<crate::entity::passive::sheep::SheepEntity>()
@@ -93,8 +101,10 @@ impl ItemBehaviour for ShearsItem {
                 ItemStack::new(wool_count, wool_item),
             ));
             world.spawn_entity(item_entity);
-            player.damage_held_item(1);
+            player.damage_used_item_stack(item, 1);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -104,6 +114,7 @@ impl ItemBehaviour for ShearsItem {
 
 fn handle_growing_plant(
     player: &Player,
+    item: &mut ItemStack,
     location: &BlockPos,
     block: &Block,
     state_id: BlockStateId,
@@ -142,7 +153,7 @@ fn handle_growing_plant(
             SoundCategory::Blocks,
             &location.to_f64(),
         );
-        player.damage_held_item(1);
+        player.damage_used_item_stack(item, 1);
         return true;
     }
 
@@ -151,6 +162,7 @@ fn handle_growing_plant(
 
 fn handle_beehive(
     player: &Player,
+    item: &mut ItemStack,
     location: &BlockPos,
     block: &Block,
     state_id: BlockStateId,
@@ -198,14 +210,19 @@ fn handle_beehive(
             ItemStack::new(3, &Item::HONEYCOMB),
         ));
         world.spawn_entity(item_entity);
-        player.damage_held_item(1);
+        player.damage_used_item_stack(item, 1);
         return true;
     }
 
     false
 }
 
-fn handle_pumpkin(player: &Player, location: &BlockPos, block: &Block) {
+fn handle_pumpkin(
+    player: &Player,
+    item: &mut ItemStack,
+    location: &BlockPos,
+    block: &Block,
+) -> bool {
     if block.id == Block::PUMPKIN.id {
         let world = player.world();
         let carved_state = Block::CARVED_PUMPKIN.default_state.id;
@@ -226,6 +243,8 @@ fn handle_pumpkin(player: &Player, location: &BlockPos, block: &Block) {
             ItemStack::new(4, &Item::PUMPKIN_SEEDS),
         ));
         world.spawn_entity(item_entity);
-        player.damage_held_item(1);
+        player.damage_used_item_stack(item, 1);
+        return true;
     }
+    false
 }

@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::player::Player;
@@ -55,16 +56,17 @@ impl ItemBehaviour for MinecartItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
 
         if !block.has_tag(&tag::Block::MINECRAFT_RAILS) {
-            return;
+            return false;
         }
         let state_id = world.get_block_state_id(&location);
         let is_ascending = if PoweredRailLikeProperties::handles_block_id(block.id) {
@@ -87,6 +89,7 @@ impl ItemBehaviour for MinecartItem {
         let minecart_entity = Arc::new(MinecartEntity::new(entity));
         world.spawn_entity(minecart_entity);
         item.decrement_unless_creative(player.gamemode.load(), 1);
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

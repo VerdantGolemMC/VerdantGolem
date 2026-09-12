@@ -13,6 +13,7 @@ use verdantgolem_data::data_component_impl::{
 use verdantgolem_data::entity::entity_from_egg;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::{Block, BlockDirection};
+use verdantgolem_util::Hand;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_util::math::wrap_degrees;
@@ -64,12 +65,13 @@ impl ItemBehaviour for SpawnEggItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         _block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         if let Some(entity_type) = entity_from_egg(item.item.id) {
             let world = player.world();
 
@@ -81,7 +83,7 @@ impl ItemBehaviour for SpawnEggItem {
                 spawner.set_entity_type(entity_type);
                 world.update_block_entity(&block_entity);
                 item.decrement_unless_creative(player.gamemode.load(), 1);
-                return;
+                return true;
             }
             let pos = BlockPos(location.0 + face.to_offset());
             let pos = Vector3::new(
@@ -102,7 +104,9 @@ impl ItemBehaviour for SpawnEggItem {
             // Broadcast the new mob to all players
             world.spawn_entity(mob);
             item.decrement_unless_creative(player.gamemode.load(), 1);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

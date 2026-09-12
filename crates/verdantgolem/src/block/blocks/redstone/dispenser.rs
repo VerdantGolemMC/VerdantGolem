@@ -237,6 +237,13 @@ impl DispenserBlock {
             return;
         }
 
+        // A cactus is a rotation tool while this rule is enabled, even when
+        // the target cannot rotate. Never fall through to item ejection.
+        let rotator_enabled = crate::carpet::values().rotator_block;
+        if Self::try_cactus_rotation(item, rotator_enabled, || Self::dispense_rotation(ctx)) {
+            return;
+        }
+
         // Still missing some specific dispenser behavior that you can find here:
         // https://minecraft.wiki/w/Dispenser#Usage
         let arrows = [
@@ -257,12 +264,6 @@ impl DispenserBlock {
         } else if item.item.id == Item::ARMOR_STAND.id {
             // Armor stands
             if !Self::dispense_armor_stand(ctx, item) {
-                Self::drop_item(ctx, item);
-            }
-        } else if item.item.id == Item::CACTUS.id && crate::carpet::values().rotator_block {
-            // carpet rule rotatorBlock: rotate the block in front
-            // counter-clockwise without consuming the cactus
-            if !Self::dispense_rotation(ctx) {
                 Self::drop_item(ctx, item);
             }
         } else if item.item.id == Item::TNT.id {
@@ -301,6 +302,16 @@ impl DispenserBlock {
             // Default / Drop
             Self::drop_item(ctx, item);
         }
+    }
+
+    /// Handles the cactus action independently of whether rotation changes a
+    /// block state. The shared stack is read-only so the tool stays in its slot.
+    fn try_cactus_rotation(item: &ItemStack, enabled: bool, rotate: impl FnOnce()) -> bool {
+        if !enabled || item.item.id != Item::CACTUS.id {
+            return false;
+        }
+        rotate();
+        true
     }
 
     fn projectile_spawn_position(ctx: &DispenseContext<'_>) -> Vector3<f64> {
@@ -451,13 +462,13 @@ impl DispenserBlock {
     /// Rotates the block in front of the dispenser clockwise (Carpet
     /// `rotatorBlock`). The cactus is never consumed; on a non-rotatable
     /// target nothing is dispensed instead of ejecting the item.
-    fn dispense_rotation(ctx: &DispenseContext<'_>) -> bool {
+    fn dispense_rotation(ctx: &DispenseContext<'_>) {
         let target = Self::target_position(ctx);
         let (block, state) = ctx.world.get_block_and_state(&target);
         let rotated = block.rotate(state.id, Rotation::Clockwise90);
         if rotated.id == state.id {
             ctx.world.update_neighbors(&target, None);
-            return false;
+            return;
         }
         ctx.world.set_block_state(
             &target,
@@ -466,7 +477,6 @@ impl DispenserBlock {
         );
         ctx.world
             .sync_world_event(WorldEvent::SoundDispenserDispense, *ctx.position, 0);
-        true
     }
 
     fn dispense_tnt(ctx: &DispenseContext<'_>, item: &mut ItemStack) {
@@ -810,5 +820,66 @@ impl DispenserBlock {
 
         let item_entity = Arc::new(ItemEntity::new_with_velocity(entity, stack, velocity, 40));
         ctx.world.spawn_entity(item_entity);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::cell::Cell;
+
+    use super::{Block, DispenserBlock, Item, ItemStack, Rotation};
+
+    #[test]
+    fn cactus_rotation_keeps_the_tool_for_unchanged_targets() {
+        for target in [&Block::AIR, &Block::STONE] {
+            let stack = ItemStack::new(3, &Item::CACTUS);
+            let calls = Cell::new(0);
+            let handled = DispenserBlock::try_cactus_rotation(&stack, true, || {
+                calls.set(calls.get() + 1);
+                assert_eq!(
+                    target
+                        .rotate(target.default_state.id, Rotation::Clockwise90)
+                        .id,
+                    target.default_state.id
+                );
+            });
+
+            assert!(
+                handled,
+                "unchanged targets must not fall through to ejection"
+            );
+            assert_eq!(calls.get(), 1);
+            assert_eq!(stack.item_count, 3);
+        }
+    }
+
+    #[test]
+    fn cactus_rotation_keeps_the_tool_for_rotatable_targets() {
+        let stack = ItemStack::new(1, &Item::CACTUS);
+        assert!(DispenserBlock::try_cactus_rotation(&stack, true, || {
+            assert_ne!(
+                Block::FURNACE
+                    .rotate(Block::FURNACE.default_state.id, Rotation::Clockwise90)
+                    .id,
+                Block::FURNACE.default_state.id
+            );
+        }));
+        assert_eq!(stack.item_count, 1);
+    }
+
+    #[test]
+    fn disabled_rotation_and_other_items_keep_normal_dispensing() {
+        let calls = Cell::new(0);
+        for (item, enabled) in [(&Item::CACTUS, false), (&Item::STONE, true)] {
+            let stack = ItemStack::new(1, item);
+            assert!(!DispenserBlock::try_cactus_rotation(
+                &stack,
+                enabled,
+                || {
+                    calls.set(calls.get() + 1);
+                }
+            ));
+        }
+        assert_eq!(calls.get(), 0);
     }
 }

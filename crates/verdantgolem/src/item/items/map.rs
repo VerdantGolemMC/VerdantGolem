@@ -1,6 +1,7 @@
 use crate::entity::player::Player;
 use crate::item::ItemBehaviour;
 use crate::item::ItemMetadata;
+use crate::item::set_item_in_hand;
 use std::any::Any;
 use verdantgolem_data::data_component::DataComponent;
 use verdantgolem_data::data_component_impl::DataComponentImpl;
@@ -8,6 +9,7 @@ use verdantgolem_data::data_component_impl::MapIdImpl;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_util::GameMode;
+use verdantgolem_util::Hand;
 
 pub struct MapItem;
 
@@ -18,26 +20,17 @@ impl ItemMetadata for MapItem {
 }
 
 impl ItemBehaviour for MapItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let Some(server) = player.world().server.upgrade() else {
-            return;
+            return false;
         };
 
+        if stack.is_empty() || stack.item.id != Item::MAP.id {
+            return false;
+        }
         let inventory = player.inventory();
-        let held_stack = inventory.held_item();
-        let (found, mut hand_stack, hand) =
-            if !held_stack.is_empty() && held_stack.item.id == Item::MAP.id {
-                (true, held_stack, verdantgolem_util::Hand::Right)
-            } else {
-                let off_hand = inventory.off_hand_item();
-                if !off_hand.is_empty() && off_hand.item.id == Item::MAP.id {
-                    (true, off_hand, verdantgolem_util::Hand::Left)
-                } else {
-                    (false, held_stack, verdantgolem_util::Hand::Right)
-                }
-            };
-
-        if found {
+        let mut hand_stack = stack.clone();
+        {
             let map_id = server.next_map_id();
             let _ = server.map_manager.create_map(
                 map_id,
@@ -55,10 +48,10 @@ impl ItemBehaviour for MapItem {
 
             let gamemode = player.gamemode.load();
             if hand_stack.item_count == 1 && gamemode != GameMode::Creative {
-                inventory.set_stack_in_hand(hand, filled_map);
+                set_item_in_hand(player, hand, filled_map);
             } else {
                 hand_stack.decrement_unless_creative(gamemode, 1);
-                inventory.set_stack_in_hand(hand, hand_stack);
+                set_item_in_hand(player, hand, hand_stack);
                 let mut stack_to_give = filled_map;
                 let was_added = inventory.insert_stack_anywhere(&mut stack_to_give);
                 if !was_added && !stack_to_give.is_empty() {
@@ -68,6 +61,7 @@ impl ItemBehaviour for MapItem {
                 }
             }
         }
+        true
     }
 
     fn as_any(&self) -> &dyn Any {

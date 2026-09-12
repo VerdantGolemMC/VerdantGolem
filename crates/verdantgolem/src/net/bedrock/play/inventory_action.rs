@@ -211,6 +211,7 @@ impl BedrockClient {
                         server.item_registry.use_on_block(
                             &mut stack,
                             player,
+                            Hand::Right,
                             data.block_position,
                             face,
                             data.click_position,
@@ -221,22 +222,17 @@ impl BedrockClient {
                         let item_id = stack.item.id;
                         if let Some(placed_block) = verdantgolem_data::Block::from_item_id(item_id)
                         {
-                            let dummy_use_item_on =
-                                verdantgolem_protocol::java::server::play::SUseItemOn {
-                                    hand: VarInt(0),
-                                    position: data.block_position,
-                                    face: VarInt(i32::from(data.block_face)),
-                                    cursor_pos: data.click_position,
-                                    inside_block: false,
-                                    is_against_world_border: false,
-                                    sequence: VarInt(0),
-                                };
+                            let use_context = crate::block::BlockUseContext {
+                                position: data.block_position,
+                                face,
+                                cursor_pos: data.click_position,
+                            };
 
                             if let Ok(Some(_)) = server.block_registry.place_block(
                                 player,
                                 placed_block,
                                 &server,
-                                &dummy_use_item_on,
+                                &use_context,
                                 data.block_position,
                                 face,
                             ) {
@@ -348,7 +344,7 @@ impl BedrockClient {
                         &server;
                         event;
                         'after: {
-                            server.item_registry.on_use(&stack_for_use, player);
+                            server.item_registry.on_use(&stack_for_use, player, Hand::Right);
                         }
                     }}
                 }
@@ -362,14 +358,20 @@ impl BedrockClient {
                         let world = player.world();
                         if let Some(target) = world.get_entity_by_id(target_runtime_id) {
                             let mut stack = player.inventory().held_item();
+                            let before = stack.clone();
                             if !target.interact(player, &mut stack) {
                                 let Some(server) = world.server.upgrade() else {
                                     return;
                                 };
-                                server
-                                    .item_registry
-                                    .use_on_entity(&mut stack, player, target);
-                                player.inventory().set_held_item(stack);
+                                server.item_registry.use_on_entity(
+                                    &mut stack,
+                                    player,
+                                    Hand::Right,
+                                    target,
+                                );
+                            }
+                            if !stack.are_equal(&before) {
+                                player.sync_used_hand(Hand::Right, &before, stack);
                             }
                         }
                     }
@@ -390,19 +392,7 @@ impl BedrockClient {
                 }
             }
             TransactionData::ReleaseItem(_data) => {
-                let item_in_use = player
-                    .living_entity
-                    .item_in_use
-                    .lock()
-                    .unwrap_or_else(std::sync::PoisonError::into_inner)
-                    .clone();
-                if let Some(stack) = item_in_use {
-                    let Some(server) = player.world().server.upgrade() else {
-                        return;
-                    };
-                    server.item_registry.on_stopped_using(&stack, player);
-                }
-                player.living_entity.clear_active_hand();
+                player.release_item_use();
             }
         }
 

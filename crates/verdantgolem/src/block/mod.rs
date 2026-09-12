@@ -23,10 +23,19 @@ use verdantgolem_data::BlockDirection;
 use verdantgolem_data::block_rotation::{Mirror, Rotation};
 use verdantgolem_data::data_component_impl::EquipmentSlot;
 use verdantgolem_data::item_stack::ItemStack;
-use verdantgolem_protocol::java::server::play::SUseItemOn;
 use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
+
+/// Protocol-independent hit information used by block placement. Network
+/// clients and headless local players both enter the same placement pipeline.
+#[derive(Clone, Copy, Debug)]
+pub struct BlockUseContext {
+    pub position: BlockPos,
+    pub face: BlockDirection,
+    /// Hit coordinates relative to the clicked block, in the range 0..=1.
+    pub cursor_pos: Vector3<f32>,
+}
 
 pub trait BlockMetadata {
     fn ids() -> Box<[BlockId]>;
@@ -258,7 +267,7 @@ pub struct OnPlaceArgs<'a> {
     pub direction: BlockDirection,
     pub player: &'a Player,
     pub replacing: BlockIsReplacing,
-    pub use_item_on: &'a SUseItemOn,
+    pub use_item_on: &'a BlockUseContext,
 }
 
 pub struct RandomTickArgs<'a> {
@@ -276,7 +285,7 @@ pub struct CanPlaceAtArgs<'a> {
     pub position: &'a BlockPos,
     pub direction: Option<BlockDirection>,
     pub player: Option<&'a Player>,
-    pub use_item_on: Option<&'a SUseItemOn>,
+    pub use_item_on: Option<&'a BlockUseContext>,
 }
 
 pub struct CanUpdateAtArgs<'a> {
@@ -286,7 +295,7 @@ pub struct CanUpdateAtArgs<'a> {
     pub position: &'a BlockPos,
     pub direction: BlockDirection,
     pub player: &'a Player,
-    pub use_item_on: &'a SUseItemOn,
+    pub use_item_on: &'a BlockUseContext,
 }
 
 pub struct PlacedArgs<'a> {

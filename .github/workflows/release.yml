@@ -167,7 +167,7 @@ jobs:
             VERSION=$(awk -F '"' '/^version/ {print $2}' Cargo.toml)
             TAG="${VERSION}"
           fi
-          echo "tag_name=${TAG}" >> $GITHUB_OUTPUT
+          echo "tag_name=${TAG}" >> "$GITHUB_OUTPUT"
           echo "Determined release tag: ${TAG}"
 
       - name: Download prebuilt binary artifacts

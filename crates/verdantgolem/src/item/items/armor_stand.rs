@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::decoration::armor_stand::ArmorStandEntity;
@@ -41,12 +42,13 @@ impl ItemBehaviour for ArmorStandItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         _block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         let position = Self::calculate_placement_position(&location, face).to_f64();
 
@@ -88,7 +90,9 @@ impl ItemBehaviour for ArmorStandItem {
 
             world.spawn_entity(Arc::new(armor_stand));
             item.decrement_unless_creative(player.gamemode.load(), 1);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

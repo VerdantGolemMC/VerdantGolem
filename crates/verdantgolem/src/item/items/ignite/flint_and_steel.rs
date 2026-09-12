@@ -8,6 +8,7 @@ use verdantgolem_data::BlockDirection;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::{Block, BlockStateId};
+use verdantgolem_util::Hand;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
@@ -29,12 +30,13 @@ impl ItemBehaviour for FlintAndSteelItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         let server_ref = world.server.upgrade();
         if let Some(server_ref) = server_ref {
@@ -52,7 +54,8 @@ impl ItemBehaviour for FlintAndSteelItem {
                 .plugin_manager
                 .fire_blocking(&server_ref, &mut portal_event);
             if event.cancelled || portal_event.cancelled {
-                return;
+                // Cancellation handles the interaction; do not try another use target.
+                return true;
             }
         }
 
@@ -70,6 +73,7 @@ impl ItemBehaviour for FlintAndSteelItem {
             // TODO: Handle DamageResult::Broken to broadcast item break and update player slot.
             let _ = item.damage_item(1);
         }
+        ignited
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

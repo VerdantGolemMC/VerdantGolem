@@ -1,4 +1,6 @@
 use std::any::Any;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::item::{ItemBehaviour, ItemMetadata};
@@ -14,18 +16,16 @@ impl ItemMetadata for GoatHornItem {
 }
 
 impl ItemBehaviour for GoatHornItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         player.world().play_sound(
             Sound::ItemGoatHornSound0,
             SoundCategory::Players,
             &player.position(),
         );
-        let stack = player.inventory().held_item();
-        player.living_entity.set_active_hand(
-            verdantgolem_util::Hand::Right,
-            stack,
-            Self::USE_DURATION,
-        );
+        player
+            .living_entity
+            .set_active_hand(hand, stack.clone(), Self::USE_DURATION);
+        true
     }
 
     fn get_use_duration(&self) -> i32 {

@@ -1,9 +1,10 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::EntityBase;
 use crate::entity::projectile::eye_of_ender::EyeOfEnder;
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, consume_item_in_hand};
 use crate::server::Server;
 use crate::world::World;
 use crate::world::portal::end::EndPortal;
@@ -34,14 +35,15 @@ impl ItemBehaviour for EnderEyeItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         if block.id != Block::END_PORTAL_FRAME.id {
-            return;
+            return false;
         }
 
         let world = player.world();
@@ -50,11 +52,11 @@ impl ItemBehaviour for EnderEyeItem {
         let new_state_id = {
             // Skip if the frame already holds an eye.
             let Some(props) = block.properties(state_id) else {
-                return;
+                return false;
             };
             let props_raw = props.to_props();
             if props_raw.iter().any(|(k, v)| *k == "eye" && *v == "true") {
-                return;
+                return false;
             }
 
             // Build new state with eye=true.
@@ -73,9 +75,10 @@ impl ItemBehaviour for EnderEyeItem {
 
         // Try to complete the portal.
         EndPortal::get_new_portal(&world, location);
+        true
     }
 
-    fn normal_use(&self, _item: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let world = player.world();
 
         let (start_pos, end_pos) = self.get_start_and_end_pos(player);
@@ -85,14 +88,14 @@ impl ItemBehaviour for EnderEyeItem {
         if let Some((hit_pos, _)) = world.raycast(start_pos, end_pos, checker)
             && world.get_block(&hit_pos) == &Block::END_PORTAL_FRAME
         {
-            return;
+            return false;
         }
 
         let origin = player.get_entity().block_pos.load();
         let target_block_pos = find_stronghold(&world, origin);
 
         let Some(target) = target_block_pos else {
-            return;
+            return false;
         };
 
         let spawn_pos = Vector3::new(
@@ -126,9 +129,8 @@ impl ItemBehaviour for EnderEyeItem {
         player.trigger_advancement(
             crate::entity::player::advancement::trigger::AdvancementTrigger::LaunchedEyeOfEnder,
         );
-        let mut stack = player.inventory.held_item();
-        stack.decrement_unless_creative(player.gamemode.load(), 1);
-        player.inventory.set_held_item(stack);
+        consume_item_in_hand(player, hand, 1);
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

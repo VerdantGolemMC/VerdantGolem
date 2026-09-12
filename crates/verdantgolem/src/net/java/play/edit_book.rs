@@ -1,3 +1,5 @@
+use verdantgolem_data::data_component_impl::DataComponentImpl;
+
 #[allow(clippy::wildcard_imports)]
 use super::*;
 

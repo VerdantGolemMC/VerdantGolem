@@ -1,11 +1,12 @@
 use std::any::Any;
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::entity::projectile::arrow::ArrowPickup;
 use crate::entity::projectile::trident::TridentEntity;
 use crate::entity::{Entity, EntityBase};
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, consume_item_in_hand};
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
@@ -22,16 +23,18 @@ impl ItemMetadata for TridentItem {
 }
 
 impl ItemBehaviour for TridentItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
-        let inventory = player.inventory();
-        let stack = inventory.held_item();
-
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         player
             .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, 72000);
+            .set_active_hand(hand, stack.clone(), 72000);
+        true
     }
 
-    fn on_stopped_using(&self, _stack: &ItemStack, player: &Player) {
+    fn on_stopped_using(&self, used_stack: &ItemStack, player: &Player, hand: Hand) {
+        let stack = player.inventory().get_stack_in_hand(hand);
+        if stack.is_empty() || !stack.are_items_and_components_equal(used_stack) {
+            return;
+        }
         let use_ticks = player
             .living_entity
             .item_use_time
@@ -43,13 +46,11 @@ impl ItemBehaviour for TridentItem {
         }
 
         let world = player.world();
-        let stack_guard = player.inventory().held_item();
-
         // Check Riptide level
         let mut riptide_level = 0u32;
-        if let Some(enchantments) = stack_guard
-            .get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>(
-        ) {
+        if let Some(enchantments) =
+            stack.get_data_component::<verdantgolem_data::data_component_impl::EnchantmentsImpl>()
+        {
             for (enchantment, level) in enchantments.enchantment.iter() {
                 if **enchantment == verdantgolem_data::Enchantment::RIPTIDE {
                     riptide_level = *level as u32;
@@ -84,19 +85,31 @@ impl ItemBehaviour for TridentItem {
                 ));
             }
 
-            player.damage_held_item(1);
+            player.damage_item_in_hand(hand, 1);
             player.living_entity.clear_active_hand();
             return;
         }
 
+        // Damage and remove the releasing hand's trident, never a same-ID item
+        // in the other hand. The projectile keeps the updated durability.
+        player.damage_item_in_hand(hand, 1);
+        let thrown_stack = player.inventory().get_stack_in_hand(hand);
+        if thrown_stack.is_empty() {
+            player.living_entity.clear_active_hand();
+            return;
+        }
         // Normal throw - spawn thrown trident
         let (yaw, pitch) = player.rotation();
         let entity = Entity::new(world.clone(), player.position(), &EntityType::TRIDENT);
         let trident = TridentEntity::new_shot(
             entity,
             player.get_entity(),
-            stack_guard,
-            ArrowPickup::Allowed,
+            thrown_stack.copy_with_count(1),
+            if player.gamemode.load() == GameMode::Creative {
+                ArrowPickup::CreativeOnly
+            } else {
+                ArrowPickup::Allowed
+            },
         );
         trident.set_velocity_from_rotation(pitch, yaw, 0.0, 2.5, 1.0);
         world.spawn_entity(Arc::new(trident));
@@ -107,24 +120,7 @@ impl ItemBehaviour for TridentItem {
             &player.position(),
         );
 
-        if player.gamemode.load() != GameMode::Creative {
-            let inventory = player.inventory();
-            let selected_slot = inventory.get_selected_slot() as usize;
-
-            let main_hand_item = inventory.get_slot(selected_slot);
-            if main_hand_item.item.id == Item::TRIDENT.id {
-                inventory.set_slot(selected_slot, ItemStack::EMPTY.clone());
-                player.sync_hand_slot(selected_slot, ItemStack::EMPTY.clone());
-            } else {
-                let off_hand_slot =
-                    verdantgolem_inventory::player::player_inventory::PlayerInventory::OFF_HAND_SLOT;
-                let off_hand_item = inventory.get_slot(off_hand_slot);
-                if off_hand_item.item.id == Item::TRIDENT.id {
-                    inventory.set_slot(off_hand_slot, ItemStack::EMPTY.clone());
-                    player.sync_hand_slot(off_hand_slot, ItemStack::EMPTY.clone());
-                }
-            }
-        }
+        consume_item_in_hand(player, hand, 1);
 
         player.living_entity.clear_active_hand();
     }

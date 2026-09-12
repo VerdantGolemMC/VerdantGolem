@@ -1,11 +1,12 @@
 use std::any::Any;
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::entity::projectile::arrow::{ArrowEntity, ArrowPickup};
 use crate::entity::{Entity, EntityBase};
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, set_item_in_hand};
 use verdantgolem_data::data_component::DataComponent;
 use verdantgolem_data::data_component_impl::{ChargedProjectilesImpl, EnchantmentsImpl};
 use verdantgolem_data::item::Item;
@@ -22,10 +23,7 @@ impl ItemMetadata for CrossbowItem {
 }
 
 impl ItemBehaviour for CrossbowItem {
-    fn normal_use(&self, _item: &Item, player: &Player) {
-        let inventory = player.inventory();
-        let stack = inventory.held_item();
-
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         // Every crossbow carries a ChargedProjectiles component by default, so its mere
         // presence does not mean the crossbow is loaded. Vanilla checks the list is also
         // non-empty (CrossbowItem.java:68).
@@ -33,27 +31,30 @@ impl ItemBehaviour for CrossbowItem {
             .get_data_component::<ChargedProjectilesImpl>()
             .is_some_and(|charged| !charged.projectiles.is_empty())
         {
-            Self::fire_projectiles(player);
-            return;
+            Self::fire_projectiles(player, stack, hand);
+            return true;
         }
 
         let has_arrows = player.find_arrow().is_some();
         if !has_arrows && player.gamemode.load() != GameMode::Creative {
-            return;
+            return false;
         }
 
         player
             .living_entity
-            .set_active_hand(verdantgolem_util::Hand::Right, stack, 72000);
+            .set_active_hand(hand, stack.clone(), 72000);
+        true
     }
 
-    fn on_stopped_using(&self, _stack: &ItemStack, player: &Player) {
+    fn on_stopped_using(&self, used_stack: &ItemStack, player: &Player, hand: Hand) {
+        let mut stack = player.inventory().get_stack_in_hand(hand);
+        if stack.is_empty() || !stack.are_items_and_components_equal(used_stack) {
+            return;
+        }
         let use_ticks = player.living_entity.item_use_time.load(Ordering::Relaxed);
         let use_ticks = 72000 - use_ticks;
 
         let mut charge_time = 25;
-        let mut stack = player.inventory().held_item();
-
         if let Some(enchantments) = stack.get_data_component::<EnchantmentsImpl>() {
             for (enchantment, level) in enchantments.enchantment.iter() {
                 if **enchantment == verdantgolem_data::Enchantment::QUICK_CHARGE {
@@ -95,7 +96,7 @@ impl ItemBehaviour for CrossbowItem {
                         projectiles: vec![arrow_nbt],
                     })),
                 ));
-                player.inventory().set_held_item(stack);
+                set_item_in_hand(player, hand, stack);
 
                 if player.gamemode.load() != GameMode::Creative {
                     player.consume_arrow(slot);
@@ -121,8 +122,11 @@ impl ItemBehaviour for CrossbowItem {
 }
 
 impl CrossbowItem {
-    fn fire_projectiles(player: &Player) {
-        let mut held = player.inventory().held_item();
+    fn fire_projectiles(player: &Player, stack: &ItemStack, hand: Hand) {
+        let mut held = player.inventory().get_stack_in_hand(hand);
+        if held.is_empty() || !held.are_items_and_components_equal(stack) {
+            return;
+        }
         let projectiles = held.get_data_component::<ChargedProjectilesImpl>().cloned();
         let has_multishot =
             held.get_data_component::<EnchantmentsImpl>()
@@ -179,8 +183,8 @@ impl CrossbowItem {
 
             held.patch
                 .retain(|(id, _)| *id != DataComponent::ChargedProjectiles);
-            player.inventory().set_held_item(held);
-            player.damage_held_item(1);
+            set_item_in_hand(player, hand, held);
+            player.damage_item_in_hand(hand, 1);
         }
     }
 }

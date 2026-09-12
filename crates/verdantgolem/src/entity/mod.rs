@@ -1444,18 +1444,8 @@ impl Entity {
                 continue;
             }
 
-            let mut max_time = 1.0;
-
-            for inert_box in &collisions {
-                if let Some(collision_time) = bounding_box.calculate_collision_time(
-                    inert_box,
-                    adjusted_movement,
-                    axis,
-                    max_time,
-                ) {
-                    max_time = collision_time;
-                }
-            }
+            let max_time =
+                Self::collision_fraction(&bounding_box, adjusted_movement, axis, &collisions);
 
             if max_time != 1.0 {
                 let changed_component = adjusted_movement.get_axis(axis) * max_time;
@@ -1468,6 +1458,19 @@ impl Entity {
             .store(horizontal_collision, Ordering::SeqCst);
 
         adjusted_movement
+    }
+
+    fn collision_fraction(
+        bounding_box: &BoundingBox,
+        movement: Vector3<f64>,
+        axis: Axis,
+        collisions: &[BoundingBox],
+    ) -> f64 {
+        collisions.iter().fold(1.0, |max_time, obstacle| {
+            bounding_box
+                .calculate_collision_time(obstacle, movement, axis, max_time)
+                .unwrap_or(max_time)
+        })
     }
 
     /// Applies knockback to the entity, following vanilla Minecraft's mechanics.
@@ -2169,8 +2172,11 @@ impl Entity {
     // Entity.movementInputToVelocity in yarn
 
     fn movement_input_to_velocity(&self, movement_input: Vector3<f64>, speed: f64) -> Vector3<f64> {
-        let yaw = f64::from(self.yaw.load()).to_radians();
+        Self::velocity_from_input(self.yaw.load(), movement_input, speed)
+    }
 
+    fn velocity_from_input(yaw: f32, movement_input: Vector3<f64>, speed: f64) -> Vector3<f64> {
+        let yaw = f64::from(yaw).to_radians();
         let dist = movement_input.length_squared();
 
         if dist < 1.0e-7 {
@@ -2242,8 +2248,15 @@ impl Entity {
 
     // Does not send movement. That must be done separately
     pub fn move_entity(&self, caller: &dyn EntityBase, mut motion: Vector3<f64>) {
-        if caller.get_player().is_some() {
+        if caller.get_player().is_some_and(|player| !player.is_local()) {
             return;
+        }
+        if let Some(player) = caller.get_player() {
+            let Some(local_motion) = player.local_movement_delta(motion) else {
+                self.velocity.store(Vector3::default());
+                return;
+            };
+            motion = local_motion;
         }
 
         if self.no_physics.load(Ordering::Relaxed) {
@@ -2276,7 +2289,11 @@ impl Entity {
 
         if let Some(living) = caller.get_living_entity() {
             let on_ground = self.on_ground.load(Ordering::SeqCst);
-            living.fall(caller, final_move.y, on_ground, false);
+            let flying = caller.get_player().is_some_and(|player| {
+                player.is_flying()
+                    || player.gamemode.load() == verdantgolem_util::GameMode::Creative
+            });
+            living.fall(caller, final_move.y, on_ground, flying);
         }
 
         if motion.y != final_move.y {
@@ -4227,6 +4244,37 @@ impl Flag {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn local_movement_stops_at_solid_walls_in_both_directions() {
+        let body = BoundingBox::new(Vector3::new(-0.3, 0.0, -0.3), Vector3::new(0.3, 1.8, 0.3));
+        for sign in [-1.0, 1.0] {
+            let wall = if sign > 0.0 {
+                BoundingBox::new(Vector3::new(1.0, -1.0, -2.0), Vector3::new(2.0, 3.0, 2.0))
+            } else {
+                BoundingBox::new(Vector3::new(-2.0, -1.0, -2.0), Vector3::new(-1.0, 3.0, 2.0))
+            };
+            let motion = Vector3::new(sign * 2.0, -0.08, 0.0);
+            let fraction = Entity::collision_fraction(&body, motion, Axis::X, &[wall]);
+            assert!((fraction - 0.35).abs() < 1.0e-9);
+            let moved = body.shift(Vector3::new(motion.x * fraction, 0.0, 0.0));
+            assert!(!moved.intersects(&wall));
+        }
+    }
+
+    #[test]
+    fn local_input_rotation_and_diagonal_speed_match_physics() {
+        let forward = Entity::velocity_from_input(0.0, Vector3::new(0.0, 0.0, 1.0), 0.1);
+        assert_eq!(forward, Vector3::new(0.0, 0.0, 0.1));
+        let west = Entity::velocity_from_input(90.0, Vector3::new(0.0, 0.0, 1.0), 0.1);
+        assert!((west.x + 0.1).abs() < 1.0e-9 && west.z.abs() < 1.0e-9);
+        let diagonal = Entity::velocity_from_input(0.0, Vector3::new(1.0, 0.0, 1.0), 0.1);
+        assert!((diagonal.length() - 0.1).abs() < 1.0e-9);
+        assert_eq!(
+            Entity::velocity_from_input(90.0, Vector3::default(), 0.1),
+            Vector3::default()
+        );
+    }
 
     #[test]
     fn equipment_break_status_maps_all_slots() {

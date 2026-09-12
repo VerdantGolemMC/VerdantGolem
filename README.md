@@ -36,6 +36,10 @@ It keeps tracking upstream Pumpkin so improvements and protocol updates can be m
 
 ## Features
 
+VerdantGolem's own [technical-survival rules and commands](docs/carpet-features.md)
+include Carpet-style rules, fake players, hopper production counters, and persistent
+forced-chunk loading, in addition to the upstream server features below.
+
 - [x] Configuration (toml)
 - [Tracking: Protocol](https://github.com/Pumpkin-MC/Pumpkin/issues/1401)
   - [x] Server Status/Ping
