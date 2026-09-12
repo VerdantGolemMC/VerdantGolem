@@ -1,4 +1,5 @@
 name: Spelling
+run-name: ${{ inputs.sync_run_id && format('Upstream sync {0}', inputs.sync_run_id) || github.event.pull_request.title || github.event.head_commit.message || github.workflow }}
 
 permissions:
   contents: read
@@ -7,6 +8,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      sync_run_id:
+        description: "Correlation ID for upstream sync verification"
+        type: string
+        default: ""
 
 env:
   CLICOLOR: 1

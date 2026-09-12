@@ -1,218 +1,113 @@
 name: Upstream Sync
 
-# Automated sync from upstream Pumpkin (Pumpkin-MC/Pumpkin).
-#
-# Policy (see docs/upstream-sync.md):
-# - Rename detection maps most upstream changes onto the verdantgolem tree.
-# - Conflict resolution order: plugin-wit tracks upstream; brand/CI/deployment
-#   files keep ours; files whose only local divergence is the mechanical
-#   rename take upstream content with the rename re-applied
-#   (.github/sync/auto-resolve.py).
-# - Clean merges open a PR; CI must pass before it is merged.
-# - Leftover conflicts fail the run with a step summary + artifact; the repo
-#   has Issues disabled so nothing is pushed blindly.
-
 on:
   schedule:
-    - cron: "0 3 * * *" # daily, 03:00 UTC
+    - cron: "0 3 * * *" # 03:00 UTC / 11:00 Asia/Shanghai.
+  push:
+    branches: [master]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Prepare a report without publishing a branch or PR"
+        type: boolean
+        default: true
+      auto_merge:
+        description: "Merge a clean sync PR after pinned CI passes"
+        type: boolean
+        default: true
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: upstream-sync
   cancel-in-progress: false
 
 env:
-  SYNC_BRANCH: auto/upstream-sync
+  BASE_BRANCH: master
+  SYNC_BRANCH: codex/upstream-sync
 
 jobs:
-  sync:
+  prepare:
+    name: Normalize and prepare upstream merge
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      status: ${{ steps.prepare.outputs.status }}
+      base: ${{ steps.prepare.outputs.base }}
+      commit: ${{ steps.prepare.outputs.commit }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: master
           fetch-depth: 0
-          submodules: recursive
-
-      - name: Configure git
-        run: |
-          git config user.name "verdantgolem-sync-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config rerere.enabled true
-          git config merge.renameLimit 999999
-
-      - name: Cache rerere
-        uses: actions/cache@v4
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          path: .git/rr-cache
-          key: rerere-${{ github.run_id }}
-          restore-keys: |
-            rerere-
-
-      - name: Fetch upstream
+          components: rustfmt
+      - name: Test the merge engine and publication guards
+        run: python3 -m unittest discover -s .github/sync -p 'test_*.py' -v
+      - name: Fetch the configured upstream
         run: |
-          git remote add upstream https://github.com/Pumpkin-MC/Pumpkin.git
-          git fetch upstream master:refs/remotes/upstream/master
-
-      - name: Check for new upstream commits
-        id: check
-        run: |
-          base="$(git merge-base HEAD upstream/master)"
-          head_up="$(git rev-parse upstream/master)"
-          if [ "$base" = "$head_up" ]; then
-            echo "synced=false" >> "$GITHUB_OUTPUT"
-            echo "Already in sync with upstream ($head_up)."
-          else
-            {
-              echo "synced=true"
-              echo "count=$(git rev-list --count HEAD..upstream/master)"
-              echo "up=$head_up"
-            } >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Merge upstream
-        if: steps.check.outputs.synced == 'true'
-        id: merge
-        run: |
-          set +e
-          git merge --no-edit -Xfind-renames=15% upstream/master
-          status=$?
-          set -e
-          if [ "$status" -eq 0 ]; then
-            echo "clean=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          echo "Merge reported conflicts; applying automatic resolutions"
-
-          # The WIT submodule pointer follows the upstream contract.
-          if git diff --name-only --diff-filter=U | grep -qx 'crates/pumpkin-plugin-wit'; then
-            wit_sha="$(git rev-parse upstream/master:crates/pumpkin-plugin-wit)"
-            git update-index --cacheinfo "160000,$wit_sha,crates/pumpkin-plugin-wit"
-            echo "plugin-wit pointer -> $wit_sha"
-          fi
-
-          # Brand / CI / deployment files intentionally diverge; keep ours.
-          keep_ours=(
-            .github/workflows/rust.yml
-            .github/workflows/docker.yml
-            .github/workflows/release.yml
-            .github/CODEOWNERS
-            .github/FUNDING.yml
-            .github/PULL_REQUEST_TEMPLATE.md
-            .github/ISSUE_TEMPLATE/bug_report.yml
-            README.md
-            CONTRIBUTING.md
-            assets/NOTICE.md
-            Dockerfile
-            docker-compose.yml
-            .dockerignore
-            flake.nix
-            .devcontainer/devcontainer.json
-            typos.toml
-          )
-          for path in "${keep_ours[@]}"; do
-            if git diff --name-only --diff-filter=U | grep -qx "$path"; then
-              git checkout --ours -- "$path"
-              git add -- "$path"
-              echo "kept ours: $path"
-            fi
-          done
-
-          if git diff --name-only --diff-filter=U | grep -q .; then
-            python3 .github/sync/auto-resolve.py || true
-          fi
-
-          if git diff --name-only --diff-filter=U | grep -q .; then
-            git diff --name-only --diff-filter=U > conflicted-paths.txt
-            git merge --abort
-            echo "clean=false" >> "$GITHUB_OUTPUT"
-          else
-            # Audit: no orphan pumpkin paths may enter the tree.
-            if git diff --cached --name-status --diff-filter=A |
-                grep -E '^(crates/pumpkin/|tools/pumpkin-|egg-pumpkin\.json)' |
-                grep -v 'pumpkin-plugin-wit'; then
-              echo "::error::Merge staged files at orphan pumpkin paths"
-              git merge --abort
-              echo "clean=false" >> "$GITHUB_OUTPUT"
-            else
-              git commit --no-edit
-              echo "clean=true" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-
-      - name: Push sync branch
-        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'true'
-        run: |
-          if git diff --quiet origin/master HEAD; then
-            echo "Merge produced no content changes; nothing to sync."
-            exit 0
-          fi
-          git push -f origin "HEAD:refs/heads/$SYNC_BRANCH"
-
-      - name: Open PR and merge after CI
-        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'true'
+          git fetch --no-tags https://github.com/Pumpkin-MC/Pumpkin.git \
+            master:refs/remotes/upstream/master
+      - name: Prepare an audited merge and workspace lockfile
+        id: prepare
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
+          PREPARE_HEAD: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && github.sha || format('origin/{0}', env.BASE_BRANCH) }}
+        # Candidate manifests run only in this read-only job, without a
+        # publication token or a write-permission checkout.
         run: |
-          up="${{ steps.check.outputs.up }}"
-          count="${{ steps.check.outputs.count }}"
-          body="Automated upstream sync.
-
-          - Upstream: Pumpkin-MC/Pumpkin@${up}
-          - New upstream commits: ${count}
-          - Auto-resolution: brand/CI files keep ours, plugin-wit tracks
-            upstream, mechanically-renamed files take upstream content.
-          - This PR merges automatically once CI passes."
-
-          existing="$(gh pr list --head "$SYNC_BRANCH" --state open --json number --jq '.[0].number')"
-          if [ -n "$existing" ]; then
-            gh pr edit "$existing" --title "chore: sync upstream Pumpkin" --body "$body"
-            pr="$existing"
-          else
-            pr="$(gh pr create --head "$SYNC_BRANCH" --base master \
-              --title "chore: sync upstream Pumpkin" --body "$body")"
-          fi
-
-          echo "PR: $pr"
-          # Wait for CI (PR push + pull_request checks) before merging.
-          if timeout 7200 gh pr checks "$SYNC_BRANCH" --watch --interval 60; then
-            gh pr merge "$SYNC_BRANCH" --merge
-            echo "Sync PR merged."
-          else
-            gh pr comment "$SYNC_BRANCH" --body "CI did not pass (or timed out) within 2h; leaving the PR open for manual review."
-            exit 1
-          fi
-
-      - name: Report unresolved conflicts
-        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
-        run: |
-          {
-            echo "## Upstream sync hit unresolved conflicts"
-            echo
-            echo "- Target upstream: \`${{ steps.check.outputs.up }}\`"
-            echo "- New upstream commits: ${{ steps.check.outputs.count }}"
-            echo
-            echo "These files need manual resolution (see docs/upstream-sync.md):"
-            echo '```'
-            cat conflicted-paths.txt
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload conflict list
-        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
+          python3 .github/sync/upstream_sync.py \
+            --head "$PREPARE_HEAD" --upstream upstream/master \
+            --format-rust --refresh-lock --bundle --output "$RUNNER_TEMP/upstream-sync"
+      - name: Preserve report, conflict patch, or candidate bundle
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: conflicted-paths
-          path: conflicted-paths.txt
+          name: upstream-sync-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/upstream-sync/
+          if-no-files-found: warn
+          retention-days: 14
 
-      - name: Fail on unresolved conflicts
-        if: steps.check.outputs.synced == 'true' && steps.merge.outputs.clean == 'false'
+  publish:
+    name: Publish PR, verify pinned CI, and merge
+    needs: prepare
+    if: ${{ needs.prepare.outputs.status == 'ready' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 220
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      AUTO_MERGE: ${{ vars.UPSTREAM_AUTO_MERGE != 'false' && (github.event_name != 'workflow_dispatch' || inputs.auto_merge) }}
+    steps:
+      # Execute the trusted workflow's scripts, never candidate code, with
+      # publication permissions.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/download-artifact@v8
+        with:
+          name: upstream-sync-candidate-${{ github.run_id }}
+          path: ${{ runner.temp }}/upstream-sync/
+      - name: Publish and verify the exact candidate
+        env:
+          SYNC_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
         run: |
-          echo "Conflicted files remain; nothing was pushed."
-          exit 1
+          python3 .github/sync/publish_sync.py \
+            --report "$RUNNER_TEMP/upstream-sync/report.json" \
+            --bundle "$RUNNER_TEMP/upstream-sync/candidate.bundle" \
+            --output "$RUNNER_TEMP/upstream-sync-publication" \
+            --base-branch "$BASE_BRANCH" --branch "$SYNC_BRANCH" \
+            --run-id "$SYNC_RUN_ID" --auto-merge "$AUTO_MERGE"
+      - name: Preserve CI run IDs and publication outcome
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: upstream-sync-publication-${{ github.run_id }}
+          path: ${{ runner.temp }}/upstream-sync-publication/
+          if-no-files-found: warn
+          retention-days: 14

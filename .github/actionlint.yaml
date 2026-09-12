@@ -1,0 +1,5 @@
+# This hosted label is already used by successful repository CI runs.
+# Register it for actionlint versions whose hosted-runner catalog predates 26.04.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04-arm
