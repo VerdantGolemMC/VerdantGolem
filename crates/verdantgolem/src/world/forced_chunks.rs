@@ -238,6 +238,7 @@ impl ForcedChunkStore {
         let durability_error = match write(&self.path, &root) {
             Ok(()) => None,
             Err(AtomicWriteError::BeforeCommit(error)) => return Err(error),
+            #[cfg(any(unix, test))]
             Err(AtomicWriteError::AfterCommit(error)) => Some(error),
         };
         // The atomic replacement is the commit point. Keep runtime state and
@@ -291,6 +292,9 @@ fn path_error(path: &Path, operation: &str, error: &io::Error) -> io::Error {
 
 enum AtomicWriteError {
     BeforeCommit(io::Error),
+    // Only Unix syncs the directory after replacement; tests can inject the
+    // post-commit failure on any platform to exercise state/ticket consistency.
+    #[cfg(any(unix, test))]
     AfterCommit(io::Error),
 }
 
