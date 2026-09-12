@@ -36,6 +36,20 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+      - name: Lint GitHub workflows with pinned actionlint
+        run: |
+          tool_dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$tool_dir"
+          release="https://github.com/rhysd/actionlint/releases/download/v1.7.12"
+          archive="actionlint_1.7.12_linux_amd64.tar.gz"
+          curl --fail --location --retry 3 "$release/$archive" -o "$tool_dir/$archive"
+          curl --fail --location --retry 3 "$release/actionlint_1.7.12_checksums.txt" -o "$tool_dir/checksums.txt"
+          (
+            cd "$tool_dir"
+            grep " $archive\$" checksums.txt | sha256sum --check -
+            tar -xzf "$archive"
+          )
+          "$tool_dir/actionlint" -color
       - run: python3 -m unittest discover -s .github/sync -p 'test_*.py' -v
       - run: python3 -m unittest discover -s tools/tests -p 'test_technical_survival_smoke.py' -v
   technical_smoke:
