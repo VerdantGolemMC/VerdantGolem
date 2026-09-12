@@ -435,7 +435,7 @@ carpet_rules! {
         kind: Bool,
         default: RuleValue::Bool(false),
         field: desert_shrubs,
-        desc: "Saplings in hot, dry biomes wither into dead bushes (unless water is near).",
+        desc: "Saplings in desert biomes wither into dead bushes unless water is nearby.",
     };
     RotatorBlock => {
         name: "rotatorBlock",
@@ -443,7 +443,7 @@ carpet_rules! {
         kind: Bool,
         default: RuleValue::Bool(false),
         field: rotator_block,
-        desc: "A dispenser holding a cactus rotates the block it faces counter-clockwise.",
+        desc: "A dispenser holding a cactus rotates the block it faces clockwise without ejecting the cactus.",
     };
     FillUpdates => {
         name: "fillUpdates",
@@ -507,7 +507,7 @@ carpet_rules! {
         default: RuleValue::Int(256),
         min: 1.0,
         field: forceload_limit,
-        desc: "Maximum number of chunks force-loaded via /forceload.",
+        desc: "Maximum number of chunks in one /forceload region operation.",
     };
     SpawnChunkRadius => {
         name: "spawnChunkRadius",

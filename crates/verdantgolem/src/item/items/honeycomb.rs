@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use verdantgolem_util::Hand;
 
 use crate::block::UseWithItemArgs;
 use crate::block::entities::BlockEntity;
@@ -32,16 +33,21 @@ impl ItemMetadata for HoneyCombItem {
 impl ItemBehaviour for HoneyCombItem {
     fn use_on_block(
         &self,
-        _item: &mut ItemStack,
+        item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
-        try_wax_block(&world, location, block);
+        let waxed = try_wax_block(&world, location, block);
+        if waxed {
+            item.decrement_unless_creative(player.gamemode.load(), 1);
+        }
+        waxed
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

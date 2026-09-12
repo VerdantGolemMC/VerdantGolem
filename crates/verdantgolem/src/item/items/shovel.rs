@@ -8,6 +8,7 @@ use verdantgolem_data::sound::{Sound, SoundCategory};
 use verdantgolem_data::world::WorldEvent;
 use verdantgolem_data::{Block, tag};
 use verdantgolem_util::GameMode;
+use verdantgolem_util::Hand;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
@@ -25,12 +26,13 @@ impl ItemBehaviour for ShovelItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         // Yes, Minecraft does hardcode these
         let mut changed = if (block == &Block::GRASS_BLOCK
@@ -78,6 +80,7 @@ impl ItemBehaviour for ShovelItem {
             // TODO: Handle DamageResult::Broken to broadcast item break and update player slot.
             let _ = item.damage_item(1);
         }
+        changed
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

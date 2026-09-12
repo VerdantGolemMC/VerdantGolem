@@ -1,4 +1,5 @@
 use std::any::Any;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::item::{ItemBehaviour, ItemMetadata};
@@ -24,12 +25,13 @@ impl ItemBehaviour for BoneMealItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
         let state_id = world.get_block_state_id(&location);
         if server
@@ -38,7 +40,9 @@ impl ItemBehaviour for BoneMealItem {
         {
             world.sync_world_event(WorldEvent::ParticlesAndSoundPlantGrowth, location, 15);
             item.decrement_unless_creative(player.gamemode.load(), 1);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {

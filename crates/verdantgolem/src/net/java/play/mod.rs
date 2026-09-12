@@ -10,11 +10,8 @@ use tracing::{Level, debug, error, info, trace, warn};
 use verdantgolem_protocol::bedrock::server::text::SText;
 use verdantgolem_util::{Hand, PermissionLvl};
 
-use crate::block::BlockHitResult;
-use crate::block::registry::BlockActionResult;
 use crate::block::{self};
 use crate::entity::EntityBase;
-use crate::entity::equipment_break_status;
 use crate::entity::player::statistics::{CustomStatistic, StatisticCategory};
 use crate::entity::player::{ChatMode, ChatSession, MINE_BLOCK_EXHAUSTION, Player};
 use crate::error::PumpkinError;
@@ -22,11 +19,9 @@ use crate::log_at_level;
 use crate::net::PlayerConfig;
 use crate::net::java::JavaClient;
 use crate::plugin::player::changed_main_hand::PlayerChangedMainHandEvent;
-use crate::plugin::player::fish::{PlayerFishEvent, PlayerFishState};
 use crate::plugin::player::item_held::PlayerItemHeldEvent;
 use crate::plugin::player::player_chat::PlayerChatEvent;
 use crate::plugin::player::player_command_send::PlayerCommandSendEvent;
-use crate::plugin::player::player_interact_entity_event::PlayerInteractEntityEvent;
 use crate::plugin::player::player_interact_event::{InteractAction, PlayerInteractEvent};
 use crate::plugin::player::player_interact_unknown_entity_event::PlayerInteractUnknownEntityEvent;
 use crate::plugin::player::player_move::PlayerMoveEvent;
@@ -42,8 +37,7 @@ use crate::world::{BlockBreakingProgress, World, chunker};
 use verdantgolem_data::block_properties::{BlockProperties, CommandBlockLikeProperties};
 use verdantgolem_data::data_component::DataComponent;
 use verdantgolem_data::data_component_impl::{
-    BlocksAttacksImpl, ConsumableImpl, DataComponentImpl, EquipmentSlot, EquippableImpl, FoodImpl,
-    WritableBookContentImpl, WrittenBookContentImpl,
+    EquipmentSlot, WritableBookContentImpl, WrittenBookContentImpl,
 };
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;

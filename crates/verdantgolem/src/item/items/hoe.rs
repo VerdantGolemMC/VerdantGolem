@@ -10,6 +10,7 @@ use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::{Block, tag};
 use verdantgolem_util::GameMode;
+use verdantgolem_util::Hand;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
@@ -27,12 +28,13 @@ impl ItemBehaviour for HoeItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         // Yes, Minecraft does hardcode these
         if block == &Block::GRASS_BLOCK
             || block == &Block::DIRT_PATH
@@ -100,7 +102,9 @@ impl ItemBehaviour for HoeItem {
                 // TODO: Handle DamageResult::Broken to broadcast item break and update player slot.
                 let _ = item.damage_item(1);
             }
+            return changed;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

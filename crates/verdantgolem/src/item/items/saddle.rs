@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
@@ -17,7 +18,13 @@ impl ItemMetadata for SaddleItem {
 }
 
 impl ItemBehaviour for SaddleItem {
-    fn use_on_entity(&self, item: &mut ItemStack, player: &Player, entity: Arc<dyn EntityBase>) {
+    fn use_on_entity(
+        &self,
+        item: &mut ItemStack,
+        player: &Player,
+        _hand: Hand,
+        entity: Arc<dyn EntityBase>,
+    ) -> bool {
         if let Some(mob) = entity.get_mob()
             && mob.can_be_saddled()
             && !mob.is_saddled()
@@ -33,7 +40,9 @@ impl ItemBehaviour for SaddleItem {
                 .world()
                 .play_sound(sound, SoundCategory::Neutral, &ent.pos.load());
             item.decrement_unless_creative(player.gamemode.load(), 1);
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {

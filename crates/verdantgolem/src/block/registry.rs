@@ -52,6 +52,7 @@ use crate::block::blocks::infested::InfestedBlock;
 use crate::block::blocks::iron_bars::IronBarsBlock;
 use crate::block::blocks::jigsaw::JigsawBlock;
 // use crate::block::blocks::leaves::LeavesBlock;
+use crate::block::BlockUseContext;
 use crate::block::blocks::logs::LogBlock;
 use crate::block::blocks::loom::LoomBlock;
 use crate::block::blocks::magma::MagmaBlock;
@@ -175,7 +176,6 @@ use verdantgolem_data::fluid::Fluid;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
 use verdantgolem_data::{Block, BlockDirection, BlockId, BlockState};
-use verdantgolem_protocol::java::server::play::SUseItemOn;
 use verdantgolem_util::math::boundingbox::BoundingBox;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_world::world::{BlockAccessor, BlockFlags};
@@ -548,7 +548,7 @@ impl BlockRegistry {
         player: &Arc<Player>,
         placed_block: &'static Block,
         server: &Arc<Server>,
-        use_item_on: &SUseItemOn,
+        use_item_on: &BlockUseContext,
         location: BlockPos,
         face: BlockDirection,
     ) -> Result<Option<(BlockPos, BlockStateId)>, BlockPlacingError> {
@@ -914,7 +914,7 @@ impl BlockRegistry {
         state: &BlockState,
         position: &BlockPos,
         direction: Option<BlockDirection>,
-        use_item_on: Option<&SUseItemOn>,
+        use_item_on: Option<&BlockUseContext>,
     ) -> bool {
         let pumpkin_block = self.get_pumpkin_block(block.id);
         if let Some(pumpkin_block) = pumpkin_block {
@@ -941,7 +941,7 @@ impl BlockRegistry {
         state_id: BlockStateId,
         position: &BlockPos,
         direction: BlockDirection,
-        use_item_on: &SUseItemOn,
+        use_item_on: &BlockUseContext,
         player: &Player,
     ) -> bool {
         let pumpkin_block = self.get_pumpkin_block(block.id);
@@ -969,7 +969,7 @@ impl BlockRegistry {
         position: &BlockPos,
         direction: BlockDirection,
         replacing: BlockIsReplacing,
-        use_item_on: &SUseItemOn,
+        use_item_on: &BlockUseContext,
     ) -> BlockStateId {
         let pumpkin_block = self.get_pumpkin_block(block.id);
         if let Some(pumpkin_block) = pumpkin_block {

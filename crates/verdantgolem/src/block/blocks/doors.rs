@@ -16,6 +16,7 @@ use verdantgolem_world::world::BlockAccessor;
 use verdantgolem_world::world::BlockFlags;
 
 use crate::block::BlockBehaviour;
+use crate::block::BlockUseContext;
 use crate::block::BrokenArgs;
 use crate::block::CanPlaceAtArgs;
 use crate::block::GetStateForNeighborUpdateArgs;
@@ -27,7 +28,6 @@ use crate::block::PlacedArgs;
 use crate::block::blocks::redstone::block_receives_redstone_power;
 use crate::block::registry::BlockActionResult;
 use crate::entity::player::Player;
-use verdantgolem_protocol::java::server::play::SUseItemOn;
 
 use crate::world::World;
 use verdantgolem_util::GameMode;
@@ -100,7 +100,7 @@ fn get_sound(block: &Block, open: bool) -> Sound {
 fn get_hinge(
     world: &World,
     pos: &BlockPos,
-    use_item: &SUseItemOn,
+    use_item: &BlockUseContext,
     facing: HorizontalFacing,
 ) -> DoorHinge {
     let top_pos = pos.up();

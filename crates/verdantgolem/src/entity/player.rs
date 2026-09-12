@@ -1,4 +1,6 @@
 pub mod advancement;
+pub(crate) mod interaction;
+mod local_movement;
 pub mod statistics;
 
 use core::f32;
@@ -996,6 +998,12 @@ impl Player {
             Vector3::new(0.0, 100.0, 0.0),
             &EntityType::PLAYER,
         ));
+        // Players normally integrate movement on the client. Local players
+        // need the vanilla player base speed rather than the generic living
+        // entity attribute fallback (0.7).
+        if matches!(client.as_ref(), ClientPlatform::Local) {
+            living_entity.set_attribute_base(&Attributes::MOVEMENT_SPEED, 0.1);
+        }
         living_entity.entity.invulnerable.store(
             matches!(gamemode, GameMode::Creative | GameMode::Spectator),
             Ordering::Relaxed,
@@ -1828,6 +1836,73 @@ impl Player {
         false
     }
 
+    /// Damages the hand that actually initiated an interaction.
+    pub fn damage_item_in_hand(&self, hand: Hand, amount: i32) -> bool {
+        self.damage_item_in_slot(&Self::equipment_slot_for_hand(hand), amount)
+    }
+
+    const fn equipment_slot_for_hand(hand: Hand) -> EquipmentSlot {
+        match hand {
+            Hand::Right => EquipmentSlot::MAIN_HAND,
+            Hand::Left => EquipmentSlot::OFF_HAND,
+        }
+    }
+
+    fn damage_stack_for_gamemode(
+        stack: &mut ItemStack,
+        amount: i32,
+        gamemode: GameMode,
+    ) -> verdantgolem_data::item_stack::DamageResult {
+        if matches!(gamemode, GameMode::Creative | GameMode::Spectator) {
+            verdantgolem_data::item_stack::DamageResult::Untouched
+        } else {
+            stack.damage_item(amount)
+        }
+    }
+
+    /// Damages a stack already borrowed by an entity/block interaction. The
+    /// caller writes this exact stack back to its originating hand; no inventory
+    /// slot is guessed from item equality (both hands may hold the same item).
+    /// Break animation/slot synchronization is performed by that caller.
+    pub fn damage_used_item_stack(&self, stack: &mut ItemStack, amount: i32) -> bool {
+        use verdantgolem_data::item_stack::DamageResult;
+
+        let used_item = stack.item;
+        let result = Self::damage_stack_for_gamemode(stack, amount, self.gamemode.load());
+        if result == DamageResult::Untouched {
+            return false;
+        }
+        if let Some(server) = self.world().server.upgrade()
+            && let Some(player) = self.world().get_player_by_uuid(self.gameprofile.id)
+        {
+            let mut damage_event =
+                crate::plugin::api::events::player::player_item_damage::PlayerItemDamageEvent::new(
+                    player.clone(),
+                    used_item.registry_key.to_string(),
+                    amount,
+                );
+            server
+                .plugin_manager
+                .fire_blocking(&server, &mut damage_event);
+            if result == DamageResult::Broken {
+                let mut break_event = crate::plugin::api::events::player::player_item_break::PlayerItemBreakEvent::new(
+                    player, used_item.registry_key.to_string(),
+                );
+                server
+                    .plugin_manager
+                    .fire_blocking(&server, &mut break_event);
+            }
+        }
+        if result == DamageResult::Broken {
+            self.increment_stat(
+                statistics::StatisticCategory::Broken,
+                i32::from(used_item.id),
+                1,
+            );
+        }
+        true
+    }
+
     /// Convenience wrapper – damages the currently held (main-hand) item.
     pub fn damage_held_item(&self, amount: i32) -> bool {
         self.damage_item_in_slot(&EquipmentSlot::MAIN_HAND, amount)
@@ -2570,6 +2645,16 @@ impl Player {
     pub fn tick<'a>(&'a self, server: &'a Server) {
         self.process_inbound_packets();
 
+        // Network-only ticks still drive real clients while `/tick freeze` is
+        // active. A local player's physics, use duration, hunger and cooldowns
+        // must advance only on the same simulated ticks as its action schedule.
+        if self.is_local()
+            && !server.tick_rate_manager.runs_normally()
+            && !server.tick_rate_manager.is_sprinting()
+        {
+            return;
+        }
+
         if self.is_spectator() {
             self.living_entity
                 .entity
@@ -2742,6 +2827,7 @@ impl Player {
         self.last_attacked_ticks.fetch_add(1, Ordering::Relaxed);
 
         self.living_entity.tick(self, server);
+        self.sync_local_movement();
 
         self.breath_manager.tick(self);
         self.hunger_manager.tick(self);
@@ -2842,12 +2928,16 @@ impl Player {
     /// Carpet fake-player jump: succeeds only while on the ground, applies
     /// the vanilla jump velocity and records the jump statistic.
     pub fn jump_local(&self) -> bool {
-        if !self.living_entity.entity.on_ground.load(Ordering::Relaxed) {
+        if !self.should_tick_local_physics()
+            || !self.living_entity.entity.on_ground.load(Ordering::Relaxed)
+        {
             return false;
         }
-        let mut velocity = self.living_entity.entity.velocity.load();
-        velocity.y = 0.42;
-        self.living_entity.entity.velocity.store(velocity);
+        self.living_entity.jump();
+        self.living_entity
+            .entity
+            .on_ground
+            .store(false, Ordering::Relaxed);
         self.jump();
         true
     }
@@ -6364,6 +6454,14 @@ impl NBTStorage for EnderChestInventory {
 impl NBTStorageInit for EnderChestInventory {}
 
 impl EntityBase for Player {
+    fn get_gravity(&self) -> f64 {
+        if self.is_local() && !self.is_flying() {
+            self.living_entity.get_attribute_value(&Attributes::GRAVITY)
+        } else {
+            0.0
+        }
+    }
+
     fn damage_with_context(
         &self,
         caller: &dyn EntityBase,
@@ -7530,6 +7628,48 @@ mod tests {
     use super::{bedrock_inventory_slot, read_root_vehicle, write_root_vehicle};
     use uuid::Uuid;
     use verdantgolem_nbt::{compound::NbtCompound, tag::NbtTag};
+
+    #[test]
+    fn hand_damage_maps_to_the_originating_equipment_slot() {
+        use super::Player;
+        use verdantgolem_data::data_component_impl::EquipmentSlot;
+        use verdantgolem_util::Hand;
+
+        assert!(Player::equipment_slot_for_hand(Hand::Right) == EquipmentSlot::MAIN_HAND);
+        assert!(Player::equipment_slot_for_hand(Hand::Left) == EquipmentSlot::OFF_HAND);
+    }
+
+    #[test]
+    fn used_stack_damage_changes_only_the_selected_stack_and_respects_creative() {
+        use super::Player;
+        use verdantgolem_data::{
+            item::Item,
+            item_stack::{DamageResult, ItemStack},
+        };
+        use verdantgolem_util::GameMode;
+
+        let main = ItemStack::new(1, &Item::BRUSH);
+        let mut offhand = main.clone();
+        assert_eq!(
+            Player::damage_stack_for_gamemode(&mut offhand, 16, GameMode::Survival),
+            DamageResult::Damaged
+        );
+        assert_eq!(main.get_damage(), 0);
+        assert_eq!(offhand.get_damage(), 16);
+        assert_eq!(
+            Player::damage_stack_for_gamemode(&mut offhand, 16, GameMode::Creative),
+            DamageResult::Untouched
+        );
+        assert_eq!(offhand.get_damage(), 16);
+        let remaining = offhand.get_max_damage().unwrap() - offhand.get_damage();
+        assert_eq!(
+            Player::damage_stack_for_gamemode(&mut offhand, remaining, GameMode::Survival),
+            DamageResult::Broken
+        );
+        assert!(offhand.is_empty());
+        assert!(!main.is_empty());
+        assert_eq!(main.get_damage(), 0);
+    }
 
     #[test]
     fn player_screen_slots_map_to_bedrock_inventory() {

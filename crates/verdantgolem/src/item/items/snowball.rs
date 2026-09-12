@@ -1,10 +1,12 @@
 use std::sync::Arc;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::entity::projectile::snowball::SnowballEntity;
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, consume_item_in_hand};
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::sound::Sound;
@@ -20,7 +22,7 @@ impl ItemMetadata for SnowBallItem {
 const POWER: f32 = 1.5;
 
 impl ItemBehaviour for SnowBallItem {
-    fn normal_use(&self, _block: &Item, player: &Player) {
+    fn normal_use(&self, _stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let position = player.position();
         let world = player.world();
         world.play_sound(
@@ -36,25 +38,8 @@ impl ItemBehaviour for SnowBallItem {
             .set_velocity_from(pitch, yaw, 0.0, POWER, 1.0);
         world.spawn_entity(Arc::new(snowball));
 
-        // Consume item
-        let mut main_hand = player.inventory.held_item();
-        let consumed = if !main_hand.is_empty() && main_hand.item.id == Item::SNOWBALL.id {
-            main_hand.decrement_unless_creative(player.gamemode.load(), 1);
-            player.inventory.set_held_item(main_hand);
-            true
-        } else {
-            false
-        };
-
-        if !consumed {
-            let mut off_hand = player.inventory.off_hand_item();
-            if !off_hand.is_empty() && off_hand.item.id == Item::SNOWBALL.id {
-                off_hand.decrement_unless_creative(player.gamemode.load(), 1);
-                player
-                    .inventory
-                    .set_stack_in_hand(verdantgolem_util::Hand::Left, off_hand);
-            }
-        }
+        consume_item_in_hand(player, hand, 1);
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

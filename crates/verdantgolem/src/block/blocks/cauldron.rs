@@ -77,7 +77,8 @@ impl BlockBehaviour for CauldronBlock {
                     crate::plugin::block::cauldron_level_change::CauldronChangeReason::BucketEmpty,
                     Some(Arc::clone(args.player) as Arc<dyn crate::entity::EntityBase>),
                 ) {
-                    return BlockActionResult::Pass;
+                    // Explicit plugin veto: never fall through to bucket air use.
+                    return BlockActionResult::Fail;
                 }
                 let state_id = Block::WATER_CAULDRON
                     .from_properties(&[("level", "3")])

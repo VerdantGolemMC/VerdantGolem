@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
@@ -16,7 +17,13 @@ impl ItemMetadata for NameTagItem {
 }
 
 impl ItemBehaviour for NameTagItem {
-    fn use_on_entity(&self, item: &mut ItemStack, player: &Player, entity: Arc<dyn EntityBase>) {
+    fn use_on_entity(
+        &self,
+        item: &mut ItemStack,
+        player: &Player,
+        _hand: Hand,
+        entity: Arc<dyn EntityBase>,
+    ) -> bool {
         let entity = entity.get_entity();
         if entity.entity_type.saveable
             && let Some(name) = item.get_data_component::<CustomNameImpl>()
@@ -24,7 +31,9 @@ impl ItemBehaviour for NameTagItem {
             // TODO
             entity.set_custom_name(name.name.clone());
             item.decrement_unless_creative(player.gamemode.load(), 1);
+            return true;
         }
+        false
     }
     fn as_any(&self) -> &dyn std::any::Any {
         self

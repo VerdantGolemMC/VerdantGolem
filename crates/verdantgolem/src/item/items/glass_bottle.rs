@@ -1,4 +1,5 @@
 use std::any::Any;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::item::{ItemBehaviour, ItemMetadata};
@@ -24,12 +25,13 @@ impl ItemBehaviour for GlassBottleItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         let world = player.world();
 
         let is_water_target = block.id == Block::WATER.id || block.id == Block::WATER_CAULDRON.id;
@@ -91,7 +93,9 @@ impl ItemBehaviour for GlassBottleItem {
             if !was_added && !water_bottle.is_empty() {
                 world.drop_stack(&player.position().to_block_pos(), water_bottle);
             }
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {

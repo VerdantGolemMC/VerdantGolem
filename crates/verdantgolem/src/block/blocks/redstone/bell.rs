@@ -154,7 +154,8 @@ impl BlockBehaviour for BellBlock {
             args.hit.face.to_horizontal_facing(),
             Some(args.player.clone()),
         ) {
-            return BlockActionResult::Pass;
+            // A correctly aimed ring failed only because the plugin vetoed it.
+            return BlockActionResult::Fail;
         }
 
         args.player.increment_stat(

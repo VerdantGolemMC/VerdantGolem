@@ -149,17 +149,9 @@ impl HopperBlockEntity {
     }
     fn try_move_items(&self, state: HopperLikeProperties, world: &Arc<World>) {
         if self.cooldown_time.load(Ordering::Relaxed) <= 0 && state.enabled {
-            // carpet hopperCounters: an empty hopper facing wool still counts
-            // as a (zero-item) transfer, keeping the 8gt cooldown instead of
-            // rescanning entities every tick.
-            if crate::carpet::values().hopper_counters && self.is_empty() {
-                let target_pos = self.position.offset(to_offset(&self.facing));
-                let (target_block, _) = world.get_block_and_state(&target_pos);
-                if crate::carpet::counters::wool_channel(target_block).is_some() {
-                    self.cooldown_time.store(8, Ordering::Relaxed);
-                    return;
-                }
-            }
+            // Empty counter hoppers must still extract from the container or
+            // items above them. Only a successful transfer starts the cooldown;
+            // an idle shortcut here would permanently starve the counter.
             let mut success = if self.is_empty() {
                 false
             } else {
@@ -298,6 +290,23 @@ impl HopperBlockEntity {
         false
     }
 
+    /// Clears exactly the stacks included in one wool-counter transfer. Item
+    /// keys are static registry data, so no temporary key copies are needed.
+    fn take_counter_items(&self) -> Vec<(&'static str, u64)> {
+        let mut items = self
+            .items
+            .write()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        let mut counted = Vec::with_capacity(items.len());
+        for item in items.iter_mut() {
+            if !item.is_empty() {
+                counted.push((item.item.registry_key, u64::from(item.item_count)));
+                *item = ItemStack::EMPTY.clone();
+            }
+        }
+        counted
+    }
+
     fn eject_items(&self, world: &Arc<World>) -> bool {
         // TODO getEntityContainer
 
@@ -306,29 +315,11 @@ impl HopperBlockEntity {
         if crate::carpet::values().hopper_counters {
             let (target_block, _) = world.get_block_and_state(&target_pos);
             if let Some(channel) = crate::carpet::counters::wool_channel(target_block) {
-                let counted = {
-                    let mut items = self
-                        .items
-                        .write()
-                        .unwrap_or_else(std::sync::PoisonError::into_inner);
-                    let mut counted = Vec::with_capacity(items.len());
-                    for item in items.iter_mut() {
-                        if !item.is_empty() {
-                            counted.push((
-                                item.item.registry_key.to_string(),
-                                u64::from(item.item_count),
-                            ));
-                            *item = ItemStack::EMPTY.clone();
-                        }
-                    }
-                    counted
-                };
+                let counted = self.take_counter_items();
                 if counted.is_empty() {
                     return false;
                 }
-                for (key, count) in counted {
-                    crate::carpet::counters::add(channel, &key, count);
-                }
+                crate::carpet::counters::add_batch(channel, counted);
                 self.mark_dirty();
                 return true;
             }
@@ -497,5 +488,41 @@ impl Clearable for HopperBlockEntity {
             .unwrap_or_else(std::sync::PoisonError::into_inner);
         items.fill_with(|| ItemStack::EMPTY.clone());
         self.mark_dirty();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use verdantgolem_data::item::Item;
+
+    #[test]
+    fn counter_transfer_takes_every_nonempty_slot_exactly_once() {
+        let hopper = HopperBlockEntity::new(BlockPos::new(0, 0, 0), FacingHopper::Down);
+        hopper.set_stack(0, ItemStack::new(64, &Item::STONE));
+        hopper.set_stack(1, ItemStack::new(32, &Item::STONE));
+        hopper.set_stack(2, ItemStack::new(1, &Item::DIAMOND));
+        hopper.set_stack(3, ItemStack::new(0, &Item::DIRT));
+        hopper.set_stack(4, ItemStack::new(64, &Item::AIR));
+
+        let counted = hopper.take_counter_items();
+        assert_eq!(
+            counted,
+            [
+                (Item::STONE.registry_key, 64),
+                (Item::STONE.registry_key, 32),
+                (Item::DIAMOND.registry_key, 1),
+            ]
+        );
+        assert_eq!(counted.iter().map(|(_, count)| *count).sum::<u64>(), 97);
+        assert!(hopper.is_empty());
+        assert!(hopper.take_counter_items().is_empty());
+    }
+
+    #[test]
+    fn empty_counter_hopper_has_no_transfer_to_start_a_session() {
+        let hopper = HopperBlockEntity::new(BlockPos::new(0, 0, 0), FacingHopper::Down);
+        assert!(hopper.take_counter_items().is_empty());
+        assert!(!hopper.is_dirty());
     }
 }

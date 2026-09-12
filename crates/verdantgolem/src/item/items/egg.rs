@@ -1,10 +1,11 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::Entity;
 use crate::entity::EntityBase;
 use crate::entity::player::Player;
 use crate::entity::projectile::egg::EggEntity;
-use crate::item::{ItemBehaviour, ItemMetadata};
+use crate::item::{ItemBehaviour, ItemMetadata, consume_item_in_hand};
 use verdantgolem_data::entity::EntityType;
 use verdantgolem_data::item::Item;
 use verdantgolem_data::item_stack::ItemStack;
@@ -21,7 +22,7 @@ impl ItemMetadata for EggItem {
 const POWER: f32 = 1.5;
 
 impl ItemBehaviour for EggItem {
-    fn normal_use(&self, _block: &Item, player: &Player) {
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
         let position = player.position();
         let world = player.world();
         world.play_sound(
@@ -30,38 +31,18 @@ impl ItemBehaviour for EggItem {
             &position,
         );
 
-        // Capture the held item stack and pass it to the thrown egg entity
-        let item_stack: ItemStack = player.inventory.held_item();
-
         let entity = Entity::new(world.clone(), position, &EntityType::EGG);
         let egg = EggEntity::new_shot(entity, player.get_entity());
 
         // Propagate the item stack so clients show correct variant
-        egg.set_item_stack(item_stack);
+        egg.set_item_stack(stack.copy_with_count(1));
 
         let (yaw, pitch) = player.rotation();
         egg.thrown.set_velocity_from(pitch, yaw, 0.0, POWER, 1.0);
         world.spawn_entity(Arc::new(egg));
 
-        // Consume item
-        let mut main_hand = player.inventory.held_item();
-        let consumed = if !main_hand.is_empty() && Self::ids().contains(&main_hand.item.id) {
-            main_hand.decrement_unless_creative(player.gamemode.load(), 1);
-            player.inventory.set_held_item(main_hand);
-            true
-        } else {
-            false
-        };
-
-        if !consumed {
-            let mut off_hand = player.inventory.off_hand_item();
-            if !off_hand.is_empty() && Self::ids().contains(&off_hand.item.id) {
-                off_hand.decrement_unless_creative(player.gamemode.load(), 1);
-                player
-                    .inventory
-                    .set_stack_in_hand(verdantgolem_util::Hand::Left, off_hand);
-            }
-        }
+        consume_item_in_hand(player, hand, 1);
+        true
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

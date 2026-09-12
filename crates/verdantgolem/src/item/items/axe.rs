@@ -10,6 +10,7 @@ use verdantgolem_data::tag::Taggable;
 use verdantgolem_data::{Block, tag};
 use verdantgolem_data::{BlockDirection, BlockId};
 use verdantgolem_util::GameMode;
+use verdantgolem_util::Hand;
 use verdantgolem_util::math::position::BlockPos;
 use verdantgolem_util::math::vector3::Vector3;
 use verdantgolem_world::world::BlockFlags;
@@ -27,12 +28,13 @@ impl ItemBehaviour for AxeItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         // I tried to follow mojang order of doing things.
         let world = player.world();
         let replacement_block = try_use_axe(block.id);
@@ -102,6 +104,7 @@ impl ItemBehaviour for AxeItem {
             // TODO: Handle DamageResult::Broken to broadcast item break and update player slot.
             let _ = item.damage_item(1);
         }
+        changed
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use verdantgolem_util::Hand;
 
 use crate::entity::EntityBase;
 use crate::entity::decoration::leash_knot::LeashKnotEntity;
@@ -28,14 +29,15 @@ impl ItemBehaviour for LeadItem {
         &self,
         item: &mut ItemStack,
         player: &Player,
+        _hand: Hand,
         location: BlockPos,
         _face: BlockDirection,
         _cursor_pos: Vector3<f32>,
         block: &Block,
         _server: &Server,
-    ) {
+    ) -> bool {
         if !block.has_tag(&verdantgolem_data::tag::Block::MINECRAFT_FENCES) {
-            return;
+            return false;
         }
 
         let world = player.world();
@@ -89,6 +91,7 @@ impl ItemBehaviour for LeadItem {
             }
             world.play_sound(Sound::ItemLeadTied, SoundCategory::Neutral, &center);
         }
+        any_leashed
     }
 
     fn as_any(&self) -> &dyn std::any::Any {

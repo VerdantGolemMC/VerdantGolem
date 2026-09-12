@@ -1,4 +1,6 @@
 use std::any::Any;
+use verdantgolem_data::item_stack::ItemStack;
+use verdantgolem_util::Hand;
 
 use crate::entity::player::Player;
 use crate::item::{ItemBehaviour, ItemMetadata};
@@ -16,15 +18,17 @@ impl ItemMetadata for WritableBookItem {
 }
 
 impl ItemBehaviour for WritableBookItem {
-    fn normal_use(&self, item: &Item, player: &Player) {
-        if item.id == Item::WRITTEN_BOOK.id {
-            player.try_send_client_packet(&COpenBook::new(VarInt(0))); // 0 = main hand
+    fn normal_use(&self, stack: &ItemStack, player: &Player, hand: Hand) -> bool {
+        if stack.item.id == Item::WRITTEN_BOOK.id {
+            player.try_send_client_packet(&COpenBook::new(VarInt(i32::from(hand == Hand::Left))));
             player.world().play_sound(
                 Sound::ItemBookPageTurn,
                 SoundCategory::Players,
                 &player.position(),
             );
+            return true;
         }
+        false
     }
 
     fn as_any(&self) -> &dyn Any {
